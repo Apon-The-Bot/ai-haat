@@ -79,60 +79,50 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // If user is not logged in, show clean Auth Guard
   if (!user) {
     return (
-      <div className="min-h-[75vh] flex items-center justify-center py-12 px-4 bg-gray-50/70">
-        <div className="max-w-lg w-full bg-white rounded-3xl border border-[#E8E8EE] shadow-sm p-6 sm:p-10 text-center space-y-6">
+      <div className="min-h-[70vh] flex items-center justify-center py-12 px-4 bg-gray-50/70">
+        <div className="max-w-sm w-full bg-white rounded-2xl border border-[#E8E8EE] shadow-sm p-8 text-center space-y-5">
           
-          {/* Lock Icon Badge */}
-          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-3xl bg-orange-50 border border-orange-100 flex items-center justify-center text-[#FC5C03] shadow-xs">
-            <Lock className="w-8 h-8 sm:w-10 sm:h-10 stroke-[2.2]" />
+          {/* Lock Icon */}
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-[#FC5C03]">
+            <Lock className="w-7 h-7 stroke-[2.2]" />
           </div>
 
-          {/* Title & Description */}
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF2E8] text-[#FC5C03] text-xs font-bold rounded-full uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{isBn ? "লগইন প্রয়োজন" : "Authentication Required"}</span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-black text-[#1A1D26] tracking-tight">
-              {isBn ? "ড্যাশবোর্ড অ্যাক্সেস করতে লগইন করুন" : "Please Log In to Access Dashboard"}
+          {/* Title */}
+          <div>
+            <h1 className="text-xl font-black text-[#1A1D26] tracking-tight">
+              {isBn ? "লগইন করুন" : "Please Login"}
             </h1>
-            <p className="text-xs sm:text-sm text-[#7A8190] leading-relaxed max-w-md mx-auto">
-              {isBn
-                ? "আপনার সমস্ত কেনা ডিজিটাল সাবস্ক্রিপশন, লাইসেন্স কি, ওয়ালেট ব্যালেন্স এবং অর্ডার ট্র্যাকিং দেখতে আপনার অ্যাকাউন্টে লগইন করুন।"
-                : "Log in to manage your active digital subscriptions, view stored license keys in your vault, check wallet balance, and track orders."}
-            </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <div className="space-y-2.5 pt-1">
             <button
               type="button"
               onClick={openLoginModal}
-              className="w-full sm:w-auto px-7 py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-sm font-bold rounded-xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <LogIn className="w-4 h-4" />
-              <span>{isBn ? "লগইন করুন" : "Log In"}</span>
+              <span>{isBn ? "লগইন করুন" : "Login"}</span>
             </button>
 
             <button
               type="button"
               onClick={openRegisterModal}
-              className="w-full sm:w-auto px-6 py-3 bg-white text-[#1A1D26] hover:text-[#FC5C03] border border-[#E8E8EE] hover:border-[#FC5C03]/40 text-xs sm:text-sm font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 bg-white text-[#1A1D26] hover:text-[#FC5C03] border border-[#E8E8EE] hover:border-[#FC5C03]/40 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <UserPlus className="w-4 h-4" />
-              <span>{isBn ? "রেজিস্টার করুন" : "Create Account"}</span>
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>{isBn ? "নতুন অ্যাকাউন্ট খুলুন" : "Create Account"}</span>
             </button>
           </div>
 
           {/* Quick Shop Link */}
-          <div className="pt-4 border-t border-gray-100 flex items-center justify-center gap-2 text-xs text-[#7A8190]">
-            <span>{isBn ? "কেনাকাটা করতে চান?" : "Want to explore products?"}</span>
+          <div className="pt-2 border-t border-gray-100">
             <Link
               href="/shop"
-              className="text-[#FC5C03] font-bold hover:underline inline-flex items-center gap-1"
+              className="text-xs text-[#7A8190] hover:text-[#FC5C03] font-semibold inline-flex items-center gap-1 transition-colors"
             >
-              <span>{isBn ? "শপে যান" : "Browse Shop"}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>{isBn ? "শপে ফিরে যান" : "Back to Shop"}</span>
+              <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 

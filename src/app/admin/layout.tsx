@@ -76,30 +76,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-[#F8FAFC]">
-        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-sm p-8 text-center space-y-6">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shadow-xs">
-            <ShieldAlert className="w-8 h-8 stroke-[2.2]" />
+        <div className="max-w-xs w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center space-y-5">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600">
+            <ShieldAlert className="w-7 h-7 stroke-[2.2]" />
           </div>
-          <div className="space-y-2">
+          <div>
             <h1 className="text-xl font-black text-slate-900 tracking-tight">
-              Admin Access Required
+              Admin Login
             </h1>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              এই সেকশনটি শুধুমাত্র AI Haat অ্যাডমিনের জন্য সংরক্ষিত। প্রবেশ করতে অ্যাডমিন অ্যাকাউন্ট দিয়ে লগইন করুন।
-            </p>
           </div>
-          <div className="flex flex-col gap-2.5 pt-2">
+          <div className="space-y-2 pt-1">
             <button
               type="button"
               onClick={openLoginModal}
-              className="w-full py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-sm font-bold rounded-xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <LogIn className="w-4 h-4" />
-              <span>Admin Login</span>
+              <span>Login</span>
             </button>
             <Link
               href="/"
-              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all block"
+              className="w-full py-2 text-slate-600 hover:text-slate-900 text-xs font-semibold rounded-xl transition-all block"
             >
               Back to Store
             </Link>
