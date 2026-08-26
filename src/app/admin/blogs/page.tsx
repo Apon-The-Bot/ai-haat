@@ -47,7 +47,7 @@ export default function AdminBlogsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
-          <h1 className="text-xl font-black text-white">ব্লগ ও গাইড ম্যানেজার (Blog Manager) ✍️</h1>
+          <h1 className="text-xl font-black text-white">ব্লগ ও গাইড ম্যানেজার (Blog Manager)</h1>
           <p className="text-xs text-slate-400">এআই ও টেক রিলেটেড আর্টিকেল এবং টিউটোরিয়াল প্রকাশ করুন</p>
         </div>
 

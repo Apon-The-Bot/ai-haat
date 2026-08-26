@@ -64,19 +64,19 @@ export function Hero() {
 
             {/* Headline with clean block lines and proper Bengali line-height */}
             <div>
-              <h1 className="text-[23px] sm:text-3xl md:text-4xl lg:text-[42px] xl:text-[46px] font-black text-[#1A1D26] tracking-normal space-y-2 sm:space-y-2.5">
-                <span className="block leading-[1.4] sm:leading-[1.45]">
+              <h1 className="text-[28px] sm:text-[34px] md:text-4xl lg:text-[44px] xl:text-[48px] font-black text-[#1A1D26] tracking-tight space-y-2 sm:space-y-2.5">
+                <span className="block leading-[1.35] sm:leading-[1.4]">
                   প্রিমিয়াম <span className="text-[#FC5C03]">ডিজিটাল প্রোডাক্টস</span>
                 </span>
-                <span className="block text-[#1A1D26] leading-[1.4] sm:leading-[1.45] pt-0.5 sm:pt-1">
+                <span className="block text-[#1A1D26] leading-[1.35] sm:leading-[1.4] pt-0.5 sm:pt-1">
                   এক জায়গায়, নিশ্চিন্তে
                 </span>
               </h1>
-              <span className="w-14 sm:w-16 h-1 sm:h-1.5 bg-[#FC5C03] rounded-full mt-3.5 sm:mt-4 block" />
+              <span className="w-16 sm:w-20 h-1.5 bg-[#FC5C03] rounded-full mt-3.5 sm:mt-4 block" />
             </div>
 
             {/* Supporting Text */}
-            <p className="text-xs sm:text-sm text-[#4B5563] max-w-xl leading-relaxed pt-1.5">
+            <p className="text-[13px] sm:text-sm text-[#4B5563] max-w-xl leading-relaxed pt-1">
               ChatGPT, Canva Pro, Microsoft 365, VPN এবং গেম টপ-আপের শতভাগ আসল সাবস্ক্রিপশন। পেমেন্টের ৫-১৫ মিনিটে অটোমেটেড দ্রুত ডেলিভারি ও ফুল রিপ্লেসমেন্ট ওয়ারেন্টি।
             </p>
 

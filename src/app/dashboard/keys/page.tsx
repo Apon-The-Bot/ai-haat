@@ -78,7 +78,7 @@ export default function DigitalVaultPage() {
             {/* Credentials Vault Box */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-[#1A1D26]">
-                <span>🔐 ক্রেডেনশিয়াল / লাইসেন্স কি:</span>
+                <span>ক্রেডেনশিয়াল / লাইসেন্স কি:</span>
                 <button
                   onClick={() => handleCopy(item.id, item.credentials)}
                   className="px-3 py-1 bg-[#FFF2E8] hover:bg-[#FC5C03] text-[#FC5C03] hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"

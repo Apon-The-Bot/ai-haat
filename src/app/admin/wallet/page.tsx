@@ -68,7 +68,7 @@ export default function AdminWalletPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
-          <h1 className="text-xl font-black text-white">ওয়ালেট রিচার্জ অনুমোদন (Deposit Queue) 💳</h1>
+          <h1 className="text-xl font-black text-white">ওয়ালেট রিচার্জ অনুমোদন (Deposit Queue)</h1>
           <p className="text-xs text-slate-400">বিকাশ ও নগদে পাঠানো TrxID যাচাই করে কাস্টমারের ওয়ালেটে ব্যালেন্স অনুমোদন করুন</p>
         </div>
 

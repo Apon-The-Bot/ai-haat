@@ -58,7 +58,7 @@ export default function DashboardOverviewPage() {
             <span>AI Haat Client Hub</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black">
-            স্বাগতম, {user?.name || "Amanullah Sheikh"}! 👋
+            স্বাগতম, {user?.name || "Amanullah Sheikh"}!
           </h1>
           <p className="text-xs text-gray-300 mt-1 max-w-md">
             আপনার সকল ডিজিটাল প্রোডাক্ট, লাইসেন্স কি এবং ওয়ালেট ব্যালেন্স এক জায়গা থেকে ম্যানেজ করুন।

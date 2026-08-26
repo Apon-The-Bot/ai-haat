@@ -44,7 +44,7 @@ export default function AdminSettingsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
-          <h1 className="text-xl font-black text-white">সাইট সেটিংস ও কনফিগারেশন (Settings) ⚙️</h1>
+          <h1 className="text-xl font-black text-white">সাইট সেটিংস ও কনফিগারেশন (Settings)</h1>
           <p className="text-xs text-slate-400">পেমেন্ট নাম্বার, টেলিগ্রাম বট নোটিফিকেশন ও সাইটের নোটিশ নিয়ন্ত্রণ করুন</p>
         </div>
 
@@ -62,7 +62,7 @@ export default function AdminSettingsPage() {
         {/* Section 1: Payment Numbers */}
         <div className="bg-slate-950/80 rounded-2xl border border-slate-800 p-5 sm:p-6 space-y-4">
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <span>💳 বিকাশ, নগদ ও রকেট পেমেন্ট নাম্বার</span>
+            <span>বিকাশ, নগদ ও রকেট পেমেন্ট নাম্বার</span>
           </h3>
           <p className="text-xs text-slate-400">
             চেকআউট এবং ওয়ালেট রিচার্জ পেজে কাস্টমারদের এই নাম্বারগুলো প্রদর্শিত হবে।

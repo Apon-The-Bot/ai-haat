@@ -65,6 +65,7 @@ export interface User {
   phone: string;
   walletBalanceBDT: number;
   isReseller: boolean;
+  role?: "USER" | "ADMIN" | "RESELLER";
   avatar?: string;
 }
 

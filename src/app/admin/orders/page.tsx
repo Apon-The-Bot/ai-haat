@@ -144,7 +144,7 @@ export default function AdminOrdersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
-          <h1 className="text-xl font-black text-white">অর্ডার ও ইনস্ট্যান্ট ডেলিভারি (Orders Queue) 🛒</h1>
+          <h1 className="text-xl font-black text-white">অর্ডার ও ইনস্ট্যান্ট ডেলিভারি (Orders Queue)</h1>
           <p className="text-xs text-slate-400">অর্ডার ভেরিফাই করুন এবং ১-ক্লিকে কাস্টমারকে ডিজিটাল কি/অ্যাকাউন্ট ডেলিভারি দিন</p>
         </div>
 
@@ -275,7 +275,7 @@ export default function AdminOrdersPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
                 <h3 className="text-sm font-bold text-white">
-                  🚀 ডিজিটাল ডেলিভারি: {selectedOrderForDelivery.id}
+                  ডিজিটাল ডেলিভারি: {selectedOrderForDelivery.id}
                 </h3>
                 <span className="text-xs text-slate-400">
                   {selectedOrderForDelivery.customerName} ({selectedOrderForDelivery.customerEmail})

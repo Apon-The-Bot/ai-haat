@@ -7,7 +7,7 @@ export default function DashboardNotificationsPage() {
   const [notifications, setNotifications] = useState([
     {
       id: "notif-1",
-      title: "অর্ডার ডেলিভারি সম্পন্ন হয়েছে! 🎉",
+      title: "অর্ডার ডেলিভারি সম্পন্ন হয়েছে!",
       message: "আপনার ChatGPT Plus (Order #AH-89211) এর লগইন ক্রেডেনশিয়াল ডিজিটাল ভল্টে যোগ করা হয়েছে।",
       type: "DELIVERY",
       date: "2026-08-25 14:15",

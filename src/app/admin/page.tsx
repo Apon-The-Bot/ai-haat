@@ -93,7 +93,7 @@ export default function AdminOverviewPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-white">
-            এডমিন ড্যাশবোর্ড ওভারভিউ (Admin Overview) 👑
+            এডমিন ড্যাশবোর্ড ওভারভিউ (Admin Overview)
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">
             রিয়েল-টাইম বিক্রয় পরিসংখ্যান, লাইভ অর্ডার প্রসেসিং ও সাইট নিয়ন্ত্রণ

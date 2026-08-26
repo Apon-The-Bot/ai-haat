@@ -4,10 +4,7 @@ import { CurrencyProvider } from "@/context/CurrencyContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { CartDrawer } from "@/components/CartDrawer";
-import { AuthModal } from "@/components/AuthModal";
+import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "AI Haat - Premium Digital Products Marketplace",
@@ -29,11 +26,7 @@ export default function RootLayout({
           <CurrencyProvider>
             <CartProvider>
               <AuthProvider>
-                <Header />
-                <main className="flex-1 w-full bg-white">{children}</main>
-                <Footer />
-                <CartDrawer />
-                <AuthModal />
+                <AppShell>{children}</AppShell>
               </AuthProvider>
             </CartProvider>
           </CurrencyProvider>

@@ -58,7 +58,7 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
-          <h1 className="text-xl font-black text-white">ইউজার ও রিসেলার ডিরেক্টরি (Users & Roles) 👥</h1>
+          <h1 className="text-xl font-black text-white">ইউজার ও রিসেলার ডিরেক্টরি (Users & Roles)</h1>
           <p className="text-xs text-slate-400">সকল গ্রাহক, রিসেলার এবং এডমিন এক্সেস পরিচালনা করুন</p>
         </div>
       </div>

@@ -55,23 +55,23 @@ export default function DashboardOrdersPage() {
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* Header & Filter Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-[#E8E8EE] shadow-2xs">
         <div>
-          <h1 className="text-lg sm:text-xl font-black text-[#1A1D26]">আমার অর্ডারসমূহ (My Orders)</h1>
+          <h1 className="text-base sm:text-lg font-black text-[#1A1D26]">আমার অর্ডারসমূহ (My Orders)</h1>
           <p className="text-xs text-[#7A8190]">আপনার অর্ডারের বর্তমান অবস্থা এবং ইনভয়েস হিস্ট্রি</p>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-[#E8E8EE] self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl self-start sm:self-auto">
           {["ALL", "DELIVERED", "PROCESSING"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                filter === f ? "bg-[#FC5C03] text-white" : "text-gray-600 hover:text-black"
+                filter === f ? "bg-[#FC5C03] text-white shadow-2xs" : "text-gray-600 hover:text-black"
               }`}
             >
               {f === "ALL" ? "সবগুলো" : f === "DELIVERED" ? "ডেলিভার্ড" : "প্রসেসিং"}
@@ -105,7 +105,7 @@ export default function DashboardOrdersPage() {
               key={order.id}
               className="bg-white rounded-2xl border border-[#E8E8EE] p-4 sm:p-5 shadow-2xs hover:border-[#FC5C03]/30 transition-all space-y-3"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-gray-100">
+              <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs font-black text-[#1A1D26]">{order.id}</span>
                   <span
@@ -115,31 +115,36 @@ export default function DashboardOrdersPage() {
                         : "bg-amber-100 text-amber-800"
                     }`}
                   >
-                    {order.status === "DELIVERED" ? "ডেলিভারি সম্পন্ন" : "অর্ডার প্রসেসিং হচ্ছে"}
+                    {order.status === "DELIVERED" ? "ডেলিভারি সম্পন্ন" : "প্রসেসিং হচ্ছে"}
                   </span>
                 </div>
                 <span className="text-[11px] text-[#7A8190]">{order.date}</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                <div className="sm:col-span-8">
-                  <h3 className="text-sm font-bold text-[#1A1D26]">{order.productName}</h3>
-                  <span className="text-xs text-gray-500">{order.variation}</span>
-                  <div className="flex items-center gap-2 text-[11px] text-[#7A8190] mt-1">
-                    <span>মেথড: <b>{order.paymentMethod}</b></span>
-                    <span>•</span>
-                    <span>TrxID: <code>{order.trxId}</code></span>
-                  </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#1A1D26]">{order.productName}</h3>
+                <span className="text-xs text-gray-500">{order.variation}</span>
+                <div className="flex items-center gap-2 text-[11px] text-[#7A8190] mt-1">
+                  <span>মেথড: <b>{order.paymentMethod}</b></span>
+                  <span>•</span>
+                  <span>TrxID: <code>{order.trxId}</code></span>
                 </div>
+              </div>
 
-                <div className="sm:col-span-4 flex flex-col sm:items-end gap-2">
-                  <span className="text-base font-black text-[#FC5C03]">
+              {/* Bottom Row: Price on left, Action on right */}
+              <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-[10px] text-gray-400 block uppercase font-semibold">মূল্য</span>
+                  <span className="text-sm sm:text-base font-black text-[#FC5C03]">
                     {formatPrice(order.amountBDT)}
                   </span>
+                </div>
+
+                <div>
                   {order.status === "DELIVERED" ? (
                     <Link
                       href="/dashboard/keys"
-                      className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
+                      className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 flex items-center gap-1.5 transition-colors"
                     >
                       <KeyRound className="w-3.5 h-3.5" />
                       <span>ভল্ট থেকে কি নিন</span>
@@ -147,11 +152,12 @@ export default function DashboardOrdersPage() {
                   ) : (
                     <span className="text-[11px] text-amber-700 font-semibold flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>৫-১৫ মিনিটের মধ্যে ডেলিভারি হবে</span>
+                      <span>৫-১৫ মিনিটে পাবেন</span>
                     </span>
                   )}
                 </div>
               </div>
+
             </div>
           ))
         )}

@@ -49,7 +49,7 @@ export default function AdminProofsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
-          <h1 className="text-xl font-black text-white">কাস্টমার প্রুফ ও রিভিউ (Proofs & Reviews) 🛡️</h1>
+          <h1 className="text-xl font-black text-white">কাস্টমার প্রুফ ও রিভিউ (Proofs & Reviews)</h1>
           <p className="text-xs text-slate-400">সফল ডেলিভারির প্রমাণপত্র ও কাস্টমার রিভিউ মডারেশন করুন</p>
         </div>
 
