@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,6 +14,11 @@ import {
   ExternalLink,
   ChevronRight,
   Globe,
+  Lock,
+  LogIn,
+  UserPlus,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -22,10 +27,15 @@ import { SafeImage } from "@/components/SafeImage";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, openLoginModal, openRegisterModal } = useAuth();
   const { formatPrice } = useCurrency();
   const { language, setLanguage } = useLanguage();
   const isBn = language === "bn";
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     {
@@ -57,6 +67,80 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isAdmin = user?.role === "ADMIN" || user?.email === "mdamanullahsheikhapon@gmail.com";
 
+  // Prevent flash of login screen while checking localStorage/session on mount
+  if (!mounted) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center bg-gray-50/70">
+        <div className="w-8 h-8 border-3 border-[#FC5C03] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If user is not logged in, show clean Auth Guard
+  if (!user) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center py-12 px-4 bg-gray-50/70">
+        <div className="max-w-lg w-full bg-white rounded-3xl border border-[#E8E8EE] shadow-sm p-6 sm:p-10 text-center space-y-6">
+          
+          {/* Lock Icon Badge */}
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-3xl bg-orange-50 border border-orange-100 flex items-center justify-center text-[#FC5C03] shadow-xs">
+            <Lock className="w-8 h-8 sm:w-10 sm:h-10 stroke-[2.2]" />
+          </div>
+
+          {/* Title & Description */}
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF2E8] text-[#FC5C03] text-xs font-bold rounded-full uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isBn ? "লগইন প্রয়োজন" : "Authentication Required"}</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-[#1A1D26] tracking-tight">
+              {isBn ? "ড্যাশবোর্ড অ্যাক্সেস করতে লগইন করুন" : "Please Log In to Access Dashboard"}
+            </h1>
+            <p className="text-xs sm:text-sm text-[#7A8190] leading-relaxed max-w-md mx-auto">
+              {isBn
+                ? "আপনার সমস্ত কেনা ডিজিটাল সাবস্ক্রিপশন, লাইসেন্স কি, ওয়ালেট ব্যালেন্স এবং অর্ডার ট্র্যাকিং দেখতে আপনার অ্যাকাউন্টে লগইন করুন।"
+                : "Log in to manage your active digital subscriptions, view stored license keys in your vault, check wallet balance, and track orders."}
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={openLoginModal}
+              className="w-full sm:w-auto px-7 py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>{isBn ? "লগইন করুন" : "Log In"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={openRegisterModal}
+              className="w-full sm:w-auto px-6 py-3 bg-white text-[#1A1D26] hover:text-[#FC5C03] border border-[#E8E8EE] hover:border-[#FC5C03]/40 text-xs sm:text-sm font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>{isBn ? "রেজিস্টার করুন" : "Create Account"}</span>
+            </button>
+          </div>
+
+          {/* Quick Shop Link */}
+          <div className="pt-4 border-t border-gray-100 flex items-center justify-center gap-2 text-xs text-[#7A8190]">
+            <span>{isBn ? "কেনাকাটা করতে চান?" : "Want to explore products?"}</span>
+            <Link
+              href="/shop"
+              className="text-[#FC5C03] font-bold hover:underline inline-flex items-center gap-1"
+            >
+              <span>{isBn ? "শপে যান" : "Browse Shop"}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/70 py-4 sm:py-6 lg:py-8">
       <div className="max-w-[1500px] w-[calc(100%-24px)] md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)] mx-auto space-y-4 sm:space-y-6">
@@ -87,7 +171,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Mobile Language Switcher Inside Tab Bar */}
           <button
             onClick={() => setLanguage(language === "en" ? "bn" : "en")}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-100 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-200 shrink-0 ml-2"
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-100 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-200 shrink-0 ml-2 cursor-pointer"
           >
             <Globe className="w-3 h-3 text-[#FC5C03]" />
             <span>{language === "en" ? "বাং" : "EN"}</span>
@@ -222,6 +306,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
 
                 <button
+                  type="button"
                   onClick={logout}
                   className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left cursor-pointer"
                 >

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,14 +17,26 @@ import {
   Menu,
   X,
   ExternalLink,
+  ShieldAlert,
+  LogIn,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, openLoginModal } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isAdmin =
+    user?.role === "ADMIN" ||
+    user?.email === "mdamanullahsheikhapon@gmail.com" ||
+    user?.email === "admin@aihaat.com";
 
   const navigation = [
     {
@@ -52,6 +64,50 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ],
     },
   ];
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <div className="w-8 h-8 border-3 border-[#FC5C03] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-[#F8FAFC]">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-sm p-8 text-center space-y-6">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shadow-xs">
+            <ShieldAlert className="w-8 h-8 stroke-[2.2]" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">
+              Admin Access Required
+            </h1>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              এই সেকশনটি শুধুমাত্র AI Haat অ্যাডমিনের জন্য সংরক্ষিত। প্রবেশ করতে অ্যাডমিন অ্যাকাউন্ট দিয়ে লগইন করুন।
+            </p>
+          </div>
+          <div className="flex flex-col gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={openLoginModal}
+              className="w-full py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Admin Login</span>
+            </button>
+            <Link
+              href="/"
+              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all block"
+            >
+              Back to Store
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans antialiased">
@@ -108,21 +164,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* SIDEBAR */}
         <aside className="hidden lg:block lg:col-span-3 xl:col-span-2 bg-white border-r border-slate-200 p-4 space-y-6 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
           {navigation.map((group) => (
-            <div key={group.group} className="space-y-1">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
+            <div key={group.group} className="space-y-1.5">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
                 {group.group}
               </div>
-
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href));
+                const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                       isActive
-                        ? "bg-[#FFF2E8] text-[#FC5C03] font-bold"
+                        ? "bg-[#FFF2E8] text-[#FC5C03] shadow-2xs"
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                     }`}
                   >
@@ -130,7 +185,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
                       <span>{item.name}</span>
                     </div>
-
                   </Link>
                 );
               })}
@@ -139,7 +193,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* MAIN CONTENT */}
-        <main className="lg:col-span-9 xl:col-span-10 p-6 lg:p-8 min-w-0">
+        <main className="lg:col-span-9 xl:col-span-10 p-4 sm:p-6 lg:p-8 min-w-0 bg-[#F8FAFC]">
           {children}
         </main>
 
