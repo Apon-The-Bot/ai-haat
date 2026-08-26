@@ -45,7 +45,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar: session.user.image || undefined,
         role: isAdmin ? "ADMIN" : "USER",
         walletBalanceBDT: (session.user as any).walletBalanceBDT || 500,
-        isReseller: false,
       };
 
       setUser(googleUser);
@@ -86,7 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
       role: isAdmin ? "ADMIN" : "USER",
       walletBalanceBDT: 500,
-      isReseller: false,
     };
     setUser(loggedUser);
     localStorage.setItem("aihaat_user", JSON.stringify(loggedUser));
@@ -103,7 +101,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phone,
       role: isAdmin ? "ADMIN" : "USER",
       walletBalanceBDT: 50,
-      isReseller: false,
     };
     setUser(newUser);
     localStorage.setItem("aihaat_user", JSON.stringify(newUser));

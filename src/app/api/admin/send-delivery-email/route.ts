@@ -36,8 +36,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
-      success: true,
-      message: result.simulated
+      message: (result as any).simulated
         ? "Email dispatched (Hostinger SMTP simulated - add SMTP_PASS in .env for live sending)"
         : "HTML delivery email successfully sent from delivery@aihaat.shop!",
       ...result,

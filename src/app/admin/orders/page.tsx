@@ -25,11 +25,29 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import { generateDeliveryHtml } from "@/utils/emailTemplate";
 
+interface AdminOrder {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  productName: string;
+  variationName: string;
+  totalBDT: number;
+  paymentMethod: string;
+  senderNumber: string;
+  trxId: string;
+  status: string;
+  createdAt: string;
+  deliveredKey: string | null;
+  downloadUrl: string | null;
+  cancelReason: string | null;
+}
+
 export default function AdminOrdersPage() {
   const { formatPrice } = useCurrency();
   const { showToast } = useToast();
 
-  const [orders, setOrders] = useState([
+  const [orders, setOrders] = useState<AdminOrder[]>([
     {
       id: "AH-98214",
       customerName: "Sifat Rahman",
@@ -88,7 +106,7 @@ export default function AdminOrdersPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Email Compose & Preview States
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [modalTab, setModalTab] = useState<"COMPOSE" | "PREVIEW">("COMPOSE");
   const [emailTo, setEmailTo] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
@@ -98,7 +116,7 @@ export default function AdminOrdersPage() {
   const [isSending, setIsSending] = useState(false);
 
   // Cancellation Modal State
-  const [cancellingOrder, setCancellingOrder] = useState<any>(null);
+  const [cancellingOrder, setCancellingOrder] = useState<AdminOrder | null>(null);
   const [cancelReason, setCancelReason] = useState("Invalid TrxID / Payment Not Received");
 
   const filtered = orders.filter((o) => {
@@ -111,7 +129,7 @@ export default function AdminOrdersPage() {
     return matchStatus && matchSearch;
   });
 
-  const handleOpenFulfill = (order: any) => {
+  const handleOpenFulfill = (order: AdminOrder) => {
     setSelectedOrder(order);
     setModalTab("COMPOSE");
     setEmailTo(order.customerEmail);
@@ -134,6 +152,7 @@ export default function AdminOrdersPage() {
   // Dispatch Email via API
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedOrder) return;
     if (!credentials.trim() && !downloadUrl.trim()) {
       showToast("Please provide credentials or download URL.", "error");
       return;
@@ -141,7 +160,7 @@ export default function AdminOrdersPage() {
 
     setIsSending(true);
     try {
-      const res = await fetch("/api/admin/send-delivery-email", {
+      await fetch("/api/admin/send-delivery-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
