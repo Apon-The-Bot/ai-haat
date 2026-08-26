@@ -4,8 +4,12 @@ export interface Variation {
   id: string;
   name: string;
   priceBDT: number;
+  originalPriceBDT?: number;
   description?: string;
   inStock: boolean;
+  type?: "DURATION" | "CREDITS" | "TIER" | "CUSTOM";
+  duration?: string;
+  credits?: string | number;
 }
 
 export interface Review {
@@ -45,6 +49,7 @@ export interface Product {
     requirements?: string;
   };
   reviews: Review[];
+  deliveryMethod?: "EMAIL" | "WHATSAPP" | "MESSENGER";
   isFeatured?: boolean;
   isBestProduct?: boolean;
   isBestSelling?: boolean;
@@ -64,9 +69,23 @@ export interface User {
   email: string;
   phone: string;
   walletBalanceBDT: number;
-  isReseller: boolean;
-  role?: "USER" | "ADMIN" | "RESELLER";
+  role?: "USER" | "ADMIN";
   avatar?: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discountType: "PERCENTAGE" | "FLAT_BDT";
+  discountValue: number;
+  appliesTo: "ALL" | "SPECIFIC_PRODUCTS";
+  productIds: string[];
+  minOrderBDT: number;
+  maxDiscountBDT?: number;
+  usageLimit: number;
+  usedCount: number;
+  validUntil: string;
+  isActive: boolean;
 }
 
 export interface Order {

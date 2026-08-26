@@ -239,8 +239,15 @@ export default function ProductDetailPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs font-black text-[#FC5C03] mt-1">
-                        {formatPrice(v.priceBDT)}
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <span className="text-xs font-black text-[#FC5C03]">
+                          {formatPrice(v.priceBDT)}
+                        </span>
+                        {v.originalPriceBDT && v.originalPriceBDT > v.priceBDT && (
+                          <span className="text-[10px] text-gray-400 line-through font-semibold">
+                            {formatPrice(v.originalPriceBDT)}
+                          </span>
+                        )}
                       </div>
                       {v.description && (
                         <p className="text-[10px] text-[#7A8190] mt-1 line-clamp-1">

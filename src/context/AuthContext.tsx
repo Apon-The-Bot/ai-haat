@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { User } from "@/types";
 import { useToast } from "@/context/ToastContext";
 
@@ -21,33 +22,45 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const { showToast } = useToast();
 
+  // Sync NextAuth Google session with AuthContext
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem("aihaat_user");
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      } else {
-        // Provide a default demo logged-in profile if desired or start with guest
-        const defaultUser: User = {
-          id: "usr_10928",
-          name: "Sabbir Hossain",
-          email: "sabbir.aihaat@gmail.com",
-          phone: "+8801712345678",
-          walletBalanceBDT: 1540,
-          isReseller: false,
-        };
-        setUser(defaultUser);
-        localStorage.setItem("aihaat_user", JSON.stringify(defaultUser));
+    if (session?.user) {
+      const email = session.user.email?.toLowerCase() || "";
+      const isAdmin =
+        (session.user as any).role === "ADMIN" ||
+        email === "mdamanullahsheikhapon@gmail.com" ||
+        email === "admin@aihaat.com";
+
+      const googleUser: User = {
+        id: (session.user as any).id || `google-${email}`,
+        name: session.user.name || "AI Haat Member",
+        email: session.user.email || "",
+        phone: "+8801700000000",
+        avatar: session.user.image || undefined,
+        role: isAdmin ? "ADMIN" : "USER",
+        walletBalanceBDT: (session.user as any).walletBalanceBDT || 500,
+        isReseller: false,
+      };
+
+      setUser(googleUser);
+      localStorage.setItem("aihaat_user", JSON.stringify(googleUser));
+    } else {
+      try {
+        const savedUser = localStorage.getItem("aihaat_user");
+        if (savedUser) {
+          setUser(JSON.parse(savedUser));
+        }
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {
-      console.error(e);
     }
-  }, []);
+  }, [session]);
 
   const openLoginModal = () => {
     setAuthMode("login");
@@ -60,39 +73,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = (phoneOrEmail: string) => {
+    const email = phoneOrEmail.toLowerCase();
+    const isAdmin =
+      email === "mdamanullahsheikhapon@gmail.com" ||
+      email === "admin@aihaat.com";
+
     const loggedUser: User = {
       id: `usr_${Date.now().toString().slice(-5)}`,
-      name: phoneOrEmail.includes("@") ? phoneOrEmail.split("@")[0] : "AI Haat Member",
-      email: phoneOrEmail.includes("@") ? phoneOrEmail : `${phoneOrEmail}@user.aihaat.com`,
-      phone: phoneOrEmail.includes("@") ? "+8801700000000" : phoneOrEmail,
-      walletBalanceBDT: 2500,
+      name: email.includes("@") ? email.split("@")[0] : "AI Haat Member",
+      email: email.includes("@") ? email : `${email}@user.aihaat.com`,
+      phone: email.includes("@") ? "+8801700000000" : email,
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+      role: isAdmin ? "ADMIN" : "USER",
+      walletBalanceBDT: 500,
       isReseller: false,
     };
     setUser(loggedUser);
     localStorage.setItem("aihaat_user", JSON.stringify(loggedUser));
     setIsAuthModalOpen(false);
-    showToast(`Welcome back, ${loggedUser.name}!`, "success");
+    showToast(`স্বাগতম, ${loggedUser.name}!`, "success");
   };
 
   const register = (name: string, email: string, phone: string) => {
+    const isAdmin = email.toLowerCase() === "mdamanullahsheikhapon@gmail.com";
     const newUser: User = {
       id: `usr_${Date.now().toString().slice(-5)}`,
       name,
       email,
       phone,
-      walletBalanceBDT: 50, // Welcome bonus
+      role: isAdmin ? "ADMIN" : "USER",
+      walletBalanceBDT: 50,
       isReseller: false,
     };
     setUser(newUser);
     localStorage.setItem("aihaat_user", JSON.stringify(newUser));
     setIsAuthModalOpen(false);
-    showToast(`Account created! ৳50 Welcome bonus added to your wallet.`, "success");
+    showToast(`অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!`, "success");
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
     localStorage.removeItem("aihaat_user");
-    showToast("Logged out successfully", "info");
+    try {
+      await signOut({ redirect: false });
+    } catch {}
+    showToast("লগআউট সম্পন্ন হয়েছে", "info");
   };
 
   const rechargeWallet = (amountBDT: number) => {
@@ -103,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     setUser(updated);
     localStorage.setItem("aihaat_user", JSON.stringify(updated));
-    showToast(`Recharge successful! Added ৳${amountBDT.toLocaleString()} to wallet.`, "success");
+    showToast(`৳${amountBDT.toLocaleString()} ওয়ালেটে যোগ হয়েছে।`, "success");
   };
 
   return (

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Search, ShoppingBag, Menu, X, ChevronRight, Zap, User, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { PRODUCTS } from "@/data/products";
@@ -15,6 +16,8 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { currency, setCurrency, formatPrice } = useCurrency();
+  const { language, setLanguage } = useLanguage();
+  const isBn = language === "bn";
   const { totalItems, setIsCartOpen } = useCart();
   const { user, openLoginModal, logout } = useAuth();
 
@@ -53,7 +56,6 @@ export function Header() {
     { name: "SHOP", href: "/shop" },
     { name: "WALLET", href: "/wallet" },
     { name: "PROOFS", href: "/proofs" },
-    { name: "RESELLER", href: "/reseller" },
     { name: "BLOG", href: "/blog" },
     { name: "ORDER TRACKING", href: "/order-tracking" },
     { name: "PRODUCT REQUEST", href: "/product-request" },
@@ -259,10 +261,10 @@ export function Header() {
                 <Link
                   href="/dashboard"
                   className="flex items-center gap-1.5 h-8 px-3.5 bg-[#1A1D26] hover:bg-black text-white text-xs font-bold rounded-full transition-all"
-                  title="Client Dashboard"
+                  title="Dashboard"
                 >
                   <User className="w-3.5 h-3.5 text-[#FC5C03]" />
-                  <span>ড্যাশবোর্ড</span>
+                  <span>{isBn ? "ড্যাশবোর্ড" : "Dashboard"}</span>
                 </Link>
                 {(user.role === "ADMIN" || user.email === "mdamanullahsheikhapon@gmail.com") && (
                   <Link
@@ -279,9 +281,9 @@ export function Header() {
               <button
                 type="button"
                 onClick={openLoginModal}
-                className="hidden sm:flex w-[78px] h-8 bg-gradient-to-r from-[#FE7113] to-[#FC5C03] hover:from-[#FC5C03] hover:to-[#EC4001] text-white text-xs font-bold rounded-full shadow-xs hover:shadow-sm transition-all items-center justify-center"
+                className="hidden sm:flex w-[78px] h-8 bg-gradient-to-r from-[#FE7113] to-[#FC5C03] hover:from-[#FC5C03] hover:to-[#EC4001] text-white text-xs font-bold rounded-full shadow-xs hover:shadow-sm transition-all items-center justify-center cursor-pointer"
               >
-                Login
+                {isBn ? "লগইন" : "Login"}
               </button>
             )}
           </div>

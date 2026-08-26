@@ -18,8 +18,12 @@
 .DS_Store
 *.pem
 *.zip
-785146739*.jpg
-786564710*.jpg
+*.jpg
+*.png
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
 
 # debug
 npm-debug.log*

@@ -7,18 +7,18 @@ import {
   KeyRound,
   Wallet,
   ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
   Clock,
   Sparkles,
-  Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function DashboardOverviewPage() {
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
+  const { language } = useLanguage();
+  const isBn = language === "bn";
 
   const recentOrders = [
     {
@@ -26,7 +26,7 @@ export default function DashboardOverviewPage() {
       productName: "ChatGPT Plus (1 Month Shared)",
       amountBDT: 290,
       status: "DELIVERED",
-      date: "2026-08-25 14:15",
+      date: "Aug 25, 2026",
       hasKey: true,
     },
     {
@@ -34,7 +34,7 @@ export default function DashboardOverviewPage() {
       productName: "Canva Pro (1 Year Personal)",
       amountBDT: 499,
       status: "DELIVERED",
-      date: "2026-08-20 11:35",
+      date: "Aug 20, 2026",
       hasKey: true,
     },
     {
@@ -42,7 +42,7 @@ export default function DashboardOverviewPage() {
       productName: "NordVPN Ultimate (1 Year)",
       amountBDT: 950,
       status: "PROCESSING",
-      date: "2026-08-26 19:20",
+      date: "Aug 26, 2026",
       hasKey: false,
     },
   ];
@@ -58,10 +58,12 @@ export default function DashboardOverviewPage() {
             <span>AI Haat Client Hub</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black">
-            স্বাগতম, {user?.name || "Amanullah Sheikh"}!
+            {isBn ? `স্বাগতম, ${user?.name || "Member"}!` : `Welcome back, ${user?.name || "Member"}!`}
           </h1>
           <p className="text-xs text-gray-300 mt-1 max-w-md">
-            আপনার সকল ডিজিটাল প্রোডাক্ট, লাইসেন্স কি এবং ওয়ালেট ব্যালেন্স এক জায়গা থেকে ম্যানেজ করুন।
+            {isBn
+              ? "আপনার সমস্ত ডিজিটাল প্রোডাক্ট, লাইসেন্স কি এবং ওয়ালেট এক জায়গা থেকে নিয়ন্ত্রণ করুন।"
+              : "Manage your active subscriptions, license keys, and wallet balance from one place."}
           </p>
         </div>
 
@@ -71,14 +73,14 @@ export default function DashboardOverviewPage() {
             className="px-4 py-2.5 bg-white text-[#1A1D26] hover:bg-[#FFF2E8] hover:text-[#FC5C03] text-xs font-bold rounded-xl shadow-xs transition-colors shrink-0 flex items-center gap-1.5"
           >
             <KeyRound className="w-3.5 h-3.5 text-[#FC5C03]" />
-            <span>ডিজিটাল ভল্ট</span>
+            <span>{isBn ? "ডিজিটাল ভল্ট" : "Digital Vault"}</span>
           </Link>
           <Link
             href="/shop"
             className="px-4 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-xl shadow-xs transition-colors shrink-0 flex items-center gap-1.5"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
-            <span>শপ ব্রাউজ</span>
+            <span>{isBn ? "শপ ব্রাউজ" : "Browse Shop"}</span>
           </Link>
         </div>
       </div>
@@ -92,10 +94,12 @@ export default function DashboardOverviewPage() {
             <ShoppingBag className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs font-bold text-[#7A8190] block">মোট অর্ডার</span>
-            <span className="text-2xl font-black text-[#1A1D26]">৩ টি</span>
+            <span className="text-xs font-bold text-[#7A8190] block">
+              {isBn ? "মোট অর্ডার" : "Total Orders"}
+            </span>
+            <span className="text-2xl font-black text-[#1A1D26]">3</span>
             <Link href="/dashboard/orders" className="text-[11px] text-[#FC5C03] font-bold hover:underline block mt-0.5">
-              অর্ডার তালিকা →
+              {isBn ? "অর্ডার তালিকা →" : "View Orders →"}
             </Link>
           </div>
         </div>
@@ -106,10 +110,12 @@ export default function DashboardOverviewPage() {
             <KeyRound className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs font-bold text-[#7A8190] block">ভল্টে সংরক্ষিত কি</span>
-            <span className="text-2xl font-black text-[#1A1D26]">২ টি</span>
+            <span className="text-xs font-bold text-[#7A8190] block">
+              {isBn ? "ভল্টে সংরক্ষিত কি" : "Keys in Vault"}
+            </span>
+            <span className="text-2xl font-black text-[#1A1D26]">2</span>
             <Link href="/dashboard/keys" className="text-[11px] text-emerald-600 font-bold hover:underline block mt-0.5">
-              ভল্ট ওপেন করুন →
+              {isBn ? "ভল্ট ওপেন করুন →" : "Open Vault →"}
             </Link>
           </div>
         </div>
@@ -120,12 +126,14 @@ export default function DashboardOverviewPage() {
             <Wallet className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs font-bold text-[#7A8190] block">ওয়ালেট ব্যালেন্স</span>
+            <span className="text-xs font-bold text-[#7A8190] block">
+              {isBn ? "ওয়ালেট ব্যালেন্স" : "Wallet Balance"}
+            </span>
             <span className="text-2xl font-black text-[#FC5C03]">
               {formatPrice(user?.walletBalanceBDT || 500)}
             </span>
             <Link href="/dashboard/wallet" className="text-[11px] text-[#FC5C03] font-bold hover:underline block mt-0.5">
-              রিচার্জ করুন →
+              {isBn ? "রিচার্জ করুন →" : "Top Up →"}
             </Link>
           </div>
         </div>
@@ -137,13 +145,15 @@ export default function DashboardOverviewPage() {
         <div className="flex items-center justify-between pb-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-[#FC5C03]" />
-            <h3 className="text-sm font-bold text-[#1A1D26]">সাম্প্রতিক অর্ডারসমূহ</h3>
+            <h3 className="text-sm font-bold text-[#1A1D26]">
+              {isBn ? "সাম্প্রতিক অর্ডারসমূহ" : "Recent Orders"}
+            </h3>
           </div>
           <Link
             href="/dashboard/orders"
             className="text-xs font-bold text-[#FC5C03] hover:underline flex items-center gap-0.5"
           >
-            <span>সব দেখুন</span>
+            <span>{isBn ? "সব দেখুন" : "View All"}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -161,7 +171,7 @@ export default function DashboardOverviewPage() {
                         : "bg-amber-100 text-amber-800"
                     }`}
                   >
-                    {order.status === "DELIVERED" ? "ডেলিভার্ড" : "প্রসেসিং হচ্ছে"}
+                    {order.status === "DELIVERED" ? (isBn ? "ডেলিভার্ড" : "Delivered") : (isBn ? "প্রসেসিং" : "Processing")}
                   </span>
                 </div>
                 <h4 className="text-xs font-bold text-[#1A1D26] mt-1">{order.productName}</h4>
@@ -178,7 +188,7 @@ export default function DashboardOverviewPage() {
                     className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 flex items-center gap-1 transition-colors"
                   >
                     <KeyRound className="w-3.5 h-3.5" />
-                    <span>কি দেখুন</span>
+                    <span>{isBn ? "কি দেখুন" : "View Keys"}</span>
                   </Link>
                 )}
               </div>

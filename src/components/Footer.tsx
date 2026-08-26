@@ -126,11 +126,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/reseller" className="hover:text-[#FC5C03] transition-colors">
-                  রিসেলার হোলসেল প্রোগ্রাম
-                </Link>
-              </li>
-              <li>
                 <Link href="/product-request" className="hover:text-[#FC5C03] transition-colors">
                   কাস্টম প্রোডাক্ট রিকোয়েস্ট
                 </Link>

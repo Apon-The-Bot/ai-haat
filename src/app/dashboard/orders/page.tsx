@@ -2,11 +2,15 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ShoppingBag, KeyRound, Search, ExternalLink, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { ShoppingBag, KeyRound, Search, Clock } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function DashboardOrdersPage() {
   const { formatPrice } = useCurrency();
+  const { language } = useLanguage();
+  const isBn = language === "bn";
+
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
 
@@ -19,7 +23,7 @@ export default function DashboardOrdersPage() {
       paymentMethod: "bKash",
       trxId: "BL90X84Q",
       status: "DELIVERED",
-      date: "2026-08-25 14:15",
+      date: "Aug 25, 2026 14:15",
       deliveredKey: "Email: user12@gptaccess.net | Pass: SmartGpt2026! | Pin: 4092",
     },
     {
@@ -30,7 +34,7 @@ export default function DashboardOrdersPage() {
       paymentMethod: "Nagad",
       trxId: "NG882K19",
       status: "DELIVERED",
-      date: "2026-08-20 11:35",
+      date: "Aug 20, 2026 11:35",
       deliveredKey: "Invite Link: https://canva.com/brand/join?token=AH-PRO-2026-INVITE",
     },
     {
@@ -41,7 +45,7 @@ export default function DashboardOrdersPage() {
       paymentMethod: "Wallet",
       trxId: "WLT-89190",
       status: "PROCESSING",
-      date: "2026-08-26 19:20",
+      date: "Aug 26, 2026 19:20",
       deliveredKey: null,
     },
   ];
@@ -60,8 +64,12 @@ export default function DashboardOrdersPage() {
       {/* Header & Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-[#E8E8EE] shadow-2xs">
         <div>
-          <h1 className="text-base sm:text-lg font-black text-[#1A1D26]">আমার অর্ডারসমূহ (My Orders)</h1>
-          <p className="text-xs text-[#7A8190]">আপনার অর্ডারের বর্তমান অবস্থা এবং ইনভয়েস হিস্ট্রি</p>
+          <h1 className="text-base sm:text-lg font-black text-[#1A1D26]">
+            {isBn ? "আমার অর্ডারসমূহ" : "My Orders"}
+          </h1>
+          <p className="text-xs text-[#7A8190]">
+            {isBn ? "অর্ডারের বর্তমান অবস্থা এবং ইনভয়েস হিস্ট্রি" : "Track real-time order status and access your credentials."}
+          </p>
         </div>
 
         {/* Filter Pills */}
@@ -74,7 +82,11 @@ export default function DashboardOrdersPage() {
                 filter === f ? "bg-[#FC5C03] text-white shadow-2xs" : "text-gray-600 hover:text-black"
               }`}
             >
-              {f === "ALL" ? "সবগুলো" : f === "DELIVERED" ? "ডেলিভার্ড" : "প্রসেসিং"}
+              {f === "ALL"
+                ? isBn ? "সবগুলো" : "All"
+                : f === "DELIVERED"
+                ? isBn ? "ডেলিভার্ড" : "Delivered"
+                : isBn ? "প্রসেসিং" : "Processing"}
             </button>
           ))}
         </div>
@@ -85,7 +97,7 @@ export default function DashboardOrdersPage() {
         <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
         <input
           type="text"
-          placeholder="অর্ডার নাম্বার বা প্রোডাক্টের নাম দিয়ে খুঁজুন..."
+          placeholder={isBn ? "অর্ডার নাম্বার বা প্রোডাক্টের নাম দিয়ে খুঁজুন..." : "Search by order ID or product name..."}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl border border-[#E8E8EE] text-xs focus:outline-hidden focus:border-[#FC5C03]"
@@ -97,7 +109,9 @@ export default function DashboardOrdersPage() {
         {filteredOrders.length === 0 ? (
           <div className="bg-white rounded-2xl border border-[#E8E8EE] p-8 text-center space-y-2">
             <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto" />
-            <p className="text-xs text-gray-500 font-bold">কোনো অর্ডার পাওয়া যায়নি।</p>
+            <p className="text-xs text-gray-500 font-bold">
+              {isBn ? "কোনো অর্ডার পাওয়া যায়নি।" : "No orders found."}
+            </p>
           </div>
         ) : (
           filteredOrders.map((order) => (
@@ -115,7 +129,7 @@ export default function DashboardOrdersPage() {
                         : "bg-amber-100 text-amber-800"
                     }`}
                   >
-                    {order.status === "DELIVERED" ? "ডেলিভারি সম্পন্ন" : "প্রসেসিং হচ্ছে"}
+                    {order.status === "DELIVERED" ? (isBn ? "ডেলিভারি সম্পন্ন" : "Delivered") : (isBn ? "প্রসেসিং হচ্ছে" : "Processing")}
                   </span>
                 </div>
                 <span className="text-[11px] text-[#7A8190]">{order.date}</span>
@@ -125,16 +139,18 @@ export default function DashboardOrdersPage() {
                 <h3 className="text-sm font-bold text-[#1A1D26]">{order.productName}</h3>
                 <span className="text-xs text-gray-500">{order.variation}</span>
                 <div className="flex items-center gap-2 text-[11px] text-[#7A8190] mt-1">
-                  <span>মেথড: <b>{order.paymentMethod}</b></span>
+                  <span>{isBn ? "পেমেন্ট" : "Payment"}: <b>{order.paymentMethod}</b></span>
                   <span>•</span>
                   <span>TrxID: <code>{order.trxId}</code></span>
                 </div>
               </div>
 
-              {/* Bottom Row: Price on left, Action on right */}
+              {/* Bottom Row */}
               <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
                 <div>
-                  <span className="text-[10px] text-gray-400 block uppercase font-semibold">মূল্য</span>
+                  <span className="text-[10px] text-gray-400 block uppercase font-semibold">
+                    {isBn ? "মূল্য" : "Total"}
+                  </span>
                   <span className="text-sm sm:text-base font-black text-[#FC5C03]">
                     {formatPrice(order.amountBDT)}
                   </span>
@@ -147,12 +163,12 @@ export default function DashboardOrdersPage() {
                       className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 flex items-center gap-1.5 transition-colors"
                     >
                       <KeyRound className="w-3.5 h-3.5" />
-                      <span>ভল্ট থেকে কি নিন</span>
+                      <span>{isBn ? "ভল্ট থেকে কি নিন" : "View Keys"}</span>
                     </Link>
                   ) : (
                     <span className="text-[11px] text-amber-700 font-semibold flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>৫-১৫ মিনিটে পাবেন</span>
+                      <span>{isBn ? "৫-১৫ মিনিটে পাবেন" : "5-15 mins delivery"}</span>
                     </span>
                   )}
                 </div>

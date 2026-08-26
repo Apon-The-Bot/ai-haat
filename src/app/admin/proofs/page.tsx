@@ -15,9 +15,9 @@ export default function AdminProofsPage() {
   const [customerNote, setCustomerNote] = useState("");
 
   const handleDelete = (id: string) => {
-    if (confirm("আপনি কি নিশ্চিত এই প্রুফটি মুছে ফেলতে চান?")) {
+    if (confirm("Are you sure you want to delete this delivery proof?")) {
       setProofList((prev) => prev.filter((p) => p.id !== id));
-      showToast("প্রুফ মুছে ফেলা হয়েছে।", "success");
+      showToast("Delivery proof removed.", "success");
     }
   };
 
@@ -29,14 +29,14 @@ export default function AdminProofsPage() {
       productName,
       amountBDT: Number(amount) || 290,
       type: "Subscription",
-      date: "আজকে",
+      date: "Today",
       image: "https://images.unsplash.com/photo-1556742049-0a67e557224f?w=400",
-      customerNote: customerNote || "ইনস্ট্যান্ট ডেলিভারি পেয়েছি। অসাধারণ সার্ভিস!",
+      customerNote: customerNote || "Instant delivery received within 5 minutes. Excellent support!",
     };
 
     setProofList([newProof as any, ...proofList]);
     setIsAddModalOpen(false);
-    showToast("নতুন ডেলিভারি প্রুফ সফলভাবে যোগ হয়েছে!", "success");
+    showToast("New delivery proof published!", "success");
     setOrderId("");
     setProductName("");
     setAmount("");
@@ -47,147 +47,138 @@ export default function AdminProofsPage() {
     <div className="space-y-6">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <h1 className="text-xl font-black text-white">কাস্টমার প্রুফ ও রিভিউ (Proofs & Reviews)</h1>
-          <p className="text-xs text-slate-400">সফল ডেলিভারির প্রমাণপত্র ও কাস্টমার রিভিউ মডারেশন করুন</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900">Delivery Proofs & Reviews</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Publish and manage verified customer delivery screenshots and reviews.</p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 self-start sm:self-auto"
+          className="px-4 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>+ নতুন প্রুফ যুক্ত করুন</span>
+          <span>Add Delivery Proof</span>
         </button>
       </div>
 
-      {/* Proofs Table */}
-      <div className="bg-slate-950/80 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
-              <tr>
-                <th className="py-3.5 px-4">অর্ডার আইডি</th>
-                <th className="py-3.5 px-4">প্রোডাক্ট</th>
-                <th className="py-3.5 px-4">মূল্য</th>
-                <th className="py-3.5 px-4">কাস্টমার মন্তব্য</th>
-                <th className="py-3.5 px-4">তারিখ</th>
-                <th className="py-3.5 px-4 text-right">অ্যাকশন</th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-slate-800/80 text-slate-300">
-              {proofList.map((p) => (
-                <tr key={p.id} className="hover:bg-slate-900/50 transition-colors">
-                  <td className="py-3.5 px-4 font-mono font-bold text-white">
-                    {p.orderId}
-                  </td>
-
-                  <td className="py-3.5 px-4 font-bold text-slate-200">
-                    {p.productName}
-                  </td>
-
-                  <td className="py-3.5 px-4 font-bold text-[#FC5C03]">
-                    ৳{p.amountBDT}
-                  </td>
-
-                  <td className="py-3.5 px-4 text-slate-400 max-w-xs truncate">
-                    "{p.customerNote}"
-                  </td>
-
-                  <td className="py-3.5 px-4 text-slate-500">
-                    {p.date}
-                  </td>
-
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={() => handleDelete(p.id)}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-950 text-slate-400 hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Add Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white">+ নতুন ডেলিভারি প্রুফ যোগ করুন</h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+      {/* Grid of Proofs (White Theme) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {proofList.map((proof) => (
+          <div
+            key={proof.id}
+            className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-xs relative group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-[#FC5C03]">{proof.orderId}</span>
+              <span className="text-[10px] text-slate-400 font-mono">{proof.date}</span>
             </div>
 
-            <form onSubmit={handleAddProof} className="space-y-3.5">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-300 block mb-1">অর্ডার নাম্বার</label>
-                  <input
-                    type="text"
-                    placeholder="AH-89211"
-                    value={orderId}
-                    onChange={(e) => setOrderId(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-300 block mb-1">মূল্য (BDT) *</label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="290"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white"
-                  />
-                </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900">{proof.productName}</h4>
+              <span className="text-xs font-bold text-emerald-600">৳{proof.amountBDT}</span>
+            </div>
+
+            <p className="text-xs text-slate-600 italic bg-slate-50 p-3 rounded-xl border border-slate-200">
+              &ldquo;{proof.customerNote}&rdquo;
+            </p>
+
+            <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+              <div className="flex text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+                ))}
               </div>
 
+              <button
+                onClick={() => handleDelete(proof.id)}
+                className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                title="Delete Proof"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add Proof Modal (White Theme) */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-900">Add Verified Customer Proof</h3>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-slate-400 hover:text-black cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddProof} className="space-y-4">
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">প্রোডাক্টের নাম *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Product Name *
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="ChatGPT Plus (Shared Profile)"
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white"
+                  placeholder="e.g. ChatGPT Plus (1 Month)"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Order ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={orderId}
+                    onChange={(e) => setOrderId(e.target.value)}
+                    placeholder="AH-98214"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Amount (৳ BDT) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="290"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">কাস্টমার মন্তব্য / রিভিউ *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Customer Feedback / Review Note
+                </label>
                 <textarea
-                  rows={2}
-                  required
-                  placeholder="ইনস্ট্যান্ট ডেলিভারি পেয়েছি। সার্ভিস অসাধারণ!"
+                  rows={3}
                   value={customerNote}
                   onChange={(e) => setCustomerNote(e.target.value)}
-                  className="w-full p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white"
+                  placeholder="Instant delivery received within 5 minutes..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
                 />
               </div>
 
-              <div className="pt-2 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="w-1/3 py-2.5 border border-slate-800 text-slate-300 font-bold text-xs rounded-xl"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="submit"
-                  className="w-2/3 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl"
-                >
-                  যোগ করুন (Save)
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Publish Proof
+              </button>
             </form>
           </div>
         </div>

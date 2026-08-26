@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FileText, Plus, Trash2, Edit, Search, Check, Sparkles } from "lucide-react";
+import { FileText, Plus, Trash2, Edit, Search, Check, Sparkles, X } from "lucide-react";
 import { BLOGS as initialBlogs } from "@/data/blogs";
 import { useToast } from "@/context/ToastContext";
 
@@ -14,9 +14,9 @@ export default function AdminBlogsPage() {
   const [excerpt, setExcerpt] = useState("");
 
   const handleDelete = (id: string) => {
-    if (confirm("আপনি কি নিশ্চিত এই ব্লগ পোস্টটি মুছে ফেলতে চান?")) {
+    if (confirm("Are you sure you want to delete this blog post?")) {
       setBlogsList((prev) => prev.filter((b) => b.id !== id));
-      showToast("ব্লগ পোস্ট মুছে ফেলা হয়েছে।", "success");
+      showToast("Blog post deleted successfully.", "success");
     }
   };
 
@@ -30,13 +30,13 @@ export default function AdminBlogsPage() {
       image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600",
       excerpt,
       content: excerpt,
-      date: "আজকে",
-      readTime: "4 মিনিট",
+      date: "Today",
+      readTime: "4 mins read",
     };
 
     setBlogsList([newBlog as any, ...blogsList]);
     setIsAddModalOpen(false);
-    showToast("নতুন ব্লগ সফলভাবে প্রকাশিত হয়েছে!", "success");
+    showToast("New blog article published!", "success");
     setTitle("");
     setExcerpt("");
   };
@@ -45,135 +45,118 @@ export default function AdminBlogsPage() {
     <div className="space-y-6">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <h1 className="text-xl font-black text-white">ব্লগ ও গাইড ম্যানেজার (Blog Manager)</h1>
-          <p className="text-xs text-slate-400">এআই ও টেক রিলেটেড আর্টিকেল এবং টিউটোরিয়াল প্রকাশ করুন</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900">Articles & Resource Guides</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Publish guides, AI prompt tips, and marketplace announcements.</p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 self-start sm:self-auto"
+          className="px-4 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>+ নতুন ব্লগ লিখুন</span>
+          <span>Write New Article</span>
         </button>
       </div>
 
-      {/* Blogs Table */}
-      <div className="bg-slate-950/80 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
-              <tr>
-                <th className="py-3.5 px-4">শিরোনাম</th>
-                <th className="py-3.5 px-4">ক্যাটাগরি</th>
-                <th className="py-3.5 px-4">পড়ার সময়</th>
-                <th className="py-3.5 px-4">তারিখ</th>
-                <th className="py-3.5 px-4 text-right">অ্যাকশন</th>
-              </tr>
-            </thead>
+      {/* Grid of Blogs (White Theme) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {blogsList.map((b) => (
+          <div
+            key={b.id}
+            className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-xs flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="px-2 py-0.5 bg-[#FFF2E8] border border-[#FC5C03]/20 rounded text-[10.5px] font-bold text-[#FC5C03]">
+                  {b.category}
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">{b.readTime}</span>
+              </div>
 
-            <tbody className="divide-y divide-slate-800/80 text-slate-300">
-              {blogsList.map((blog) => (
-                <tr key={blog.id} className="hover:bg-slate-900/50 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <span className="font-bold text-white block">{blog.title}</span>
-                    <span className="text-[10px] text-slate-500 font-mono">/blog/{blog.slug}</span>
-                  </td>
-
-                  <td className="py-3.5 px-4">
-                    <span className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded-md text-[10px] font-bold">
-                      {blog.category}
-                    </span>
-                  </td>
-
-                  <td className="py-3.5 px-4 text-slate-400">
-                    {blog.readTime}
-                  </td>
-
-                  <td className="py-3.5 px-4 text-slate-500">
-                    {blog.date}
-                  </td>
-
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={() => handleDelete(blog.id)}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-950 text-slate-400 hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Add Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white">+ নতুন ব্লগ প্রকাশ করুন</h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+              <h4 className="text-sm font-bold text-slate-900 leading-snug">{b.title}</h4>
+              <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{b.excerpt}</p>
             </div>
 
-            <form onSubmit={handleAddBlog} className="space-y-3.5">
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-[10px] text-slate-400 font-mono">{b.date}</span>
+              <button
+                onClick={() => handleDelete(b.id)}
+                className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                title="Delete Article"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add Blog Modal (White Theme) */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-900">Create New Article</h3>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-slate-400 hover:text-black cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddBlog} className="space-y-4">
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">ব্লগের শিরোনাম *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Article Title *
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="যেমন: চ্যাটজিপিটি প্লাস ব্যবহারের সেরা ৫টি টিপস"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white"
+                  placeholder="e.g. 10 Best ChatGPT Prompts for Programmers"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">ক্যাটাগরি</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Category
+                </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
                 >
                   <option value="AI & Tech">AI & Tech</option>
                   <option value="Tutorials">Tutorials</option>
-                  <option value="Software Guide">Software Guide</option>
-                  <option value="Security">Security</option>
+                  <option value="Offers & News">Offers & News</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">সংক্ষিপ্ত বিবরণ / কনটেন্ট *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Content / Summary *
+                </label>
                 <textarea
                   rows={4}
                   required
-                  placeholder="ব্লগ আর্টিকেলের মূল বিবরণ..."
                   value={excerpt}
                   onChange={(e) => setExcerpt(e.target.value)}
-                  className="w-full p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white"
+                  placeholder="Write your article summary and content here..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
                 />
               </div>
 
-              <div className="pt-2 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="w-1/3 py-2.5 border border-slate-800 text-slate-300 font-bold text-xs rounded-xl"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="submit"
-                  className="w-2/3 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl"
-                >
-                  প্রকাশ করুন (Publish)
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Publish Article
+              </button>
             </form>
           </div>
         </div>

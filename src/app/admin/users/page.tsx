@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Users, Search, ShieldCheck, UserCheck, Wallet, Plus, Check } from "lucide-react";
+import { Users, Search, ShieldCheck } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 
 export default function AdminUsersPage() {
@@ -28,9 +28,9 @@ export default function AdminUsersPage() {
     },
     {
       id: "usr-3",
-      name: "Tanvir Ahmed (Reseller)",
-      email: "tanvir.reseller@gmail.com",
-      role: "RESELLER",
+      name: "Tanvir Ahmed",
+      email: "tanvir.user@gmail.com",
+      role: "USER",
       walletBalance: 3200,
       ordersCount: 14,
       joinedDate: "2026-08-15",
@@ -43,7 +43,7 @@ export default function AdminUsersPage() {
     setUsers((prev) =>
       prev.map((u) => (u.id === id ? { ...u, role: newRole } : u))
     );
-    showToast(`ইউজার রোল ${newRole}-এ পরিবর্তন করা হয়েছে।`, "success");
+    showToast(`User role updated to ${newRole}.`, "success");
   };
 
   const filtered = users.filter(
@@ -56,49 +56,49 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <h1 className="text-xl font-black text-white">ইউজার ও রিসেলার ডিরেক্টরি (Users & Roles)</h1>
-          <p className="text-xs text-slate-400">সকল গ্রাহক, রিসেলার এবং এডমিন এক্সেস পরিচালনা করুন</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900">Users & Customers</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">View registered accounts, order volume, wallet balances, and admin privileges.</p>
         </div>
       </div>
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
         <input
           type="text"
-          placeholder="নাম বা ইমেইল দিয়ে খুঁজুন..."
+          placeholder="Search by customer name or email address..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-hidden focus:border-[#FC5C03]"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:border-[#FC5C03] shadow-2xs"
         />
       </div>
 
-      {/* Table */}
-      <div className="bg-slate-950/80 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
+      {/* Table (White Theme) */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
+          <table className="w-full text-left text-xs text-slate-700">
+            <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 uppercase tracking-wider text-[11px] font-bold">
               <tr>
-                <th className="py-3.5 px-4">ইউজার</th>
-                <th className="py-3.5 px-4">ইমেইল</th>
-                <th className="py-3.5 px-4">রোল (Role)</th>
-                <th className="py-3.5 px-4">ওয়ালেট ব্যালেন্স</th>
-                <th className="py-3.5 px-4">মোট অর্ডার</th>
-                <th className="py-3.5 px-4">যোগদানের তারিখ</th>
-                <th className="py-3.5 px-4 text-right">রোল পরিবর্তন</th>
+                <th className="py-3.5 px-4">Customer Name</th>
+                <th className="py-3.5 px-4">Email Address</th>
+                <th className="py-3.5 px-4">Role</th>
+                <th className="py-3.5 px-4">Wallet Balance</th>
+                <th className="py-3.5 px-4">Total Orders</th>
+                <th className="py-3.5 px-4">Member Since</th>
+                <th className="py-3.5 px-4 text-right">Assign Role</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-800/80 text-slate-300">
+            <tbody className="divide-y divide-slate-100 font-medium">
               {filtered.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-900/50 transition-colors">
-                  <td className="py-3.5 px-4 font-bold text-white">
+                <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="py-3.5 px-4 font-bold text-slate-900">
                     {u.name}
                   </td>
 
-                  <td className="py-3.5 px-4 font-mono text-slate-400">
+                  <td className="py-3.5 px-4 font-mono text-slate-500">
                     {u.email}
                   </td>
 
@@ -106,10 +106,8 @@ export default function AdminUsersPage() {
                     <span
                       className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
                         u.role === "ADMIN"
-                          ? "bg-purple-950 text-purple-400 border border-purple-800/40"
-                          : u.role === "RESELLER"
-                          ? "bg-blue-950 text-blue-400 border border-blue-800/40"
-                          : "bg-slate-800 text-slate-300"
+                          ? "bg-purple-100 text-purple-700 border border-purple-200"
+                          : "bg-slate-100 text-slate-600 border border-slate-200"
                       }`}
                     >
                       {u.role}
@@ -120,11 +118,11 @@ export default function AdminUsersPage() {
                     ৳{u.walletBalance}
                   </td>
 
-                  <td className="py-3.5 px-4 text-slate-400">
-                    {u.ordersCount} টি
+                  <td className="py-3.5 px-4 text-slate-700">
+                    {u.ordersCount} {u.ordersCount === 1 ? "Order" : "Orders"}
                   </td>
 
-                  <td className="py-3.5 px-4 text-slate-500">
+                  <td className="py-3.5 px-4 text-slate-400 font-mono text-[11px]">
                     {u.joinedDate}
                   </td>
 
@@ -132,10 +130,9 @@ export default function AdminUsersPage() {
                     <select
                       value={u.role}
                       onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                      className="px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-300"
+                      className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 cursor-pointer shadow-2xs"
                     >
                       <option value="USER">USER</option>
-                      <option value="RESELLER">RESELLER</option>
                       <option value="ADMIN">ADMIN</option>
                     </select>
                   </td>

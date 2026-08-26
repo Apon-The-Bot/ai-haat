@@ -1,15 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, AlertCircle, Copy, Check } from "lucide-react";
+import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, Copy, Check, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useToast } from "@/context/ToastContext";
 
 export default function DashboardWalletPage() {
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
+  const { language } = useLanguage();
   const { showToast } = useToast();
+  const isBn = language === "bn";
 
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
   const [method, setMethod] = useState("bkash");
@@ -33,7 +36,7 @@ export default function DashboardWalletPage() {
       method: "bKash",
       trxId: "BL90X84Q",
       status: "APPROVED",
-      date: "2026-08-25 12:30",
+      date: "Aug 25, 2026 12:30",
     },
     {
       id: "TX-902",
@@ -42,7 +45,7 @@ export default function DashboardWalletPage() {
       method: "Wallet Payment",
       trxId: "AH-89211",
       status: "APPROVED",
-      date: "2026-08-25 14:15",
+      date: "Aug 25, 2026 14:15",
     },
   ];
 
@@ -56,7 +59,7 @@ export default function DashboardWalletPage() {
   const handleSubmitRecharge = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !trxId) {
-      showToast("দয়া করে টাকার পরিমাণ এবং TrxID প্রদান করুন।", "error");
+      showToast(isBn ? "দয়া করে টাকার পরিমাণ এবং TrxID প্রদান করুন।" : "Please provide amount and TrxID.", "error");
       return;
     }
 
@@ -66,9 +69,9 @@ export default function DashboardWalletPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userName: user?.name || "Amanullah Sheikh",
+          userName: user?.name || "Rhythm Khan",
           userPhone: senderNumber || "017XXXXXXXX",
-          userEmail: user?.email || "customer@aihaat.com",
+          userEmail: user?.email || "rhythmkhan04@gmail.com",
           amountBDT: Number(amount),
           method,
           senderNumber,
@@ -77,15 +80,20 @@ export default function DashboardWalletPage() {
       });
 
       if (res.ok) {
-        showToast("রিচার্জ রিকোয়েস্ট জমা হয়েছে! এডমিন যাচাই করে ব্যালেন্স যোগ করবেন।", "success");
+        showToast(
+          isBn
+            ? "রিচার্জ রিকোয়েস্ট জমা হয়েছে! এডমিন যাচাই করে ব্যালেন্স যোগ করবেন।"
+            : "Top-up request submitted! Admin will verify and credit your balance shortly.",
+          "success"
+        );
         setIsRechargeModalOpen(false);
         setTrxId("");
         setSenderNumber("");
       } else {
-        showToast("রিকোয়েস্ট পাঠাতে সমস্যা হয়েছে।", "error");
+        showToast(isBn ? "রিকোয়েস্ট পাঠাতে সমস্যা হয়েছে।" : "Failed to submit request.", "error");
       }
     } catch {
-      showToast("সার্ভার ত্রুটি। আবার চেষ্টা করুন।", "error");
+      showToast(isBn ? "সার্ভার ত্রুটি। আবার চেষ্টা করুন।" : "Server error. Please try again.", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -98,30 +106,36 @@ export default function DashboardWalletPage() {
       <div className="bg-gradient-to-br from-[#1A1D26] via-[#232733] to-[#15171E] rounded-2xl p-6 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-5">
         <div>
           <span className="text-xs text-gray-400 font-bold uppercase tracking-wider block">
-            ডিজিটাল ওয়ালেট ব্যালেন্স
+            {isBn ? "ডিজিটাল ওয়ালেট ব্যালেন্স" : "Digital Wallet Balance"}
           </span>
           <div className="text-3xl sm:text-4xl font-black text-white mt-1">
             {formatPrice(user?.walletBalanceBDT || 500)}
           </div>
           <p className="text-xs text-gray-400 mt-1">
-            ওয়ালেটে ব্যালেন্স থাকলে যেকোনো সময় ১-ক্লিকে ইনস্ট্যান্ট অর্ডার সম্পন্ন করতে পারবেন।
+            {isBn
+              ? "ওয়ালেটে ব্যালেন্স থাকলে যেকোনো সময় ১-ক্লিকে ইনস্ট্যান্ট অর্ডার সম্পন্ন করতে পারবেন।"
+              : "Enjoy instant 1-click checkout for all digital subscriptions using wallet funds."}
           </p>
         </div>
 
         <button
           onClick={() => setIsRechargeModalOpen(true)}
-          className="px-6 py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 shrink-0"
+          className="px-6 py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
         >
           <PlusCircle className="w-4 h-4" />
-          <span>টাকা রিচার্জ করুন</span>
+          <span>{isBn ? "টাকা রিচার্জ করুন" : "Top Up Wallet"}</span>
         </button>
       </div>
 
       {/* Transaction History */}
       <div className="bg-white rounded-2xl border border-[#E8E8EE] p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-          <h3 className="text-sm font-bold text-[#1A1D26]">লেনদেনের ইতিহাস (Transactions)</h3>
-          <span className="text-xs text-gray-400">সর্বশেষ লেনদেন</span>
+          <h3 className="text-sm font-bold text-[#1A1D26]">
+            {isBn ? "লেনদেনের ইতিহাস" : "Recent Transactions"}
+          </h3>
+          <span className="text-xs text-gray-400">
+            {isBn ? "সর্বশেষ লেনদেন" : "Latest activity"}
+          </span>
         </div>
 
         <div className="space-y-3 divide-y divide-gray-100">
@@ -143,7 +157,9 @@ export default function DashboardWalletPage() {
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-[#1A1D26]">
-                    {tx.type === "DEPOSIT" ? `ওয়ালেট রিচার্জ (${tx.method})` : `প্রোডাক্ট ক্রয়`}
+                    {tx.type === "DEPOSIT"
+                      ? isBn ? `ওয়ালেট রিচার্জ (${tx.method})` : `Wallet Deposit (${tx.method})`
+                      : isBn ? "প্রোডাক্ট ক্রয়" : "Product Purchase"}
                   </h4>
                   <div className="flex items-center gap-2 text-[10.5px] text-[#7A8190]">
                     <span>TrxID: <code>{tx.trxId}</code></span>
@@ -159,11 +175,10 @@ export default function DashboardWalletPage() {
                     tx.type === "DEPOSIT" ? "text-emerald-600" : "text-[#1A1D26]"
                   }`}
                 >
-                  {tx.type === "DEPOSIT" ? "+" : "-"}
-                  {formatPrice(tx.amountBDT)}
+                  {tx.type === "DEPOSIT" ? `+${formatPrice(tx.amountBDT)}` : `-${formatPrice(tx.amountBDT)}`}
                 </span>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                  অনুমোদিত
+                <span className="text-[10px] text-emerald-600 font-bold uppercase">
+                  {tx.status}
                 </span>
               </div>
             </div>
@@ -171,122 +186,121 @@ export default function DashboardWalletPage() {
         </div>
       </div>
 
-      {/* Recharge Modal */}
+      {/* Top-up Recharge Modal */}
       {isRechargeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-gray-100">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="text-sm font-bold text-[#1A1D26]">ওয়ালেট রিচার্জ করুন</h3>
+              <h3 className="text-sm font-bold text-[#1A1D26]">
+                {isBn ? "ওয়ালেট রিচার্জ (Top Up)" : "Top Up Wallet"}
+              </h3>
               <button
                 onClick={() => setIsRechargeModalOpen(false)}
-                className="text-gray-400 hover:text-black text-sm"
+                className="p-1 rounded-full text-gray-400 hover:text-black cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Payment Method Selector */}
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { id: "bkash", name: "bKash", color: "#D12053" },
-                { id: "nagad", name: "Nagad", color: "#F7931E" },
-                { id: "rocket", name: "Rocket", color: "#8C3494" },
-              ].map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMethod(m.id)}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
-                    method === m.id
-                      ? "border-[#FC5C03] bg-[#FFF2E8] text-[#FC5C03]"
-                      : "border-gray-200 text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  {m.name}
-                </button>
-              ))}
-            </div>
+            <form onSubmit={handleSubmitRecharge} className="space-y-4">
+              {/* Payment Method Selector */}
+              <div>
+                <label className="block text-xs font-bold text-[#1A1D26] mb-1.5">
+                  {isBn ? "পেমেন্ট মাধ্যম সিলেক্ট করুন" : "Select Payment Method"}
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["bkash", "nagad", "rocket"].map((m) => (
+                    <button
+                      type="button"
+                      key={m}
+                      onClick={() => setMethod(m)}
+                      className={`py-2 px-3 rounded-xl border text-xs font-bold capitalize transition-all cursor-pointer ${
+                        method === m
+                          ? "border-[#FC5C03] bg-[#FFF2E8] text-[#FC5C03]"
+                          : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Account Info Box */}
-            <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-500 font-semibold">আমাদের {method.toUpperCase()} নাম্বার:</span>
+              {/* Number Copy Box */}
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-gray-500 uppercase font-semibold block">
+                    {method.toUpperCase()} {isBn ? "নাম্বার (Send Money)" : "Number (Send Money)"}
+                  </span>
+                  <span className="text-xs font-mono font-bold text-[#1A1D26]">
+                    {paymentNumbers[method as keyof typeof paymentNumbers]}
+                  </span>
+                </div>
                 <button
+                  type="button"
                   onClick={handleCopyNumber}
-                  className="text-[#FC5C03] font-bold hover:underline flex items-center gap-1 text-[11px]"
+                  className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-xs font-bold text-[#FC5C03] hover:bg-[#FFF2E8] transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   {copiedNumber ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedNumber ? "কপি হয়েছে!" : "কপি করুন"}</span>
+                  <span>{copiedNumber ? (isBn ? "কপি হয়েছে" : "Copied") : (isBn ? "কপি" : "Copy")}</span>
                 </button>
               </div>
-              <p className="font-mono font-bold text-sm text-[#1A1D26]">
-                {paymentNumbers[method as keyof typeof paymentNumbers]}
-              </p>
-              <p className="text-[11px] text-gray-500">
-                Send Money সম্পন্ন করে নিচের ফর্মে Transaction ID দিন।
-              </p>
-            </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmitRecharge} className="space-y-3">
+              {/* Amount Input */}
               <div>
-                <label className="text-[11px] font-bold text-gray-700 block mb-1">
-                  টাকার পরিমাণ (BDT) *
+                <label className="block text-xs font-bold text-[#1A1D26] mb-1">
+                  {isBn ? "টাকার পরিমাণ (BDT)" : "Amount (BDT)"}
                 </label>
                 <input
                   type="number"
                   required
                   min="50"
-                  placeholder="যেমন: 500"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E8EE] text-xs focus:outline-hidden focus:border-[#FC5C03]"
+                  placeholder="500"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-hidden focus:border-[#FC5C03]"
                 />
               </div>
 
+              {/* Sender Phone */}
               <div>
-                <label className="text-[11px] font-bold text-gray-700 block mb-1">
-                  যে নাম্বার থেকে পাঠিয়েছেন (প্রেরক নাম্বার)
+                <label className="block text-xs font-bold text-[#1A1D26] mb-1">
+                  {isBn ? "আপনার বিকাশ/নগদ নাম্বার" : "Sender Phone Number"}
                 </label>
                 <input
-                  type="tel"
-                  placeholder="017XXXXXXXX"
+                  type="text"
+                  required
                   value={senderNumber}
                   onChange={(e) => setSenderNumber(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E8EE] text-xs focus:outline-hidden focus:border-[#FC5C03]"
+                  placeholder="017XXXXXXXX"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-hidden focus:border-[#FC5C03]"
                 />
               </div>
 
+              {/* TrxID */}
               <div>
-                <label className="text-[11px] font-bold text-gray-700 block mb-1">
+                <label className="block text-xs font-bold text-[#1A1D26] mb-1">
                   Transaction ID (TrxID) *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="যেমন: BL90X84Q"
                   value={trxId}
                   onChange={(e) => setTrxId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E8EE] text-xs font-mono uppercase focus:outline-hidden focus:border-[#FC5C03]"
+                  placeholder="e.g. BL90X84Q"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs uppercase font-mono focus:outline-hidden focus:border-[#FC5C03]"
                 />
               </div>
 
-              <div className="pt-2 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsRechargeModalOpen(false)}
-                  className="w-1/3 py-2.5 border border-gray-200 text-gray-700 font-bold text-xs rounded-xl"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-2/3 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl disabled:opacity-50"
-                >
-                  {isSubmitting ? "পাঠানো হচ্ছে..." : "জমা দিন (Submit)"}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-60"
+              >
+                {isSubmitting
+                  ? isBn ? "প্রসেস হচ্ছে..." : "Submitting..."
+                  : isBn ? "রিচার্জ রিকোয়েস্ট পাঠান" : "Submit Top-Up Request"}
+              </button>
             </form>
           </div>
         </div>
