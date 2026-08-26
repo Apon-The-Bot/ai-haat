@@ -1,0 +1,12 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" rx="20" fill="url(#canvaGrad)"/>
+  <defs>
+    <linearGradient id="canvaGrad" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00C4CC"/>
+      <stop offset="0.5" stop-color="#4C6EF5"/>
+      <stop offset="1" stop-color="#7D2AE8"/>
+    </linearGradient>
+  </defs>
+  <text x="40" y="52" font-family="'Brush Script MT', 'Segoe UI', cursive, sans-serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Canva</text>
+  <path d="M56 22l4 7-6-2-4 5 1-6-5-3 6-1 2-6 2 6z" fill="#FFD700"/>
+</svg>

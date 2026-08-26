@@ -1,0 +1,6 @@
+<svg width="140" height="40" viewBox="0 0 140 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="140" height="40" rx="8" fill="#FFFFFF"/>
+    <circle cx="24" cy="20" r="10" fill="#00C4CC" fill-opacity="0.15"/>
+    <circle cx="24" cy="20" r="5" fill="#00C4CC"/>
+    <text x="44" y="24" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#1A1D26">Canva</text>
+  </svg>

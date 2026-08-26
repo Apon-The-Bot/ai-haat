@@ -1,0 +1,11 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" rx="16" fill="#FFF9F5"/>
+  <rect x="1" y="1" width="398" height="398" rx="15" stroke="#E8E8EE" stroke-width="2"/>
+  <g transform="translate(150, 130)">
+    <path d="M38 12L12 76H26L45 28L54 50H42L36 64H60L65 76H78L52 12H38Z" fill="#1A1D26"/>
+    <path d="M48 36H78V48H64V64H78V76H48V64H52V48H48V36Z" fill="#FC5C03"/>
+    <polygon points="36,64 48,36 60,64" fill="#FC5C03"/>
+  </g>
+  <text x="200" y="250" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800" fill="#1A1D26" text-anchor="middle">AI Haat</text>
+  <text x="200" y="275" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#7A8190" text-anchor="middle">PREMIUM DIGITAL PRODUCT</text>
+</svg>

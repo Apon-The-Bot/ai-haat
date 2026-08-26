@@ -1,0 +1,13 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" rx="20" fill="url(#cgGrad)"/>
+  <defs>
+    <linearGradient id="cgGrad" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10A37F"/>
+      <stop offset="1" stop-color="#0A7C5F"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(18, 18) scale(1.1)">
+    <path d="M38.5 17.5c-.8-4.5-4.2-7.8-8.7-8.4-4.8-.7-9.5 1.7-11.6 5.9-2.7-.8-5.7-.3-8 1.4-3 2.2-4.5 5.9-3.9 9.6-3.8 2.2-5.7 6.7-4.6 11 1.2 4.7 5.3 8 10.1 8.2.8 4.5 4.2 7.8 8.7 8.4 4.8.7 9.5-1.7 11.6-5.9 2.7.8 5.7.3 8-1.4 3-2.2 4.5-5.9 3.9-9.6 3.8-2.2 5.7-6.7 4.6-11-1.2-4.7-5.3-8-10.1-8.2z" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="20" cy="20" r="4" fill="#FFFFFF"/>
+  </g>
+</svg>

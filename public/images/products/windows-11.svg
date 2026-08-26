@@ -1,0 +1,30 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="400" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EFF6FF"/>
+      <stop offset="1" stop-color="#DBEAFE"/>
+    </linearGradient>
+    <linearGradient id="geminiGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4285F4"/>
+      <stop offset="0.5" stop-color="#9B72CF"/>
+      <stop offset="1" stop-color="#D96570"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="16" fill="url(#bgGrad)"/>
+  <rect x="1" y="1" width="398" height="398" rx="15" stroke="#E8E8EE" stroke-width="1.5"/>
+  
+  <g transform="translate(24, 24)">
+    <rect width="88" height="22" rx="6" fill="#1A1D26"/>
+    <text x="44" y="15" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">LIFETIME</text>
+  </g>
+  
+      <rect x="155" y="135" width="90" height="90" rx="18" fill="#0078D4"/>
+      <path d="M165 145h32v32h-32zm36 0h32v32h-32zm-36 36h32v32h-32zm36 0h32v32h-32z" fill="#FFFFFF"/>
+    
+  <text x="200" y="295" font-family="system-ui, -apple-system, sans-serif" font-size="19" font-weight="800" fill="#1A1D26" text-anchor="middle">Windows 11 Pro</text>
+  <text x="200" y="322" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#7A8190" text-anchor="middle">Genuine Retail License Key</text>
+  <g transform="translate(160, 345)">
+    <rect width="80" height="20" rx="10" fill="#FFF2E8"/>
+    <text x="40" y="14" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#FC5C03" text-anchor="middle">OFFICIAL</text>
+  </g>
+</svg>

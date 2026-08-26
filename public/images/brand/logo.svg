@@ -1,0 +1,14 @@
+<svg width="180" height="50" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lhGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FE7113" />
+      <stop offset="100%" stop-color="#FC5C03" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(4, 5) scale(0.44)">
+    <path d="M38 12L12 76H26L45 28L54 50H42L36 64H60L65 76H78L52 12H38Z" fill="#1A1D26"/>
+    <path d="M48 36H78V48H64V64H78V76H48V64H52V48H48V36Z" fill="url(#lhGrad)"/>
+    <polygon points="36,64 48,36 60,64" fill="url(#lhGrad)"/>
+  </g>
+  <text x="48" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="900" fill="#1A1D26">AI <tspan fill="#FC5C03">Haat</tspan></text>
+</svg>

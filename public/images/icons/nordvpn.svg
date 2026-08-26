@@ -1,0 +1,14 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" rx="20" fill="url(#nordGrad)"/>
+  <defs>
+    <linearGradient id="nordGrad" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4687FF"/>
+      <stop offset="1" stop-color="#1B5BFF"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(18, 18) scale(1.1)">
+    <path d="M20 6l16 7v13c0 10-7 18-16 21-9-3-16-11-16-21V13l16-7z" fill="#FFFFFF"/>
+    <path d="M20 12l10 5v9c0 6-4 12-10 14-6-2-10-8-10-14v-9l10-5z" fill="#1B5BFF"/>
+    <path d="M20 16l6 3v6c0 4-2 7-6 9-4-2-6-5-6-9v-6l6-3z" fill="#FFFFFF"/>
+  </g>
+</svg>
