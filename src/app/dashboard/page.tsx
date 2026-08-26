@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   ShoppingBag,
@@ -20,32 +20,7 @@ export default function DashboardOverviewPage() {
   const { language } = useLanguage();
   const isBn = language === "bn";
 
-  const recentOrders = [
-    {
-      id: "AH-89211",
-      productName: "ChatGPT Plus (1 Month Shared)",
-      amountBDT: 290,
-      status: "DELIVERED",
-      date: "Aug 25, 2026",
-      hasKey: true,
-    },
-    {
-      id: "AH-89204",
-      productName: "Canva Pro (1 Year Personal)",
-      amountBDT: 499,
-      status: "DELIVERED",
-      date: "Aug 20, 2026",
-      hasKey: true,
-    },
-    {
-      id: "AH-89190",
-      productName: "NordVPN Ultimate (1 Year)",
-      amountBDT: 950,
-      status: "PROCESSING",
-      date: "Aug 26, 2026",
-      hasKey: false,
-    },
-  ];
+  const [recentOrders, setRecentOrders] = useState<{id:string;productName:string;amountBDT:number;status:string;date:string;hasKey:boolean}[]>([]);
 
   return (
     <div className="space-y-6">
@@ -97,7 +72,7 @@ export default function DashboardOverviewPage() {
             <span className="text-xs font-bold text-[#7A8190] block">
               {isBn ? "মোট অর্ডার" : "Total Orders"}
             </span>
-            <span className="text-2xl font-black text-[#1A1D26]">3</span>
+            <span className="text-2xl font-black text-[#1A1D26]">{recentOrders.length}</span>
             <Link href="/dashboard/orders" className="text-[11px] text-[#FC5C03] font-bold hover:underline block mt-0.5">
               {isBn ? "অর্ডার তালিকা →" : "View Orders →"}
             </Link>
@@ -113,7 +88,7 @@ export default function DashboardOverviewPage() {
             <span className="text-xs font-bold text-[#7A8190] block">
               {isBn ? "ভল্টে সংরক্ষিত কি" : "Keys in Vault"}
             </span>
-            <span className="text-2xl font-black text-[#1A1D26]">2</span>
+            <span className="text-2xl font-black text-[#1A1D26]">0</span>
             <Link href="/dashboard/keys" className="text-[11px] text-emerald-600 font-bold hover:underline block mt-0.5">
               {isBn ? "ভল্ট ওপেন করুন →" : "Open Vault →"}
             </Link>
@@ -130,7 +105,7 @@ export default function DashboardOverviewPage() {
               {isBn ? "ওয়ালেট ব্যালেন্স" : "Wallet Balance"}
             </span>
             <span className="text-2xl font-black text-[#FC5C03]">
-              {formatPrice(user?.walletBalanceBDT || 500)}
+              {formatPrice(user?.walletBalanceBDT || 0)}
             </span>
             <Link href="/dashboard/wallet" className="text-[11px] text-[#FC5C03] font-bold hover:underline block mt-0.5">
               {isBn ? "রিচার্জ করুন →" : "Top Up →"}
@@ -159,41 +134,48 @@ export default function DashboardOverviewPage() {
         </div>
 
         <div className="space-y-3 divide-y divide-gray-100">
-          {recentOrders.map((order) => (
-            <div key={order.id} className="pt-3 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-xs text-[#1A1D26]">{order.id}</span>
-                  <span
-                    className={`px-2 py-0.5 text-[9.5px] font-bold rounded-md uppercase ${
-                      order.status === "DELIVERED"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
-                    {order.status === "DELIVERED" ? (isBn ? "ডেলিভার্ড" : "Delivered") : (isBn ? "প্রসেসিং" : "Processing")}
-                  </span>
-                </div>
-                <h4 className="text-xs font-bold text-[#1A1D26] mt-1">{order.productName}</h4>
-                <span className="text-[10.5px] text-[#7A8190]">{order.date}</span>
-              </div>
-
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <span className="text-xs font-extrabold text-[#FC5C03]">
-                  {formatPrice(order.amountBDT)}
-                </span>
-                {order.hasKey && (
-                  <Link
-                    href="/dashboard/keys"
-                    className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 flex items-center gap-1 transition-colors"
-                  >
-                    <KeyRound className="w-3.5 h-3.5" />
-                    <span>{isBn ? "কি দেখুন" : "View Keys"}</span>
-                  </Link>
-                )}
-              </div>
+          {recentOrders.length === 0 ? (
+            <div className="py-8 text-center flex flex-col items-center">
+              <ShoppingBag className="w-10 h-10 text-gray-300 mb-3" />
+              <p className="text-sm font-bold text-gray-500">{isBn ? "এখনো কোনো অর্ডার নেই" : "No orders yet"}</p>
             </div>
-          ))}
+          ) : (
+            recentOrders.map((order) => (
+              <div key={order.id} className="pt-3 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-xs text-[#1A1D26]">{order.id}</span>
+                    <span
+                      className={`px-2 py-0.5 text-[9.5px] font-bold rounded-md uppercase ${
+                        order.status === "DELIVERED"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {order.status === "DELIVERED" ? (isBn ? "ডেলিভার্ড" : "Delivered") : (isBn ? "প্রসেসিং" : "Processing")}
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-bold text-[#1A1D26] mt-1">{order.productName}</h4>
+                  <span className="text-[10.5px] text-[#7A8190]">{order.date}</span>
+                </div>
+
+                <div className="flex items-center gap-3 self-end sm:self-auto">
+                  <span className="text-xs font-extrabold text-[#FC5C03]">
+                    {formatPrice(order.amountBDT)}
+                  </span>
+                  {order.hasKey && (
+                    <Link
+                      href="/dashboard/keys"
+                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 flex items-center gap-1 transition-colors"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      <span>{isBn ? "কি দেখুন" : "View Keys"}</span>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

@@ -150,7 +150,7 @@ export default function AdminProofsPage() {
                     type="text"
                     value={orderId}
                     onChange={(e) => setOrderId(e.target.value)}
-                    placeholder="AH-98214"
+                    placeholder="AH-XXXXX"
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
                   />
                 </div>

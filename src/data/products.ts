@@ -62,11 +62,7 @@ export const PRODUCTS: Product[] = [
       deviceSupport: "Windows, Mac, Android, iOS ও Web ব্রাউজার",
       requirements: "ভিপিএন ছাড়াই সরাসরি লগইন করা যাবে।",
     },
-    reviews: [
-      { id: "r1", author: "তানভীর আহমেদ", rating: 5, date: "2026-08-18", comment: "অর্ডার করার ৫ মিনিটের মধ্যে আইডি পাসওয়ার্ড পেয়েছি। GPT-4o খুব স্মুথ কাজ করছে।", isVerifiedPurchase: true },
-      { id: "r2", author: "ফারহান কবির", rating: 5, date: "2026-08-12", comment: "পার্সোনাল মেইলে অ্যাক্টিভ করে দিয়েছে। কোন ঝামেলা হয়নি।", isVerifiedPurchase: true },
-      { id: "r3", author: "নুসরাত জাহান", rating: 4, date: "2026-08-04", comment: "সাপোর্টে দ্রুত রেসপন্স পেয়েছি। ধন্যবাদ এআই হাট টিম।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isFeatured: true,
     isBestProduct: true,
     isBestSelling: true,
@@ -107,10 +103,7 @@ export const PRODUCTS: Product[] = [
       validity: "১ মাস / ৬ মাস / ১ বছর / লাইফটাইম",
       deviceSupport: "Android, iOS, iPadOS, Windows, Mac, Web",
     },
-    reviews: [
-      { id: "rc1", author: "রকিবুল হাসান", rating: 5, date: "2026-08-20", comment: "নিজের ইমেইলে ইনভাইট এসে গেছে ৩ মিনিটে। ব্যাকগ্রাউন্ড রিমুভার দারুন কাজ করে।", isVerifiedPurchase: true },
-      { id: "rc2", author: "মাহমুদুল করিম", rating: 5, date: "2026-08-15", comment: "কম খরচে আসল ক্যানভা প্রো। সমস্যা হলে সাপোর্টে যোগাযোগ করে সাথে সাথে সাহায্য পেয়েছি।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isFeatured: true,
     isBestProduct: true,
     isBestSelling: true,
@@ -149,9 +142,7 @@ export const PRODUCTS: Product[] = [
       validity: "১ মাস / ৩ মাস / ১ বছর",
       deviceSupport: "Windows PC, Mac, Android, iPhone",
     },
-    reviews: [
-      { id: "rcc1", author: "ইমরান হোসেন", rating: 5, date: "2026-08-21", comment: "অটো ক্যাপশন ফিচার দিয়ে রিলস এডিট খুব সহজ হয়ে গেছে।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isFeatured: true,
     isBestProduct: true,
   },
@@ -188,9 +179,7 @@ export const PRODUCTS: Product[] = [
       validity: "৩০ দিন",
       deviceSupport: "সকল ব্রাউজার ও মোবাইল ডিভাইস",
     },
-    reviews: [
-      { id: "rg1", author: "শাকিল আহমেদ", rating: 5, date: "2026-08-19", comment: "ড্রাইভে ২ টেরাবাইট পেয়েছি আর জেমিনাই বড় বড় পিডিএফ খুব দ্রুত সামারি করে দেয়।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isBestProduct: true,
   },
   {
@@ -227,9 +216,7 @@ export const PRODUCTS: Product[] = [
       validity: "১২ মাস (১ বছর)",
       deviceSupport: "Windows 10/11, macOS, iPad, iPhone, Android",
     },
-    reviews: [
-      { id: "rms1", author: "মোঃ জামিল", rating: 5, date: "2026-08-16", comment: "নিজের হটমেইলে ১টিবি ওয়ানড্রাইভ পেয়ে গেছি। ওয়ার্ড এক্সেল ম্যাকবুকে খুব ভালো চলছে।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isBestProduct: true,
     isBestSelling: true,
   },
@@ -267,9 +254,7 @@ export const PRODUCTS: Product[] = [
       validity: "১ মাস / ১ বছর",
       deviceSupport: "সকল অ্যান্ড্রয়েড, আইফোন ও কম্পিউটার",
     },
-    reviews: [
-      { id: "rg1", author: "কাওসার আলী", rating: 5, date: "2026-08-14", comment: "গুগল ফটোসের ১৫ জিবি ফুল হয়ে গেছিল। এখন ২ টিবি নিয়ে একদম নিশ্চিন্ত।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isBestProduct: true,
     isBestSelling: true,
   },
@@ -310,9 +295,7 @@ export const PRODUCTS: Product[] = [
       validity: "১ মাস / ৩ মাস / ৬ মাস / ১ বছর",
       deviceSupport: "Smart TV, Android, iOS, Windows, Mac",
     },
-    reviews: [
-      { id: "ryt1", author: "আশিকুর রহমান", rating: 5, date: "2026-08-22", comment: "স্মার্ট টিভিতে আর ফোনে খুব সুন্দর কাজ করছে। কোন অ্যাড নেই!", isVerifiedPurchase: true },
-    ],
+    reviews: [],
   },
   {
     id: "p-google-play-card",
@@ -348,9 +331,7 @@ export const PRODUCTS: Product[] = [
       validity: "মেয়াদ শেষ হয় না",
       deviceSupport: "Android, Chromebook, Web",
     },
-    reviews: [
-      { id: "rgp1", author: "মনিরুল ইসলাম", rating: 5, date: "2026-08-10", comment: "কোড দিয়ে সাথে সাথে ১০ ডলার অ্যাড করে ফেলেছি।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
   },
   {
     id: "p-google-workspace",
@@ -424,9 +405,7 @@ export const PRODUCTS: Product[] = [
       validity: "১ মাস / ৬ মাস / ১ বছর",
       deviceSupport: "Windows, Mac, Linux, Android, iOS, Firestick",
     },
-    reviews: [
-      { id: "rn1", author: "জুবায়ের মাহমুদ", rating: 5, date: "2026-08-17", comment: "গেমিং এবং ইউএস ওটিটি স্ট্রিমিং এর জন্য সেরা ভিপিএন। স্পিড খুব ভালো।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
   },
   {
     id: "p-expressvpn",
@@ -530,9 +509,7 @@ export const PRODUCTS: Product[] = [
       validity: "১ মাস / ৩ মাস",
       deviceSupport: "Discord Web, Desktop, Mobile",
     },
-    reviews: [
-      { id: "rmj1", author: "ফারহান সাজিদ", rating: 5, date: "2026-08-19", comment: "ফাস্ট জিপিইউ স্পিড অসাধারণ। ১০ সেকেন্ডে হাই কোয়ালিটি ইমেজ দিচ্ছে।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
   },
   {
     id: "p-elevenlabs-voice-credits",
@@ -605,9 +582,7 @@ export const PRODUCTS: Product[] = [
       validity: "লাইফটাইম",
       deviceSupport: "Desktop PC, Laptop",
     },
-    reviews: [
-      { id: "rw1", author: "আশরাফুল ইসলাম", rating: 5, date: "2026-08-23", comment: "সেটিংসে কি বসাতেই সাথে সাথে ডিজিটাল লাইসেন্স দিয়ে অ্যাক্টিভ হয়ে গেছে। ধন্যবাদ!", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isBestProduct: true,
     isBestSelling: true,
   },
@@ -680,9 +655,7 @@ export const PRODUCTS: Product[] = [
       validity: "১ মাস / ৩ মাস / ১ বছর",
       deviceSupport: "Smart TV, Android, iOS, PC, PlayStation, Xbox",
     },
-    reviews: [
-      { id: "rcr1", author: "নাঈম হাসান", rating: 5, date: "2026-08-20", comment: "১০৮০পিতে অ্যানিমে দেখতে খুব ভালো লাগছে। সার্ভিস খুব ফাস্ট।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isBestProduct: true,
   },
   {
@@ -719,9 +692,7 @@ export const PRODUCTS: Product[] = [
       validity: "৩০ দিন / ৯০ দিন",
       deviceSupport: "Smart TV, Android, iOS, Windows, Mac",
     },
-    reviews: [
-      { id: "rnf1", author: "সাকিব আল হাসান", rating: 5, date: "2026-08-21", comment: "স্মার্ট টিভিতে ৪কে কোয়ালিটি দারুণ। প্রোফাইলে পিন থাকায় প্রাইভেসি থাকে।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isBestProduct: true,
     isBestSelling: true,
   },
@@ -761,9 +732,7 @@ export const PRODUCTS: Product[] = [
       validity: "১ মাস / ৩ মাস / ৬ মাস",
       deviceSupport: "Windows, Mac, Linux",
     },
-    reviews: [
-      { id: "rcur1", author: "তানভীর আহমেদ", rating: 5, date: "2026-08-24", comment: "ক্লড ৩.৫ সনেট দিয়ে কোড লেখার স্পিড ৩ গুণ বেড়ে গেছে। দারুণ সার্ভিস!", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isBestProduct: true,
     isBestSelling: true,
   },
@@ -839,9 +808,7 @@ export const PRODUCTS: Product[] = [
       validity: "১ মাস / ৩ মাস / ১ বছর",
       deviceSupport: "Telegram Desktop, Android, iOS, Mac",
     },
-    reviews: [
-      { id: "rtg1", author: "মাহির ফয়সাল", rating: 5, date: "2026-08-22", comment: "ইউজারনেম দেওয়ার ৪ মিনিটের মধ্যে গিফট পপআপ চলে আসছে। স্টার ব্যাজটা দারুণ।", isVerifiedPurchase: true },
-    ],
+    reviews: [],
     isBestSelling: true,
   },
   {

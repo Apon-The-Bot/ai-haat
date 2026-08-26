@@ -26,22 +26,7 @@ function OrderTrackingContent() {
 
     setSearched(true);
     // Simulate real lookup
-    if (q.toUpperCase().startsWith("AH-") || q.length >= 4) {
-      setOrderData({
-        orderId: q.toUpperCase().startsWith("AH-") ? q.toUpperCase() : `AH-${q}`,
-        productName: "ChatGPT Plus (1 Month Shared)",
-        customerEmail: "user@example.com",
-        customerPhone: "017XXXXXXXX",
-        amountBDT: 290,
-        paymentStatus: "PAID",
-        paymentMethod: "bKash",
-        orderDate: "2026-08-25 14:30",
-        currentStep: 3, // 1: Order Placed, 2: Payment Verified, 3: Processing Delivery, 4: Delivered
-        credentialDetails: "আপনার ইমেইল ও হোয়াটসঅ্যাপে লগইন তথ্য সফলভাবে পাঠানো হয়েছে।",
-      });
-    } else {
-      setOrderData(null);
-    }
+    setOrderData(null);
   };
 
   return (
@@ -71,7 +56,7 @@ function OrderTrackingContent() {
                 type="text"
                 value={orderQuery}
                 onChange={(e) => setOrderQuery(e.target.value)}
-                placeholder="অর্ডার আইডি দিন (e.g. AH-89211)"
+                placeholder="অর্ডার আইডি দিন (e.g. AH-XXXXX)"
                 className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-[#E8E8EE] rounded-lg text-xs font-semibold text-[#1A1D26] focus:outline-none focus:border-[#FC5C03] focus:bg-white"
               />
             </div>

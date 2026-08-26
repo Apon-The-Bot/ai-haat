@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   DollarSign,
@@ -24,66 +24,49 @@ export default function AdminOverviewPage() {
   const metrics = [
     {
       title: "Total Revenue",
-      value: "৳128,450",
-      change: "+18.2% this month",
+      value: "৳0",
+      change: "",
       icon: DollarSign,
       color: "text-emerald-700 bg-emerald-50 border-emerald-200",
     },
     {
       title: "Total Orders",
-      value: "418",
-      change: "+12 orders today",
+      value: "0",
+      change: "",
       icon: ShoppingBag,
       color: "text-blue-700 bg-blue-50 border-blue-200",
     },
     {
       title: "Pending Fulfillment",
-      value: "3",
-      change: "Target: <15 mins",
+      value: "0",
+      change: "",
       icon: Clock,
       color: "text-amber-800 bg-amber-50 border-amber-200",
     },
     {
       title: "Wallet Deposits",
-      value: "1 Pending",
-      change: "Verification needed",
+      value: "0 Pending",
+      change: "",
       icon: Wallet,
       color: "text-[#FC5C03] bg-orange-50 border-orange-200",
     },
     {
       title: "Registered Users",
-      value: "892",
-      change: "+24 new this week",
+      value: "0",
+      change: "",
       icon: Users,
       color: "text-purple-700 bg-purple-50 border-purple-200",
     },
     {
       title: "Active Products",
-      value: "20 Items",
-      change: "All items active",
+      value: "0 Items",
+      change: "",
       icon: Package,
       color: "text-indigo-700 bg-indigo-50 border-indigo-200",
     },
   ];
 
-  const pendingOrders = [
-    {
-      id: "AH-98214",
-      customer: "Sifat Rahman (01711-223344)",
-      product: "ChatGPT Plus (1 Month Shared)",
-      amountBDT: 290,
-      trxId: "BL90X84Q",
-      time: "10 mins ago",
-    },
-    {
-      id: "AH-98213",
-      customer: "Tanvir Ahmed (01822-334455)",
-      product: "Canva Pro (1 Year Personal)",
-      amountBDT: 499,
-      trxId: "NG882K19",
-      time: "24 mins ago",
-    },
-  ];
+  const [pendingOrders, setPendingOrders] = useState<any[]>([]);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -170,38 +153,42 @@ export default function AdminOverviewPage() {
           </div>
 
           <div className="space-y-3">
-            {pendingOrders.map((order) => (
-              <div
-                key={order.id}
-                className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-[#FC5C03]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-[#FC5C03]">{order.id}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200">
-                      {order.time}
+            {pendingOrders.length > 0 ? (
+              pendingOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-[#FC5C03]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-[#FC5C03]">{order.id}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200">
+                        {order.time}
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-900 mt-1">{order.product}</h4>
+                    <span className="text-[11px] text-slate-500 font-mono block">
+                      {order.customer} • TrxID: <b>{order.trxId}</b>
                     </span>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-900 mt-1">{order.product}</h4>
-                  <span className="text-[11px] text-slate-500 font-mono block">
-                    {order.customer} • TrxID: <b>{order.trxId}</b>
-                  </span>
-                </div>
 
-                <div className="flex items-center gap-3 self-end sm:self-auto">
-                  <span className="text-sm font-black text-slate-900">
-                    {formatPrice(order.amountBDT)}
-                  </span>
-                  <Link
-                    href="/admin/orders"
-                    className="px-3 py-1.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center gap-1"
-                  >
-                    <Send className="w-3 h-3" />
-                    <span>Fulfill</span>
-                  </Link>
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <span className="text-sm font-black text-slate-900">
+                      {formatPrice(order.amountBDT)}
+                    </span>
+                    <Link
+                      href="/admin/orders"
+                      className="px-3 py-1.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center gap-1"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>Fulfill</span>
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="text-center py-6 text-sm text-slate-500">No pending orders.</div>
+            )}
           </div>
         </div>
 

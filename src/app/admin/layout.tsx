@@ -19,9 +19,11 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
@@ -29,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       group: "MAIN",
       items: [
         { name: "Overview", href: "/admin", icon: LayoutDashboard },
-        { name: "Orders", href: "/admin/orders", icon: ShoppingBag, badge: "3" },
+        { name: "Orders", href: "/admin/orders", icon: ShoppingBag },
         { name: "Products", href: "/admin/products", icon: Package },
         { name: "Coupons", href: "/admin/coupons", icon: Tag },
       ],
@@ -37,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     {
       group: "FINANCE & USERS",
       items: [
-        { name: "Wallet Top-ups", href: "/admin/wallet", icon: Wallet, badge: "1" },
+        { name: "Wallet Top-ups", href: "/admin/wallet", icon: Wallet },
         { name: "Users", href: "/admin/users", icon: Users },
         { name: "Delivery Proofs", href: "/admin/proofs", icon: ShieldCheck },
       ],
@@ -94,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               A
             </div>
             <span className="hidden sm:block text-xs font-bold text-slate-800">
-              Amanullah Sheikh
+              {user?.name || "Admin"}
             </span>
           </div>
         </div>
@@ -128,11 +130,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
                       <span>{item.name}</span>
                     </div>
-                    {item.badge && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#FC5C03] text-white rounded-full">
-                        {item.badge}
-                      </span>
-                    )}
+
                   </Link>
                 );
               })}

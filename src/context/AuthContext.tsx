@@ -41,10 +41,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: (session.user as any).id || `google-${email}`,
         name: session.user.name || "AI Haat Member",
         email: session.user.email || "",
-        phone: "+8801700000000",
+        phone: "",
         avatar: session.user.image || undefined,
         role: isAdmin ? "ADMIN" : "USER",
-        walletBalanceBDT: (session.user as any).walletBalanceBDT || 500,
+        walletBalanceBDT: (session.user as any).walletBalanceBDT || 0,
       };
 
       setUser(googleUser);
@@ -81,10 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: `usr_${Date.now().toString().slice(-5)}`,
       name: email.includes("@") ? email.split("@")[0] : "AI Haat Member",
       email: email.includes("@") ? email : `${email}@user.aihaat.com`,
-      phone: email.includes("@") ? "+8801700000000" : email,
+      phone: email.includes("@") ? "" : email,
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
       role: isAdmin ? "ADMIN" : "USER",
-      walletBalanceBDT: 500,
+      walletBalanceBDT: 0,
     };
     setUser(loggedUser);
     localStorage.setItem("aihaat_user", JSON.stringify(loggedUser));
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       phone,
       role: isAdmin ? "ADMIN" : "USER",
-      walletBalanceBDT: 50,
+      walletBalanceBDT: 0,
     };
     setUser(newUser);
     localStorage.setItem("aihaat_user", JSON.stringify(newUser));

@@ -58,9 +58,9 @@ export default function DashboardWalletPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userName: user?.name || "Rhythm Khan",
-          userPhone: senderNumber || "017XXXXXXXX",
-          userEmail: user?.email || "rhythmkhan04@gmail.com",
+          userName: user?.name || "",
+          userPhone: senderNumber || "",
+          userEmail: user?.email || "",
           amountBDT: Number(amount),
           method,
           senderNumber,
@@ -98,7 +98,7 @@ export default function DashboardWalletPage() {
             {isBn ? "ডিজিটাল ওয়ালেট ব্যালেন্স" : "Digital Wallet Balance"}
           </span>
           <div className="text-3xl sm:text-4xl font-black text-white mt-1">
-            {formatPrice(user?.walletBalanceBDT || 500)}
+            {formatPrice(user?.walletBalanceBDT || 0)}
           </div>
           <p className="text-xs text-gray-400 mt-1">
             {isBn

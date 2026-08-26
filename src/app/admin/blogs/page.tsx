@@ -7,7 +7,7 @@ import { useToast } from "@/context/ToastContext";
 
 export default function AdminBlogsPage() {
   const { showToast } = useToast();
-  const [blogsList, setBlogsList] = useState(initialBlogs);
+  const [blogsList, setBlogsList] = useState<any[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("AI & Tech");

@@ -17,17 +17,7 @@ interface AdminUserItem {
 export default function AdminUsersPage() {
   const { showToast } = useToast();
 
-  const [users, setUsers] = useState<AdminUserItem[]>([
-    {
-      id: "usr-1",
-      name: "Amanullah Sheikh",
-      email: "mdamanullahsheikhapon@gmail.com",
-      role: "ADMIN",
-      walletBalance: 0,
-      ordersCount: 0,
-      joinedDate: "2026-08-27",
-    },
-  ]);
+  const [users, setUsers] = useState<AdminUserItem[]>([]);
 
   const [search, setSearch] = useState("");
 

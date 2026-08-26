@@ -38,12 +38,8 @@ export default function WalletPage() {
 
   const presetAmounts = [100, 300, 500, 1000, 2000, 5000];
 
-  const dummyTransactions = [
-    { id: "tx-1", title: "bKash ওয়ালেট রিচার্জ", date: "2026-08-25 14:10", amount: 500, type: "CREDIT" },
-    { id: "tx-2", title: "ChatGPT Plus ক্রয়", date: "2026-08-25 14:15", amount: -290, type: "DEBIT" },
-    { id: "tx-3", title: "Nagad ওয়ালেট রিচার্জ", date: "2026-08-20 11:30", amount: 1000, type: "CREDIT" },
-    { id: "tx-4", title: "Canva Pro ১ বছর ক্রয়", date: "2026-08-20 11:35", amount: -499, type: "DEBIT" },
-  ];
+  const [transactions, setTransactions] = useState<any[]>([]);
+
 
   return (
     <div className="w-full bg-white py-8 sm:py-12 min-h-[75vh]">
@@ -203,38 +199,44 @@ export default function WalletPage() {
               </h3>
 
               <div className="space-y-2.5 max-h-96 overflow-y-auto divide-y divide-gray-100">
-                {dummyTransactions.map((tx) => (
-                  <div key={tx.id} className="pt-2.5 first:pt-0 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          tx.type === "CREDIT"
-                            ? "bg-emerald-100 text-emerald-600"
-                            : "bg-red-100 text-red-600"
+                {transactions.length > 0 ? (
+                  transactions.map((tx) => (
+                    <div key={tx.id} className="pt-2.5 first:pt-0 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            tx.type === "CREDIT"
+                              ? "bg-emerald-100 text-emerald-600"
+                              : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {tx.type === "CREDIT" ? (
+                            <ArrowDownRight className="w-4 h-4" />
+                          ) : (
+                            <ArrowUpRight className="w-4 h-4" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-[#1A1D26]">{tx.title}</h4>
+                          <span className="text-[10px] text-gray-400">{tx.date}</span>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`text-xs font-extrabold ${
+                          tx.type === "CREDIT" ? "text-emerald-600" : "text-[#1A1D26]"
                         }`}
                       >
-                        {tx.type === "CREDIT" ? (
-                          <ArrowDownRight className="w-4 h-4" />
-                        ) : (
-                          <ArrowUpRight className="w-4 h-4" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#1A1D26]">{tx.title}</h4>
-                        <span className="text-[10px] text-gray-400">{tx.date}</span>
-                      </div>
+                        {tx.type === "CREDIT" ? "+" : ""}
+                        {formatPrice(tx.amount)}
+                      </span>
                     </div>
-
-                    <span
-                      className={`text-xs font-extrabold ${
-                        tx.type === "CREDIT" ? "text-emerald-600" : "text-[#1A1D26]"
-                      }`}
-                    >
-                      {tx.type === "CREDIT" ? "+" : ""}
-                      {formatPrice(tx.amount)}
-                    </span>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-sm text-gray-500">
+                    এখনো কোনো লেনদেন হয়নি
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

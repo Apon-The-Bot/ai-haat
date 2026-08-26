@@ -37,11 +37,11 @@ export const authOptions: NextAuthOptions = {
 
         return {
           id: `usr-${Date.now()}`,
-          name: isAdmin ? "Admin (Amanullah)" : "Amanullah Sheikh",
+          name: isAdmin ? "Admin" : (credentials?.email?.split("@")[0] || "User"),
           email: email.includes("@") ? email : `${email}@aihaat.com`,
           image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
           role: isAdmin ? "ADMIN" : "USER",
-          walletBalanceBDT: 500,
+          walletBalanceBDT: 0,
         };
       },
     }),

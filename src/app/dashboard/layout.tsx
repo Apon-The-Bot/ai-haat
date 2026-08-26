@@ -113,10 +113,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-bold text-[#1A1D26] truncate">
-                    {user?.name || "Rhythm Khan"}
+                    {user?.name || "Member"}
                   </h3>
                   <span className="text-[11px] text-[#7A8190] truncate block">
-                    {user?.email || "rhythmkhan04@gmail.com"}
+                    {user?.email || ""}
                   </span>
                   <span className="inline-block mt-0.5 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded-md uppercase">
                     Verified Member
@@ -163,7 +163,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {isBn ? "ওয়ালেট ব্যালেন্স" : "Wallet Balance"}
                   </span>
                   <span className="text-lg font-black text-white">
-                    {formatPrice(user?.walletBalanceBDT || 500)}
+                    {formatPrice(user?.walletBalanceBDT || 0)}
                   </span>
                 </div>
                 <Link

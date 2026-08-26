@@ -202,7 +202,7 @@ export default function CheckoutPage() {
                         required
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        placeholder="e.g. Rhythm Khan"
+                        placeholder="e.g. Your Name"
                         className="w-full text-xs p-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-hidden focus:border-[#FC5C03]"
                       />
                     </div>
@@ -273,7 +273,7 @@ export default function CheckoutPage() {
                     <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                       <div className="text-xs text-slate-700 space-y-1">
                         <p className="font-bold text-slate-900">
-                          Send Money to our official number: <span className="font-mono text-[#FC5C03]">01712-345678</span>
+                          Send Money to our official number: <span className="font-mono text-[#FC5C03]">01XXXXXXXXX</span>
                         </p>
                         <p className="text-[11px] text-slate-500">
                           Go to your {paymentMethod.toUpperCase()} app &gt; Send Money &gt; Enter Amount ({formatPrice(finalTotalBDT)}) &gt; Put your TrxID below.
@@ -415,7 +415,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <a
-                  href={`https://wa.me/8801712345678?text=${encodeURIComponent(
+                  href={`https://wa.me/?text=${encodeURIComponent(
                     `Hello, I have placed Order #${createdOrderId}. Please activate my order.`
                   )}`}
                   target="_blank"
