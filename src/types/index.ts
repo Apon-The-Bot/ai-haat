@@ -48,6 +48,7 @@ export interface Product {
   isFeatured?: boolean;
   isBestProduct?: boolean;
   isBestSelling?: boolean;
+  inStock?: boolean;
 }
 
 export interface CartItem {

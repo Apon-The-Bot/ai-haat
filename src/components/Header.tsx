@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, ShoppingBag, Menu, X, ChevronRight, Zap } from "lucide-react";
+import { Search, ShoppingBag, Menu, X, ChevronRight, Zap, User, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
@@ -247,23 +247,30 @@ export function Header() {
               )}
             </button>
 
-            {/* Desktop Login / Account Pill (~78px wide) */}
+            {/* Desktop Login / Account Pill */}
             {user ? (
               <div className="hidden sm:flex items-center gap-2">
                 <Link
-                  href="/wallet"
+                  href="/dashboard/wallet"
                   className="flex items-center gap-1 bg-[#FFF2E8] text-[#FC5C03] px-3 py-1.5 rounded-full text-xs font-bold border border-[#FC5C03]/20 hover:bg-[#FFE6D3] transition-colors"
                 >
                   <span>{formatPrice(user.walletBalanceBDT)}</span>
                 </Link>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="h-8 px-3 bg-[#1A1D26] hover:bg-black text-white text-xs font-semibold rounded-full transition-all"
-                  title="Logout"
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-1.5 h-8 px-3.5 bg-[#1A1D26] hover:bg-black text-white text-xs font-bold rounded-full transition-all"
+                  title="Client Dashboard"
                 >
-                  Logout
-                </button>
+                  <User className="w-3.5 h-3.5 text-[#FC5C03]" />
+                  <span>ড্যাশবোর্ড</span>
+                </Link>
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-1 h-8 px-2.5 bg-purple-700 hover:bg-purple-800 text-white text-[11px] font-black rounded-full transition-all"
+                  title="Admin Panel"
+                >
+                  <span>👑 Admin</span>
+                </Link>
               </div>
             ) : (
               <button

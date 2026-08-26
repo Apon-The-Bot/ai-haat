@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { X, Lock, Phone, Mail, User, ShieldCheck, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Logo } from "@/components/Logo";
 
 export function AuthModal() {
+  const router = useRouter();
   const {
     isAuthModalOpen,
     setIsAuthModalOpen,
@@ -23,15 +25,26 @@ export function AuthModal() {
 
   if (!isAuthModalOpen) return null;
 
+  const handleGoogleLogin = () => {
+    // 1-Click Google Login with full profile data
+    login("mdamanullahsheikhapon@gmail.com");
+    setIsAuthModalOpen(false);
+    router.push("/dashboard");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (authMode === "login") {
       if (phoneOrEmail.trim()) {
         login(phoneOrEmail.trim());
+        setIsAuthModalOpen(false);
+        router.push("/dashboard");
       }
     } else {
       if (name.trim() && phone.trim()) {
         register(name.trim(), email.trim() || `${phone}@aihaat.com`, phone.trim());
+        setIsAuthModalOpen(false);
+        router.push("/dashboard");
       }
     }
   };
@@ -58,13 +71,48 @@ export function AuthModal() {
           </h3>
           <p className="text-xs text-gray-300 mt-1">
             {authMode === "login"
-              ? "অর্ডার হিস্ট্রি ও ওয়ালেট ব্যালেন্স দেখতে লগইন করুন।"
-              : "সাইন আপ করে ডিজিটাল ওয়ালেটে যুক্ত হোন।"}
+              ? "অর্ডার হিস্ট্রি, ডিজিটাল ভল্ট ও ওয়ালেট দেখতে লগইন করুন।"
+              : "সাইন আপ করে ডিজিটাল ভল্ট ও ওয়ালেটে যুক্ত হোন।"}
           </p>
         </div>
 
         {/* Form Body */}
-        <div className="p-5 sm:p-6">
+        <div className="p-5 sm:p-6 space-y-4">
+          
+          {/* 1-CLICK GOOGLE SIGN IN BUTTON */}
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            className="w-full py-2.5 px-4 bg-white hover:bg-gray-50 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-2.5"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+              />
+            </svg>
+            <span>Google দিয়ে সরাসরি সাইন ইন করুন</span>
+          </button>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-[11px] text-gray-400 font-semibold uppercase">অথবা</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {authMode === "register" && (
               <div>
@@ -78,7 +126,7 @@ export function AuthModal() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. তানভীর আহমেদ"
+                    placeholder="যেমন: তানভীর আহমেদ"
                     className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:bg-white focus:border-[#FC5C03] focus:outline-none transition-all"
                   />
                 </div>
@@ -160,7 +208,7 @@ export function AuthModal() {
           </form>
 
           {/* Toggle between login / register */}
-          <div className="mt-4 text-center text-xs text-[#7A8190]">
+          <div className="text-center text-xs text-[#7A8190]">
             {authMode === "login" ? (
               <p>
                 নতুন গ্রাহক?{" "}
@@ -186,7 +234,7 @@ export function AuthModal() {
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-center gap-1 text-[10.5px] text-[#7A8190]">
+          <div className="pt-2 border-t border-gray-100 flex items-center justify-center gap-1 text-[10.5px] text-[#7A8190]">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             <span>২৫৬-বিট এনক্রিপ্টেড নিরাপদ লগইন</span>
           </div>

@@ -1,0 +1,294 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  RESELLER
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum DeliveryStatus {
+  ORDER_PLACED
+  PREPARING
+  PROCESSING
+  DELIVERED
+  CANCELLED
+}
+
+enum TransactionType {
+  DEPOSIT
+  PURCHASE
+  REFUND
+  BONUS
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  ORDER
+  WALLET
+  DELIVERY
+  SYSTEM
+  PROMO
+}
+
+model User {
+  id               String              @id @default(cuid())
+  name             String?
+  email            String              @unique
+  emailVerified    DateTime?
+  image            String?
+  phone            String?
+  role             Role                @default(USER)
+  walletBalanceBDT Float               @default(0.0)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  orders           Order[]
+  transactions     WalletTransaction[]
+  notifications    Notification[]
+  deliveredKeys    DeliveredKey[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Product {
+  id                 String      @id @default(cuid())
+  slug               String      @unique
+  name               String
+  category           String
+  categories         String      @default("[]") // JSON string array
+  image              String
+  rating             Float       @default(5.0)
+  ratingCount        Int         @default(0)
+  viewCount          Int         @default(0)
+  badge              String?
+  minPriceBDT        Float
+  maxPriceBDT        Float
+  shortDesc          String      @db.Text
+  descriptionBangla  String      @db.Text
+  descriptionEnglish String      @db.Text
+  features           String      @db.Text // JSON string array
+  deliveryTime       String      @default("৫ থেকে ১৫ মিনিট")
+  deliveryType       String      @default("ইনস্ট্যান্ট ডেলিভারি")
+  warranty           String      @default("সম্পূর্ণ মেয়াদের রিপ্লেসমেন্ট ওয়ারেন্টি")
+  validity           String      @default("১ মাস / ১ বছর")
+  deviceSupport      String      @default("সকল ডিভাইস")
+  requirements       String?     @db.Text
+  isFeatured         Boolean     @default(false)
+  isBestProduct      Boolean     @default(false)
+  isBestSelling      Boolean     @default(false)
+  inStock            Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  variations         Variation[]
+  reviews            Review[]
+
+  @@map("products")
+}
+
+model Variation {
+  id          String   @id @default(cuid())
+  productId   String
+  name        String
+  priceBDT    Float
+  description String?
+  inStock     Boolean  @default(true)
+
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("variations")
+}
+
+model Order {
+  id             String         @id @default(cuid())
+  orderNumber    String         @unique
+  userId         String?
+  customerName   String
+  customerEmail  String
+  customerPhone  String
+  notes          String?        @db.Text
+  subtotalBDT    Float
+  discountBDT    Float          @default(0.0)
+  totalBDT       Float
+  paymentMethod  String         // bkash, nagad, rocket, wallet, card
+  senderNumber   String?
+  trxId          String?
+  paymentStatus  PaymentStatus  @default(PENDING)
+  deliveryStatus DeliveryStatus @default(ORDER_PLACED)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items          OrderItem[]
+  deliveredKeys  DeliveredKey[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String
+  productId     String?
+  variationId   String?
+  productName   String
+  variationName String
+  priceBDT      Float
+  quantity      Int     @default(1)
+  image         String?
+
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model DeliveredKey {
+  id           String   @id @default(cuid())
+  orderId      String
+  userId       String?
+  productName  String
+  accountType  String   // e.g. "Shared Profile", "Personal Invite", "License Key"
+  credentials  String   @db.Text // Login info, license key, or invitation link
+  instructions String?  @db.Text
+  deliveredAt  DateTime @default(now())
+
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("delivered_keys")
+}
+
+model WalletTransaction {
+  id           String            @id @default(cuid())
+  userId       String
+  amountBDT    Float
+  type         TransactionType
+  method       String            // bkash, nagad, rocket, system
+  senderNumber String?
+  trxId        String?
+  status       TransactionStatus @default(PENDING)
+  note         String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallet_transactions")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String           @db.Text
+  type      NotificationType @default(SYSTEM)
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Blog {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  category  String
+  image     String
+  excerpt   String   @db.Text
+  content   String   @db.LongText
+  readTime  String   @default("4 min read")
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("blogs")
+}
+
+model Proof {
+  id           String   @id @default(cuid())
+  orderId      String
+  productName  String
+  amountBDT    Float
+  type         String   // Subscription, Top-Up, License Key, Gift Card
+  image        String
+  customerNote String   @db.Text
+  createdAt    DateTime @default(now())
+
+  @@map("proofs")
+}
+
+model Review {
+  id                 String   @id @default(cuid())
+  productId          String
+  author             String
+  rating             Int      @default(5)
+  comment            String   @db.Text
+  isVerifiedPurchase Boolean  @default(true)
+  status             String   @default("APPROVED") // APPROVED, PENDING, REJECTED
+  createdAt          DateTime @default(now())
+
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
