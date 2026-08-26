@@ -28,26 +28,15 @@ export default function DashboardWalletPage() {
     rocket: "01934-567890-4 (Send Money / Personal)",
   };
 
-  const transactions = [
-    {
-      id: "TX-901",
-      type: "DEPOSIT",
-      amountBDT: 500,
-      method: "bKash",
-      trxId: "BL90X84Q",
-      status: "APPROVED",
-      date: "Aug 25, 2026 12:30",
-    },
-    {
-      id: "TX-902",
-      type: "PURCHASE",
-      amountBDT: 290,
-      method: "Wallet Payment",
-      trxId: "AH-89211",
-      status: "APPROVED",
-      date: "Aug 25, 2026 14:15",
-    },
-  ];
+  const [transactions, setTransactions] = useState<Array<{
+    id: string;
+    type: string;
+    amountBDT: number;
+    method: string;
+    trxId: string;
+    status: string;
+    date: string;
+  }>>([]);
 
   const handleCopyNumber = () => {
     const num = paymentNumbers[method as keyof typeof paymentNumbers].split(" ")[0];
@@ -138,52 +127,59 @@ export default function DashboardWalletPage() {
           </span>
         </div>
 
-        <div className="space-y-3 divide-y divide-gray-100">
-          {transactions.map((tx) => (
-            <div key={tx.id} className="pt-3 first:pt-0 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                    tx.type === "DEPOSIT"
-                      ? "bg-emerald-50 text-emerald-600"
-                      : "bg-red-50 text-red-600"
-                  }`}
-                >
-                  {tx.type === "DEPOSIT" ? (
-                    <ArrowDownLeft className="w-5 h-5" />
-                  ) : (
-                    <ArrowUpRight className="w-5 h-5" />
-                  )}
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-[#1A1D26]">
-                    {tx.type === "DEPOSIT"
-                      ? isBn ? `ওয়ালেট রিচার্জ (${tx.method})` : `Wallet Deposit (${tx.method})`
-                      : isBn ? "প্রোডাক্ট ক্রয়" : "Product Purchase"}
-                  </h4>
-                  <div className="flex items-center gap-2 text-[10.5px] text-[#7A8190]">
-                    <span>TrxID: <code>{tx.trxId}</code></span>
-                    <span>•</span>
-                    <span>{tx.date}</span>
+        {transactions.length > 0 ? (
+          <div className="space-y-3 divide-y divide-gray-100">
+            {transactions.map((tx) => (
+              <div key={tx.id} className="pt-3 first:pt-0 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      tx.type === "DEPOSIT"
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-red-50 text-red-600"
+                    }`}
+                  >
+                    {tx.type === "DEPOSIT" ? (
+                      <ArrowDownLeft className="w-5 h-5" />
+                    ) : (
+                      <ArrowUpRight className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-[#1A1D26]">
+                      {tx.type === "DEPOSIT"
+                        ? isBn ? `ওয়ালেট রিচার্জ (${tx.method})` : `Wallet Deposit (${tx.method})`
+                        : isBn ? "প্রোডাক্ট ক্রয়" : "Product Purchase"}
+                    </h4>
+                    <div className="flex items-center gap-2 text-[10.5px] text-[#7A8190]">
+                      <span>TrxID: <code>{tx.trxId}</code></span>
+                      <span>•</span>
+                      <span>{tx.date}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="text-right">
-                <span
-                  className={`text-xs font-black block ${
-                    tx.type === "DEPOSIT" ? "text-emerald-600" : "text-[#1A1D26]"
-                  }`}
-                >
-                  {tx.type === "DEPOSIT" ? `+${formatPrice(tx.amountBDT)}` : `-${formatPrice(tx.amountBDT)}`}
-                </span>
-                <span className="text-[10px] text-emerald-600 font-bold uppercase">
-                  {tx.status}
-                </span>
+                <div className="text-right">
+                  <span
+                    className={`text-xs font-black block ${
+                      tx.type === "DEPOSIT" ? "text-emerald-600" : "text-[#1A1D26]"
+                    }`}
+                  >
+                    {tx.type === "DEPOSIT" ? `+${formatPrice(tx.amountBDT)}` : `-${formatPrice(tx.amountBDT)}`}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-bold uppercase">
+                    {tx.status}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-12 text-center text-slate-400 text-xs">
+            <p className="font-semibold text-slate-600 mb-0.5">{isBn ? "এখনো কোনো ট্রানজেকশন নেই" : "No Transactions Yet"}</p>
+            <p>{isBn ? "ওয়ালেট রিচার্জ বা পারচেজ হিস্টোরি এখানে দেখতে পাবেন।" : "Wallet deposit and purchase history will appear here."}</p>
+          </div>
+        )}
       </div>
 
       {/* Top-up Recharge Modal */}

@@ -47,59 +47,7 @@ export default function AdminOrdersPage() {
   const { formatPrice } = useCurrency();
   const { showToast } = useToast();
 
-  const [orders, setOrders] = useState<AdminOrder[]>([
-    {
-      id: "AH-98214",
-      customerName: "Sifat Rahman",
-      customerEmail: "sifat.rahman@gmail.com",
-      customerPhone: "01711223344",
-      productName: "ChatGPT Plus (1 Month Shared)",
-      variationName: "1 Month Shared Profile",
-      totalBDT: 290,
-      paymentMethod: "bKash",
-      senderNumber: "01711-223344",
-      trxId: "BL90X84Q",
-      status: "PENDING",
-      createdAt: "10 mins ago",
-      deliveredKey: null,
-      downloadUrl: null,
-      cancelReason: null,
-    },
-    {
-      id: "AH-98213",
-      customerName: "Tanvir Ahmed",
-      customerEmail: "tanvir.ahmed@gmail.com",
-      customerPhone: "01822334455",
-      productName: "CapCut Pro PC & Mobile (VIP Auto Captions)",
-      variationName: "1 Month - 1 Device PC/Mobile",
-      totalBDT: 150,
-      paymentMethod: "Nagad",
-      senderNumber: "01822-334455",
-      trxId: "NG882K19",
-      status: "PENDING",
-      createdAt: "24 mins ago",
-      deliveredKey: null,
-      downloadUrl: "https://drive.google.com/uc?id=capcut-pro-v5-apk-setup",
-      cancelReason: null,
-    },
-    {
-      id: "AH-89211",
-      customerName: "Amanullah Sheikh",
-      customerEmail: "mdamanullahsheikhapon@gmail.com",
-      customerPhone: "01712345678",
-      productName: "ChatGPT Plus (1 Month Shared)",
-      variationName: "1 Month Shared Profile",
-      totalBDT: 290,
-      paymentMethod: "bKash",
-      senderNumber: "01712-345678",
-      trxId: "BL90X84Q",
-      status: "DELIVERED",
-      createdAt: "Yesterday 14:15",
-      deliveredKey: "Email: user12@gptaccess.net\nPassword: SmartGpt2026!\nPIN: 4092",
-      downloadUrl: null,
-      cancelReason: null,
-    },
-  ]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
 
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [search, setSearch] = useState("");
@@ -302,7 +250,8 @@ export default function AdminOrdersPage() {
             </thead>
 
             <tbody className="divide-y divide-slate-100 font-medium">
-              {filtered.map((order) => (
+              {filtered.length > 0 ? (
+                filtered.map((order) => (
                 <tr key={order.id} className="hover:bg-slate-50/70 transition-colors">
                   
                   {/* Order ID */}
@@ -442,7 +391,18 @@ export default function AdminOrdersPage() {
                   </td>
 
                 </tr>
-              ))}
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="py-16 text-center text-slate-500">
+                    <div className="max-w-xs mx-auto space-y-2">
+                      <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto" />
+                      <p className="font-bold text-slate-700 text-sm">No orders found</p>
+                      <p className="text-xs text-slate-400">Customer purchases will appear here in real time.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

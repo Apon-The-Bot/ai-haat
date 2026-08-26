@@ -63,44 +63,54 @@ export default function AdminProofsPage() {
       </div>
 
       {/* Grid of Proofs (White Theme) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {proofList.map((proof) => (
-          <div
-            key={proof.id}
-            className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-xs relative group"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs font-bold text-[#FC5C03]">{proof.orderId}</span>
-              <span className="text-[10px] text-slate-400 font-mono">{proof.date}</span>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-900">{proof.productName}</h4>
-              <span className="text-xs font-bold text-emerald-600">৳{proof.amountBDT}</span>
-            </div>
-
-            <p className="text-xs text-slate-600 italic bg-slate-50 p-3 rounded-xl border border-slate-200">
-              &ldquo;{proof.customerNote}&rdquo;
-            </p>
-
-            <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-              <div className="flex text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
-                ))}
+      {proofList.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {proofList.map((proof) => (
+            <div
+              key={proof.id}
+              className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-xs relative group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-[#FC5C03]">{proof.orderId}</span>
+                <span className="text-[10px] text-slate-400 font-mono">{proof.date}</span>
               </div>
 
-              <button
-                onClick={() => handleDelete(proof.id)}
-                className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
-                title="Delete Proof"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">{proof.productName}</h4>
+                <span className="text-xs font-bold text-emerald-600">৳{proof.amountBDT}</span>
+              </div>
+
+              <p className="text-xs text-slate-600 italic bg-slate-50 p-3 rounded-xl border border-slate-200">
+                &ldquo;{proof.customerNote}&rdquo;
+              </p>
+
+              <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+                <div className="flex text-amber-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => handleDelete(proof.id)}
+                  className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                  title="Delete Proof"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
+      ) : (
+        <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 p-8">
+          <div className="max-w-xs mx-auto space-y-2">
+            <ShieldCheck className="w-10 h-10 text-slate-300 mx-auto" />
+            <p className="font-bold text-slate-700 text-sm">No delivery proofs published yet</p>
+            <p className="text-xs text-slate-400">Click &apos;+ Add Delivery Proof&apos; above to publish verified customer reviews.</p>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
       {/* Add Proof Modal (White Theme) */}
       {isAddModalOpen && (
