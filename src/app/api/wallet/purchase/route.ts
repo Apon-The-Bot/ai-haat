@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { updateOrderStatus } from "@/lib/orders-db";
+import {
+  getLocalUserByEmail,
+  debitLocalWalletBalance,
+  recordLocalTransaction,
+} from "@/lib/wallet-db";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,48 +23,79 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { email: customerEmail.toLowerCase() },
-    });
+    const cleanEmail = customerEmail.toLowerCase().trim();
 
-    if (!dbUser) {
-      return NextResponse.json({ error: "User account not found" }, { status: 404 });
+    // 1. Check Local Dual-Resilient Storage First
+    let localUser = getLocalUserByEmail(cleanEmail);
+    let remainingBalance = 0;
+    let purchaseSuccess = false;
+
+    if (localUser && (localUser.walletBalanceBDT || 0) >= amount) {
+      debitLocalWalletBalance(cleanEmail, amount);
+      localUser = getLocalUserByEmail(cleanEmail);
+      remainingBalance = localUser?.walletBalanceBDT || 0;
+      purchaseSuccess = true;
+
+      recordLocalTransaction({
+        userId: localUser?.id || `usr_${cleanEmail.slice(0, 5)}`,
+        userEmail: cleanEmail,
+        userName: localUser?.name || cleanEmail.split("@")[0],
+        amountBDT: amount,
+        type: "PURCHASE",
+        method: "wallet",
+        trxId: `WAL-${orderId}`,
+        status: "APPROVED",
+        note: `Payment for order #${orderId}`,
+      });
     }
 
-    if (dbUser.walletBalanceBDT < amount) {
+    // 2. Try MySQL DB deduction
+    try {
+      const dbUser = await prisma.user.findFirst({
+        where: {
+          OR: [{ email: cleanEmail }, { email: customerEmail }],
+        },
+      });
+
+      if (dbUser && dbUser.walletBalanceBDT >= amount) {
+        const [updatedUser] = await prisma.$transaction([
+          prisma.user.update({
+            where: { id: dbUser.id },
+            data: {
+              walletBalanceBDT: {
+                decrement: amount,
+              },
+            },
+          }),
+          prisma.walletTransaction.create({
+            data: {
+              userId: dbUser.id,
+              amountBDT: amount,
+              type: "PURCHASE",
+              method: "wallet",
+              trxId: `WAL-${orderId}`,
+              status: "APPROVED",
+              note: `Payment for order #${orderId}`,
+            },
+          }),
+        ]);
+        remainingBalance = updatedUser.walletBalanceBDT;
+        purchaseSuccess = true;
+      }
+    } catch (dbErr) {
+      console.warn("[Prisma Wallet Purchase DB sync warning]:", dbErr);
+    }
+
+    if (!purchaseSuccess) {
       return NextResponse.json(
         {
-          error: `Insufficient wallet balance. Current balance: ৳${dbUser.walletBalanceBDT}, Required: ৳${amount}`,
-          currentBalance: dbUser.walletBalanceBDT,
+          error: `ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই (ব্যালেন্স: ৳${localUser?.walletBalanceBDT || 0}, প্রয়োজন: ৳${amount})।`,
         },
         { status: 400 }
       );
     }
 
-    // Deduct balance from User and record purchase transaction atomically
-    const [updatedUser, tx] = await prisma.$transaction([
-      prisma.user.update({
-        where: { id: dbUser.id },
-        data: {
-          walletBalanceBDT: {
-            decrement: amount,
-          },
-        },
-      }),
-      prisma.walletTransaction.create({
-        data: {
-          userId: dbUser.id,
-          amountBDT: amount,
-          type: "PURCHASE",
-          method: "wallet",
-          trxId: `WAL-${orderId}`,
-          status: "APPROVED",
-          note: `Payment for order #${orderId}`,
-        },
-      }),
-    ]);
-
-    // Update order status to VERIFIED & PROCESSING in DB
+    // 3. Mark Order as Verified & Processing in DB & JSON
     try {
       await prisma.order.updateMany({
         where: {
@@ -72,11 +111,17 @@ export async function POST(req: NextRequest) {
       console.warn("Order status update error on wallet pay:", e);
     }
 
+    updateOrderStatus(orderId, {
+      paymentStatus: "Completed",
+      deliveryStatus: "Processing",
+      trxId: `WAL-${orderId}`,
+    });
+
     return NextResponse.json({
       success: true,
       message: "Payment completed successfully using wallet balance.",
-      remainingBalance: updatedUser.walletBalanceBDT,
-      transactionId: tx.id,
+      remainingBalance,
+      transactionId: `WAL-${orderId}`,
     });
   } catch (error: any) {
     console.error("[Wallet Purchase Error]:", error);
