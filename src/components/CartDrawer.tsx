@@ -6,10 +6,12 @@ import { X, Trash2, ShoppingBag, ArrowRight, Tag, Minus, Plus } from "lucide-rea
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
 import { SafeImage } from "@/components/SafeImage";
 
 export function CartDrawer() {
   const router = useRouter();
+  const { user, openLoginModal } = useAuth();
   const { isCartOpen, setIsCartOpen, items, removeFromCart, updateQuantity, subtotalBDT } = useCart();
   const { formatPrice } = useCurrency();
   const { showToast } = useToast();
@@ -184,9 +186,13 @@ export function CartDrawer() {
               <button
                 onClick={() => {
                   setIsCartOpen(false);
-                  router.push("/checkout");
+                  if (!user) {
+                    openLoginModal("/checkout");
+                  } else {
+                    router.push("/checkout");
+                  }
                 }}
-                className="w-full py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm hover:shadow-md flex items-center justify-center gap-1.5 transition-all"
+                className="w-full py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm hover:shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
                 <span>চেকআউট করুন (Proceed to Checkout)</span>
                 <ArrowRight className="w-4 h-4" />

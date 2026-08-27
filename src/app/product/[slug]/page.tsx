@@ -22,6 +22,7 @@ import { PRODUCTS, getProductBySlug } from "@/data/products";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
 import { HowToOrder } from "@/components/home/HowToOrder";
 import { SafeImage } from "@/components/SafeImage";
 import { PaymentLogo } from "@/components/PaymentLogo";
@@ -33,6 +34,7 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const slug = params.slug as string;
 
+  const { user, openLoginModal } = useAuth();
   const { getProductBySlug } = useProducts();
   const product = getProductBySlug(slug) || PRODUCTS.find((p) => p.slug === slug) || PRODUCTS[0];
   const { formatPrice } = useCurrency();
@@ -75,7 +77,11 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = () => {
     addToCart(product, selectedVariation, quantity);
-    router.push("/checkout");
+    if (!user) {
+      openLoginModal("/checkout");
+    } else {
+      router.push("/checkout");
+    }
   };
 
   const handleReviewSubmit = (e: React.FormEvent) => {
