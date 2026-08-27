@@ -9,7 +9,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { PRODUCTS } from "@/data/products";
+import { useProducts } from "@/context/ProductsContext";
 import { SafeImage } from "@/components/SafeImage";
 
 export function Header() {
@@ -20,6 +20,7 @@ export function Header() {
   const isBn = language === "bn";
   const { totalItems, setIsCartOpen } = useCart();
   const { user, openLoginModal, logout } = useAuth();
+  const { products } = useProducts();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -63,7 +64,7 @@ export function Header() {
   ];
 
   const filteredSearchResults = searchQuery.trim()
-    ? PRODUCTS.filter(
+    ? products.filter(
         (p) =>
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||

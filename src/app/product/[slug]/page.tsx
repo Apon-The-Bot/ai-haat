@@ -25,6 +25,7 @@ import { useToast } from "@/context/ToastContext";
 import { HowToOrder } from "@/components/home/HowToOrder";
 import { SafeImage } from "@/components/SafeImage";
 import { PaymentLogo } from "@/components/PaymentLogo";
+import { useProducts } from "@/context/ProductsContext";
 import { Variation, Review } from "@/types";
 
 export default function ProductDetailPage() {
@@ -32,19 +33,26 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const slug = params.slug as string;
 
-  const product = getProductBySlug(slug) || PRODUCTS[0];
+  const { getProductBySlug } = useProducts();
+  const product = getProductBySlug(slug) || PRODUCTS.find((p) => p.slug === slug) || PRODUCTS[0];
   const { formatPrice } = useCurrency();
   const { addToCart } = useCart();
   const { showToast } = useToast();
 
   const [selectedVariation, setSelectedVariation] = useState<Variation>(
-    product.variations[0] || {
+    product?.variations?.[0] || {
       id: "default",
       name: "Standard Edition",
-      priceBDT: product.minPriceBDT,
+      priceBDT: product?.minPriceBDT || 290,
       inStock: true,
     }
   );
+
+  React.useEffect(() => {
+    if (product?.variations?.[0]) {
+      setSelectedVariation(product.variations[0]);
+    }
+  }, [product]);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<"description" | "features" | "info">("description");
 
