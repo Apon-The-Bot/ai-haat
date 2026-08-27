@@ -6,6 +6,7 @@ import {
   debitLocalWalletBalance,
   recordLocalTransaction,
 } from "@/lib/wallet-db";
+import { sendTelegramMessage } from "@/utils/telegram";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +117,25 @@ export async function POST(req: NextRequest) {
       deliveryStatus: "Processing",
       trxId: `WAL-${orderId}`,
     });
+
+    // 4. Dispatch Telegram Notification
+    try {
+      await sendTelegramMessage(`
+⚡ <b>ওয়ালেট দিয়ে অর্ডার পেমেন্ট সম্পন্ন! (Paid via Wallet)</b>
+━━━━━━━━━━━━━━━━━━━━
+🆔 <b>Order ID:</b> <code>${orderId}</code>
+👤 <b>ক্রেতার ইমেইল:</b> ${cleanEmail}
+💰 <b>পরিশোধিত মূল্য:</b> <b>৳${amount}</b>
+💳 <b>মেথড:</b> WALLET BALANCE
+🔑 <b>TrxID:</b> <code>WAL-${orderId}</code>
+💵 <b>অবশিষ্ট ওয়ালেট ব্যালেন্স:</b> ৳${remainingBalance}
+⏰ <b>সময়:</b> ${new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" })}
+━━━━━━━━━━━━━━━━━━━━
+<i>অর্ডারটি ভেরিফাইড এবং প্রসেসিং হচ্ছে।</i>
+      `);
+    } catch (tErr) {
+      console.warn("Telegram dispatch warning on wallet pay:", tErr);
+    }
 
     return NextResponse.json({
       success: true,

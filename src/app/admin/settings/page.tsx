@@ -1,7 +1,26 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Settings, Save, Send, Megaphone, MessageSquare, Share2, Phone, Mail, CheckCircle2, XCircle, Zap, ShieldCheck } from "lucide-react";
+import {
+  Settings,
+  Save,
+  Send,
+  Megaphone,
+  MessageSquare,
+  Share2,
+  Phone,
+  Mail,
+  CheckCircle2,
+  XCircle,
+  Zap,
+  ShieldCheck,
+  Bot,
+  Bell,
+  Check,
+  ExternalLink,
+  HelpCircle,
+  Loader2,
+} from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 
 interface GatewayMethod {
@@ -11,6 +30,14 @@ interface GatewayMethod {
   logo: string;
   isActive: boolean;
   mobileNumber: string;
+}
+
+interface TelegramConfig {
+  botToken: string;
+  chatId: string;
+  isEnabled: boolean;
+  notifyOnOrder: boolean;
+  notifyOnWallet: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -62,7 +89,21 @@ export default function AdminSettingsPage() {
   const [businessEmail, setBusinessEmail] = useState("delivery@aihaat.shop");
 
   // Announcement
-  const [announcement, setAnnouncement] = useState("Special Launch Offer: Get instant delivery & replacement warranty on all digital subscriptions!");
+  const [announcement, setAnnouncement] = useState(
+    "Special Launch Offer: Get instant delivery & replacement warranty on all digital subscriptions!"
+  );
+
+  // Telegram Bot Settings
+  const [telegram, setTelegram] = useState<TelegramConfig>({
+    botToken: "",
+    chatId: "",
+    isEnabled: true,
+    notifyOnOrder: true,
+    notifyOnWallet: true,
+  });
+  const [isLoadingTelegram, setIsLoadingTelegram] = useState(false);
+  const [isSavingTelegram, setIsSavingTelegram] = useState(false);
+  const [isTestingTelegram, setIsTestingTelegram] = useState(false);
 
   useEffect(() => {
     const fetchGateways = async () => {
@@ -81,7 +122,26 @@ export default function AdminSettingsPage() {
         setIsLoadingGateways(false);
       }
     };
+
+    const fetchTelegram = async () => {
+      try {
+        setIsLoadingTelegram(true);
+        const res = await fetch("/api/admin/settings/telegram");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.settings) {
+            setTelegram(data.settings);
+          }
+        }
+      } catch (err) {
+        console.error("Fetch telegram settings error:", err);
+      } finally {
+        setIsLoadingTelegram(false);
+      }
+    };
+
     fetchGateways();
+    fetchTelegram();
   }, []);
 
   const handleToggleGateway = (slug: string) => {
@@ -118,37 +178,276 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveTelegram = async () => {
+    try {
+      setIsSavingTelegram(true);
+      const res = await fetch("/api/admin/settings/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(telegram),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("টেলিগ্রাম বট সেটিংস সফলভাবে সংরক্ষিত হয়েছে!", "success");
+      } else {
+        showToast(data.error || "টেলিগ্রাম সেটিংস সংরক্ষণ করা যায়নি", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("টেলিগ্রাম সেটিংস সেভ করতে সমস্যা হয়েছে", "error");
+    } finally {
+      setIsSavingTelegram(false);
+    }
+  };
+
+  const handleTestTelegram = async () => {
+    if (!telegram.botToken.trim() || !telegram.chatId.trim()) {
+      showToast("দয়া করে Bot Token এবং Chat ID উভয় ফিল্ড পূরণ করুন।", "error");
+      return;
+    }
+
+    try {
+      setIsTestingTelegram(true);
+      const res = await fetch("/api/admin/settings/telegram/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          botToken: telegram.botToken,
+          chatId: telegram.chatId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("✅ টেলিগ্রাম টেস্ট মেসেজ সফলভাবে পাঠানো হয়েছে! টেলিগ্রাম চেক করুন।", "success");
+      } else {
+        showToast(`❌ সংযোগ ব্যর্থ: ${data.error}`, "error");
+      }
+    } catch (err: any) {
+      showToast("টেলিগ্রাম টেস্ট করতে ব্যর্থ হয়েছে।", "error");
+    } finally {
+      setIsTestingTelegram(false);
+    }
+  };
+
+  const handleSaveAllSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    handleSaveGateways();
+    await handleSaveGateways();
+    await handleSaveTelegram();
     showToast("সকল সেটিংস সফলভাবে আপডেট করা হয়েছে!", "success");
   };
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto pb-16">
-      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900">System Settings</h1>
           <p className="text-sm text-slate-500 mt-1">
-            MFS পেমেন্ট গেটওয়ে কনফিগারেশন, রিসিভিং নাম্বার ও কাস্টমার সাপোর্ট সেটিংস।
+            টেলিগ্রাম নোটিফিকেশন বট, MFS পেমেন্ট গেটওয়ে, রিসিভিং নাম্বার ও কাস্টমার সাপোর্ট কনফিগারেশন।
           </p>
         </div>
 
         <button
-          onClick={handleSaveSettings}
-          disabled={isSavingGateways}
+          onClick={handleSaveAllSettings}
+          disabled={isSavingGateways || isSavingTelegram}
           className="px-6 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 self-start sm:self-auto cursor-pointer"
         >
           <Save className="w-4 h-4" />
-          <span>{isSavingGateways ? "Saving..." : "Save All Settings"}</span>
+          <span>{isSavingGateways || isSavingTelegram ? "Saving..." : "Save All Settings"}</span>
         </button>
       </div>
 
-      <form onSubmit={handleSaveSettings} className="space-y-6">
-        
-        {/* 1. MFS Automated Gateways Control */}
+      <form onSubmit={handleSaveAllSettings} className="space-y-6">
+        {/* 1. Telegram Bot Real-time Order Notification Card */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 space-y-6 shadow-2xs">
+          <div className="pb-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-sky-50 text-[#0088cc] flex items-center justify-center shadow-xs">
+                <Bot className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900">
+                    Telegram Real-time Order Alert Bot
+                  </h3>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      telegram.isEnabled
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                        : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {telegram.isEnabled ? "ACTIVE & CONNECTED" : "DISABLED"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  নতুন অর্ডার বা ওয়ালেট রিচার্জ হওয়ামাত্রই টেলিগ্রাম গ্রুপ বা প্রাইভেট বটে সম্পূর্ণ অর্ডারের তথ্য চলে যাবে।
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleTestTelegram}
+                disabled={isTestingTelegram || !telegram.botToken}
+                className="px-4 py-2 bg-sky-50 hover:bg-sky-100 border border-sky-200 text-[#0088cc] disabled:opacity-50 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                {isTestingTelegram ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Testing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Test Connection</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveTelegram}
+                disabled={isSavingTelegram}
+                className="px-4 py-2 bg-[#1A1D26] hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-2xs"
+              >
+                {isSavingTelegram ? "Saving..." : "Save Bot Settings"}
+              </button>
+            </div>
+          </div>
+
+          {/* Toggle Switches & Config Inputs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center justify-between">
+                  <span>Telegram Bot Token (HTTP API) *</span>
+                  <a
+                    href="https://t.me/BotFather"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-[#0088cc] hover:underline font-semibold flex items-center gap-1"
+                  >
+                    <span>Get from @BotFather</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </label>
+                <input
+                  type="text"
+                  value={telegram.botToken}
+                  onChange={(e) => setTelegram({ ...telegram, botToken: e.target.value })}
+                  placeholder="e.g. 7482910382:AAH92vU8_y92kdExampleToken..."
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:border-[#0088cc] focus:bg-white focus:outline-hidden"
+                />
+                <span className="text-[10px] text-slate-400 block mt-1">
+                  টেলিগ্রাম @BotFather এ /newbot কমান্ড দিয়ে আপনার বটের টোকেনটি এখানে পেস্ট করুন।
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center justify-between">
+                  <span>Telegram Chat ID / Group ID *</span>
+                  <a
+                    href="https://t.me/userinfobot"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-[#0088cc] hover:underline font-semibold flex items-center gap-1"
+                  >
+                    <span>Find ID via @userinfobot</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </label>
+                <input
+                  type="text"
+                  value={telegram.chatId}
+                  onChange={(e) => setTelegram({ ...telegram, chatId: e.target.value })}
+                  placeholder="e.g. 123456789 (User ID) or -1001234567890 (Group/Channel ID)"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:border-[#0088cc] focus:bg-white focus:outline-hidden"
+                />
+                <span className="text-[10px] text-slate-400 block mt-1">
+                  গ্রুপ বা চ্যানেলে নোটিফিকেশন পেতে চাইলে বটকে গ্রুপে অ্যাড করে গ্রুপের Chat ID দিন।
+                </span>
+              </div>
+            </div>
+
+            {/* Notification triggers & Helper */}
+            <div className="space-y-4 bg-slate-50/80 p-4 rounded-xl border border-slate-200/80">
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
+                Notification Preferences
+              </h4>
+
+              <div className="space-y-3">
+                {/* Main enable switch */}
+                <label className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer">
+                  <div className="flex items-center gap-2.5">
+                    <Bot className="w-4 h-4 text-sky-600" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Enable Telegram Bot Alerts</p>
+                      <p className="text-[10px] text-slate-500">Master switch for Telegram integration</p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={telegram.isEnabled}
+                    onChange={(e) => setTelegram({ ...telegram, isEnabled: e.target.checked })}
+                    className="w-4 h-4 text-[#0088cc] rounded-md focus:ring-0 cursor-pointer"
+                  />
+                </label>
+
+                {/* New Order Switch */}
+                <label className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer">
+                  <div className="flex items-center gap-2.5">
+                    <Zap className="w-4 h-4 text-[#FC5C03]" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Instant Order Alerts</p>
+                      <p className="text-[10px] text-slate-500">নতুন অর্ডার প্লেস হলে সাথে সাথে নোটিফিকেশন যাবে</p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={telegram.notifyOnOrder}
+                    onChange={(e) => setTelegram({ ...telegram, notifyOnOrder: e.target.checked })}
+                    className="w-4 h-4 text-[#FC5C03] rounded-md focus:ring-0 cursor-pointer"
+                  />
+                </label>
+
+                {/* Wallet Switch */}
+                <label className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer">
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Wallet Top-up Alerts</p>
+                      <p className="text-[10px] text-slate-500">গ্রাহক ওয়ালেট রিচার্জ বা পার্চেজ করলে নোটিফিকেশন যাবে</p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={telegram.notifyOnWallet}
+                    onChange={(e) => setTelegram({ ...telegram, notifyOnWallet: e.target.checked })}
+                    className="w-4 h-4 text-emerald-600 rounded-md focus:ring-0 cursor-pointer"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Guide */}
+          <div className="p-4 bg-sky-50/60 rounded-xl border border-sky-100 flex items-start gap-3">
+            <HelpCircle className="w-5 h-5 text-[#0088cc] shrink-0 mt-0.5" />
+            <div className="text-xs text-slate-600 space-y-1">
+              <p className="font-bold text-slate-900">টেলিগ্রাম বট সেটআপ করার সহজ নিয়ম (১ মিনিটে):</p>
+              <ol className="list-decimal pl-4 space-y-0.5 text-[11px] text-slate-600">
+                <li>টেলিগ্রামে <b>@BotFather</b> লিখে সার্চ দিয়ে <code>/newbot</code> লিখে একটি নাম ও ইউজারনেম দিন।</li>
+                <li>BotFather আপনাকে একটি <b>HTTP API Token</b> দেবে, সেটি কপি করে উপরের বক্সে পেস্ট করুন।</li>
+                <li>আপনার তৈরি করা বটের চ্যাটে গিয়ে <b>/start</b> চাপুন (অথবা আপনার এডমিন গ্রুপে বটটিকে এডমিন হিসেবে যুক্ত করুন)।</li>
+                <li><b>@userinfobot</b> বা <b>@getmyid_bot</b> থেকে আপনার Chat ID নিয়ে এখানে বসিয়ে <b>Test Connection</b> এ চাপ দিন।</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. MFS Automated Gateways Control */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 space-y-5 shadow-2xs">
           <div className="pb-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2.5">
@@ -193,9 +492,11 @@ export default function AdminSettingsPage() {
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-slate-900">{gw.name}</h4>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        gw.isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"
-                      }`}>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          gw.isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
                         {gw.isActive ? "ACTIVE & LIVE" : "DISABLED"}
                       </span>
                     </div>
@@ -236,7 +537,7 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* 2. Live Activation & Support Channels (WhatsApp & Messenger) */}
+        {/* 3. Live Activation & Support Channels (WhatsApp & Messenger) */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 space-y-5 shadow-2xs">
           <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -308,7 +609,7 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* 3. Global Announcement Bar */}
+        {/* 4. Global Announcement Bar */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 space-y-4 shadow-2xs">
           <h3 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
             <Megaphone className="w-5 h-5 text-amber-500" />
@@ -322,9 +623,7 @@ export default function AdminSettingsPage() {
             className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
           />
         </div>
-
       </form>
-
     </div>
   );
 }

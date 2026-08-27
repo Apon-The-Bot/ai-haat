@@ -2,16 +2,23 @@
  * Telegram Notification Service for AI Haat
  * Dispatches real-time alerts to Admin Telegram Chat / Channel
  */
+import { getTelegramSettings } from "@/lib/telegram-db";
 
-export async function sendTelegramMessage(textHtml: string): Promise<boolean> {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+export async function sendTelegramMessage(
+  textHtml: string,
+  customConfig?: { botToken?: string; chatId?: string }
+): Promise<{ success: boolean; error?: string }> {
+  const settings = getTelegramSettings();
+  const botToken = customConfig?.botToken || settings.botToken || process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = customConfig?.chatId || settings.chatId || process.env.TELEGRAM_CHAT_ID;
+  const isEnabled = customConfig ? true : settings.isEnabled;
+
+  if (!isEnabled) {
+    return { success: false, error: "Telegram bot notifications are disabled in settings." };
+  }
 
   if (!botToken || !chatId) {
-    if (process.env.NODE_ENV !== "production") {
-      console.log(`[Telegram Alert Simulated]:\n${textHtml.replace(/<[^>]*>?/gm, "")}`);
-    }
-    return false;
+    return { success: false, error: "Telegram Bot Token or Chat ID is not configured." };
   }
 
   try {
@@ -28,10 +35,14 @@ export async function sendTelegramMessage(textHtml: string): Promise<boolean> {
     });
 
     const data = await response.json();
-    return data.ok === true;
-  } catch (error) {
+    if (data.ok === true) {
+      return { success: true };
+    } else {
+      return { success: false, error: data.description || "Failed to send telegram message." };
+    }
+  } catch (error: any) {
     console.error("[Telegram Bot Error]:", error);
-    return false;
+    return { success: false, error: error.message || "Network error sending telegram message." };
   }
 }
 
@@ -47,6 +58,9 @@ export async function sendNewOrderTelegramAlert(order: {
   trxId?: string;
   notes?: string;
 }) {
+  const settings = getTelegramSettings();
+  if (!settings.notifyOnOrder) return { success: false, error: "Order notifications disabled" };
+
   const itemsText = order.items
     .map(
       (item) =>
@@ -87,6 +101,9 @@ export async function sendWalletRechargeTelegramAlert(deposit: {
   senderNumber?: string;
   trxId?: string;
 }) {
+  const settings = getTelegramSettings();
+  if (!settings.notifyOnWallet) return { success: false, error: "Wallet notifications disabled" };
+
   const message = `
 💰 <b>ওয়ালেট রিচার্জ অনুরোধ (Wallet Recharge Request)</b>
 ━━━━━━━━━━━━━━━━━━━━
