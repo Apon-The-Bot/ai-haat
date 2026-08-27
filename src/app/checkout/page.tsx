@@ -109,23 +109,26 @@ export default function CheckoutPage() {
     setHasMessengerDelivery(isMsg);
     setOrderSummaryText(summary);
 
-    // Save order in backend
+    // Save order in backend (Prisma MySQL + Local)
     try {
-      await fetch("/api/orders", {
+      const orderSaveRes = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId: orderNum,
+          orderNumber: orderNum,
           customerName: fullName,
           customerEmail: email,
           customerPhone: phone,
           items: items.map((i) => ({
             productId: i.product.id,
+            productName: i.product.name,
             name: i.product.name,
             variationId: i.selectedVariation.id,
             variationName: i.selectedVariation.name,
             priceBDT: i.selectedVariation.priceBDT,
             quantity: i.quantity,
+            image: i.product.image,
           })),
           subtotalBDT,
           discountBDT,
@@ -137,6 +140,9 @@ export default function CheckoutPage() {
           notes,
         }),
       });
+      if (!orderSaveRes.ok) {
+        console.warn("Order save warning:", await orderSaveRes.text());
+      }
     } catch (e) {
       console.error("Order save:", e);
     }
