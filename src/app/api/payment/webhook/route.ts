@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { updateOrderStatus } from "@/lib/orders-db";
+import { creditLocalWalletBalance, recordLocalTransaction } from "@/lib/wallet-db";
 
 export const dynamic = "force-dynamic";
 
@@ -17,57 +18,77 @@ export async function POST(req: NextRequest) {
     const userId = body?.metadata?.userId || "";
 
     if (orderId && (status === "completed" || status === "success")) {
-      if (orderId.startsWith("WT-") && (email || userId) && amount > 0) {
-        let user = null;
-        if (userId) {
-          user = await prisma.user.findUnique({ where: { id: userId } });
-        }
-        if (!user && email) {
-          user = await prisma.user.findFirst({
-            where: {
-              OR: [{ email }, { email: email.toLowerCase() }],
-            },
-          });
-        }
+      if (orderId.startsWith("WT-") && email && amount > 0) {
+        // 1. Credit local fallback storage
+        creditLocalWalletBalance(email, amount);
+        recordLocalTransaction({
+          userId: userId || `usr_${email.slice(0, 5)}`,
+          userEmail: email,
+          userName: email.split("@")[0],
+          amountBDT: amount,
+          type: "DEPOSIT",
+          method: "gateway",
+          senderNumber: "GATEWAY",
+          trxId: trxId || orderId,
+          status: "APPROVED",
+          note: `Automated Gateway IPN (${trxId})`,
+        });
 
-        if (user) {
-          const existing = await prisma.walletTransaction.findFirst({
-            where: {
-              trxId: trxId || orderId,
-              status: "APPROVED",
-            },
-          });
-
-          if (!existing) {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { walletBalanceBDT: { increment: amount } },
+        // 2. Try sync to Prisma MySQL
+        try {
+          let user = null;
+          if (userId) {
+            user = await prisma.user.findUnique({ where: { id: userId } });
+          }
+          if (!user && email) {
+            user = await prisma.user.findFirst({
+              where: {
+                OR: [{ email }, { email: email.toLowerCase() }],
+              },
             });
+          }
 
-            await prisma.walletTransaction.create({
-              data: {
-                userId: user.id,
-                amountBDT: amount,
-                type: "DEPOSIT",
-                method: "gateway",
-                senderNumber: "GATEWAY",
+          if (user) {
+            const existing = await prisma.walletTransaction.findFirst({
+              where: {
                 trxId: trxId || orderId,
                 status: "APPROVED",
-                note: `Automated Gateway IPN (${trxId})`,
               },
             });
 
-            await prisma.notification.create({
-              data: {
-                userId: user.id,
-                title: "ওয়ালেট রিচার্জ সফল!",
-                message: `আপনার ওয়ালেটে ৳${amount} সফলভাবে জমা হয়েছে।`,
-                type: "WALLET",
-                link: "/dashboard/wallet",
-              },
-            });
-            console.log(`✓ Webhook credited ৳${amount} to user ${user.email}`);
+            if (!existing) {
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { walletBalanceBDT: { increment: amount } },
+              });
+
+              await prisma.walletTransaction.create({
+                data: {
+                  userId: user.id,
+                  amountBDT: amount,
+                  type: "DEPOSIT",
+                  method: "gateway",
+                  senderNumber: "GATEWAY",
+                  trxId: trxId || orderId,
+                  status: "APPROVED",
+                  note: `Automated Gateway IPN (${trxId})`,
+                },
+              });
+
+              await prisma.notification.create({
+                data: {
+                  userId: user.id,
+                  title: "ওয়ালেট রিচার্জ সফল!",
+                  message: `আপনার ওয়ালেটে ৳${amount} সফলভাবে জমা হয়েছে।`,
+                  type: "WALLET",
+                  link: "/dashboard/wallet",
+                },
+              });
+              console.log(`✓ Webhook credited ৳${amount} to MySQL user ${user.email}`);
+            }
           }
+        } catch (dbErr) {
+          console.warn("[Prisma Webhook DB sync error - non-fatal]:", dbErr);
         }
       } else {
         try {

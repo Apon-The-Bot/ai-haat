@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { updateOrderStatus } from "@/lib/orders-db";
+import { creditLocalWalletBalance, recordLocalTransaction } from "@/lib/wallet-db";
 
 export const dynamic = "force-dynamic";
 
@@ -88,8 +89,25 @@ export async function GET(req: NextRequest) {
 
         const topupAmount = verifiedAmount || Number(searchParams.get("amount")) || 0;
 
+        if (customerEmail && topupAmount > 0) {
+          // Always credit local fallback storage
+          creditLocalWalletBalance(customerEmail, topupAmount);
+          recordLocalTransaction({
+            userId: user?.id || `usr_${customerEmail.slice(0, 5)}`,
+            userEmail: customerEmail,
+            userName: user?.name || customerEmail.split("@")[0],
+            amountBDT: topupAmount,
+            type: "DEPOSIT",
+            method: "gateway",
+            senderNumber: "GATEWAY",
+            trxId: realTrxId || transactionRef || orderId,
+            status: "APPROVED",
+            note: `Automated Gateway Top-up (${realTrxId || transactionRef})`,
+          });
+        }
+
         if (user && topupAmount > 0) {
-          // Prevent double credit
+          // Prevent double credit in MySQL
           const existingApproved = await prisma.walletTransaction.findFirst({
             where: {
               trxId: realTrxId || transactionRef || orderId,
