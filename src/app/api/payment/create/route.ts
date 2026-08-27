@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -25,34 +27,42 @@ export async function POST(req: Request) {
       siteUrl = process.env.NEXTAUTH_URL || "https://aihaat.shop";
     }
 
-    if (!amount || amount <= 0) {
+    const numAmount = Number(amount);
+    if (!numAmount || numAmount <= 0) {
       return NextResponse.json(
         { success: false, message: "Invalid payment amount" },
         { status: 400 }
       );
     }
 
+    const cleanEmail = (customerEmail || "").trim().toLowerCase();
+    const cleanPhone = (customerPhone || "01700000000").trim();
+    const cleanName = (customerName || "Customer").trim();
+    const currentOrderId = orderId || `AH-${Date.now().toString().slice(-5)}`;
+
+    const returnUrl = `${siteUrl}/api/payment/callback?orderId=${encodeURIComponent(currentOrderId)}&customerEmail=${encodeURIComponent(cleanEmail)}&amount=${encodeURIComponent(String(numAmount))}&userId=${encodeURIComponent(metadata?.userId || "")}`;
+
     const payload = {
-      full_name: customerName || "Customer",
-      email_address: customerEmail || "customer@aihaat.shop",
-      mobile_number: customerPhone || "01700000000",
-      amount: amount.toString(),
+      full_name: cleanName,
+      email_address: cleanEmail || "customer@aihaat.shop",
+      mobile_number: cleanPhone,
+      amount: numAmount.toFixed(2),
       currency: "BDT",
-      return_url: `${siteUrl}/api/payment/callback?orderId=${encodeURIComponent(orderId || "")}`,
+      return_url: returnUrl,
       webhook_url: `${siteUrl}/api/payment/webhook`,
       metadata: {
-        orderId: orderId || `AH-${Date.now().toString().slice(-5)}`,
+        orderId: currentOrderId,
+        email: cleanEmail,
+        userId: metadata?.userId || "",
         ...(metadata || {}),
       },
     };
 
-    // If no API key configured yet, return fallback test response
     if (!apiKey) {
       return NextResponse.json({
-        success: true,
-        mode: "manual_fallback",
-        message: "PaknaPay API Key not yet set. Complete database & API key setup in pay.aihaat.shop.",
-      });
+        success: false,
+        message: "PipraPay API Key is not configured",
+      }, { status: 500 });
     }
 
     const response = await fetch(`${baseUrl}/api/checkout/redirect`, {
@@ -78,7 +88,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: data?.error?.message || "Failed to generate gateway payment URL",
+        message: data?.error?.message || data?.message || "Failed to generate gateway payment URL",
         details: data,
       },
       { status: 400 }
