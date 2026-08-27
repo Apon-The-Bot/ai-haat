@@ -22,8 +22,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, user: null });
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+    const cleanEmail = email.trim().toLowerCase();
+
+    let dbUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: cleanEmail },
+          { email: email.trim() },
+        ],
+      },
       select: {
         id: true,
         name: true,
@@ -35,6 +42,35 @@ export async function GET(req: NextRequest) {
         createdAt: true,
       },
     });
+
+    if (!dbUser) {
+      try {
+        const isAdmin =
+          cleanEmail === "mdamanullahsheikhapon@gmail.com" ||
+          cleanEmail === "admin@aihaat.com";
+
+        dbUser = await prisma.user.create({
+          data: {
+            email: cleanEmail,
+            name: email.split("@")[0],
+            role: isAdmin ? "ADMIN" : "USER",
+            walletBalanceBDT: 0,
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            phone: true,
+            role: true,
+            walletBalanceBDT: true,
+            createdAt: true,
+          },
+        });
+      } catch (err) {
+        console.warn("[Auto-create user in DB warning]:", err);
+      }
+    }
 
     if (!dbUser) {
       return NextResponse.json({ success: false, user: null });
