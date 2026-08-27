@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllProducts, createProduct, deleteProductFromDB } from "@/lib/products-db";
+import { getAllProducts, createProduct, updateProductInDB, deleteProductFromDB } from "@/lib/products-db";
 import { PRODUCTS } from "@/data/products";
 
 export async function GET(req: NextRequest) {
@@ -33,6 +33,10 @@ export async function POST(req: NextRequest) {
       info,
       variations,
       inStock,
+      isFeatured,
+      isBestProduct,
+      isBestSelling,
+      badge,
     } = body;
 
     if (!name) {
@@ -50,6 +54,7 @@ export async function POST(req: NextRequest) {
       rating: 5.0,
       ratingCount: 1,
       viewCount: 100,
+      badge: badge || (isBestProduct ? "Best Product" : undefined),
       minPriceBDT: Number(minPriceBDT) || 0,
       maxPriceBDT: Number(maxPriceBDT) || 0,
       deliveryMethod: deliveryMethod || "EMAIL",
@@ -74,6 +79,9 @@ export async function POST(req: NextRequest) {
         inStock: v.inStock ?? true,
       })),
       inStock: inStock ?? true,
+      isFeatured: isFeatured ?? false,
+      isBestProduct: isBestProduct ?? false,
+      isBestSelling: isBestSelling ?? false,
     };
 
     const saved = await createProduct(newProduct as any);
@@ -92,6 +100,38 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, slug, inStock, isFeatured, isBestProduct, isBestSelling, badge } = body;
+
+    const target = id || slug;
+    if (!target) {
+      return NextResponse.json({ error: "Product id or slug is required" }, { status: 400 });
+    }
+
+    const updated = await updateProductInDB(target, {
+      ...(inStock !== undefined ? { inStock } : {}),
+      ...(isFeatured !== undefined ? { isFeatured } : {}),
+      ...(isBestProduct !== undefined ? { isBestProduct } : {}),
+      ...(isBestSelling !== undefined ? { isBestSelling } : {}),
+      ...(badge !== undefined ? { badge } : {}),
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Product updated successfully",
+      product: updated,
+    });
+  } catch (error: any) {
+    console.error("[Products PATCH Error]:", error);
+    return NextResponse.json(
+      { error: error?.message || "Failed to update product" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -102,9 +142,16 @@ export async function DELETE(req: NextRequest) {
     }
 
     await deleteProductFromDB(id);
-    return NextResponse.json({ success: true, message: "Product deleted successfully" });
+
+    return NextResponse.json({
+      success: true,
+      message: "Product deleted from database successfully.",
+    });
   } catch (error: any) {
     console.error("[Products DELETE Error]:", error);
-    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "Failed to delete product" },
+      { status: 500 }
+    );
   }
 }

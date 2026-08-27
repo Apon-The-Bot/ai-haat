@@ -88,6 +88,9 @@ export async function getAllProducts(): Promise<Product[]> {
             description: v.description || "",
           })),
           inStock: p.inStock,
+          isFeatured: p.isFeatured,
+          isBestProduct: p.isBestProduct,
+          isBestSelling: p.isBestSelling,
           reviews: [],
         };
       });
@@ -130,6 +133,9 @@ export async function createProduct(prod: Product): Promise<Product> {
         validity: prod.info?.validity || "১ মাস / ১ বছর",
         deviceSupport: prod.info?.deviceSupport || "সকল ডিভাইস",
         inStock: prod.inStock ?? true,
+        isFeatured: prod.isFeatured ?? false,
+        isBestProduct: prod.isBestProduct ?? false,
+        isBestSelling: prod.isBestSelling ?? false,
         variations: {
           create: (prod.variations || []).map((v) => ({
             id: v.id,
@@ -157,17 +163,24 @@ export async function updateProductInDB(idOrSlug: string, prod: Partial<Product>
   }
 
   try {
-    await prisma.product.update({
-      where: { id: idOrSlug },
-      data: {
-        name: prod.name,
-        category: prod.category,
-        image: prod.image,
-        minPriceBDT: prod.minPriceBDT,
-        maxPriceBDT: prod.maxPriceBDT,
-        shortDesc: prod.shortDesc,
-        inStock: prod.inStock,
+    const updateData: any = {};
+    if (prod.name !== undefined) updateData.name = prod.name;
+    if (prod.category !== undefined) updateData.category = prod.category;
+    if (prod.image !== undefined) updateData.image = prod.image;
+    if (prod.minPriceBDT !== undefined) updateData.minPriceBDT = prod.minPriceBDT;
+    if (prod.maxPriceBDT !== undefined) updateData.maxPriceBDT = prod.maxPriceBDT;
+    if (prod.shortDesc !== undefined) updateData.shortDesc = prod.shortDesc;
+    if (prod.inStock !== undefined) updateData.inStock = prod.inStock;
+    if (prod.isFeatured !== undefined) updateData.isFeatured = prod.isFeatured;
+    if (prod.isBestProduct !== undefined) updateData.isBestProduct = prod.isBestProduct;
+    if (prod.isBestSelling !== undefined) updateData.isBestSelling = prod.isBestSelling;
+    if (prod.badge !== undefined) updateData.badge = prod.badge;
+
+    await prisma.product.updateMany({
+      where: {
+        OR: [{ id: idOrSlug }, { slug: idOrSlug }],
       },
+      data: updateData,
     });
   } catch (err) {
     console.error("[Prisma updateProduct error]:", err);

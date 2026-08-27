@@ -29,12 +29,20 @@ export function ProductCard({ product }: ProductCardProps) {
           alt={product.name}
           aspectRatio="1/1"
           objectFit="cover"
-          className="group-hover:scale-105 transition-transform duration-300"
+          className={`group-hover:scale-105 transition-transform duration-300 ${
+            product.inStock === false ? "opacity-75 grayscale-[20%]" : ""
+          }`}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
         />
 
-        {/* 2. Optional Badge Over Image */}
-        {product.badge && (
+        {/* Stock Out Overlay Badge */}
+        {product.inStock === false ? (
+          <div className="absolute top-2 left-2 z-10">
+            <span className="px-2 py-0.5 text-[9.5px] font-black tracking-wide uppercase rounded-md shadow-xs bg-red-600 text-white">
+              স্টক আউট
+            </span>
+          </div>
+        ) : product.badge ? (
           <div className="absolute top-2 left-2 z-10">
             <span
               className={`px-2 py-0.5 text-[9.5px] font-bold tracking-wide uppercase rounded-md shadow-xs ${
@@ -50,7 +58,7 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.badge}
             </span>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Internal Content (Consistent Padding & Equal Heights) */}

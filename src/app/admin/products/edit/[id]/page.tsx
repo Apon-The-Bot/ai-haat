@@ -72,6 +72,8 @@ export default function AdminEditProductPage() {
   const [isAddingCustomCategory, setIsAddingCustomCategory] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState("");
   const [inStock, setInStock] = useState(existingProduct?.inStock !== false);
+  const [isFeatured, setIsFeatured] = useState(Boolean(existingProduct?.isFeatured));
+  const [isBestProduct, setIsBestProduct] = useState(Boolean(existingProduct?.isBestProduct || existingProduct?.isBestSelling));
 
   const handleApplyPreset = (type: "DURATIONS" | "CREDITS" | "TIERS") => {
     if (type === "DURATIONS") {
@@ -193,6 +195,9 @@ export default function AdminEditProductPage() {
         inStock: v.inStock,
       })),
       inStock,
+      isFeatured,
+      isBestProduct,
+      isBestSelling: isBestProduct,
     };
 
     try {
@@ -595,9 +600,12 @@ export default function AdminEditProductPage() {
               )}
             </div>
 
-            {/* Status Switch */}
+            {/* In Stock Switch */}
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-800">Product In Stock</span>
+              <div>
+                <span className="text-sm font-bold text-slate-800 block">In Stock Status</span>
+                <span className="text-xs text-slate-400">স্টক আছে কিনা নির্ধারণ করুন</span>
+              </div>
               <button
                 type="button"
                 onClick={() => setInStock(!inStock)}
@@ -607,6 +615,44 @@ export default function AdminEditProductPage() {
               >
                 <span className={`w-4.5 h-4.5 bg-white rounded-full absolute top-1 transition-transform ${
                   inStock ? "right-1" : "left-1"
+                }`} />
+              </button>
+            </div>
+
+            {/* Featured on Home Screen */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <div>
+                <span className="text-sm font-bold text-slate-800 block">Featured ⭐</span>
+                <span className="text-xs text-slate-400">হোম স্ক্রিনের টপ ৬ ফিচার্ডে দেখাবে</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFeatured(!isFeatured)}
+                className={`w-12 h-6.5 rounded-full transition-colors relative cursor-pointer ${
+                  isFeatured ? "bg-[#FC5C03]" : "bg-slate-200"
+                }`}
+              >
+                <span className={`w-4.5 h-4.5 bg-white rounded-full absolute top-1 transition-transform ${
+                  isFeatured ? "right-1" : "left-1"
+                }`} />
+              </button>
+            </div>
+
+            {/* Best Product / Best Selling */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <div>
+                <span className="text-sm font-bold text-slate-800 block">Best Product 🏆</span>
+                <span className="text-xs text-slate-400">সেরা প্রোডাক্ট সেকশনে দেখাবে</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBestProduct(!isBestProduct)}
+                className={`w-12 h-6.5 rounded-full transition-colors relative cursor-pointer ${
+                  isBestProduct ? "bg-amber-500" : "bg-slate-200"
+                }`}
+              >
+                <span className={`w-4.5 h-4.5 bg-white rounded-full absolute top-1 transition-transform ${
+                  isBestProduct ? "right-1" : "left-1"
                 }`} />
               </button>
             </div>

@@ -5,46 +5,11 @@ import Link from "next/link";
 import { ArrowRight, Shield, Zap, Headphones } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { SafeImage } from "@/components/SafeImage";
+import { useProducts } from "@/context/ProductsContext";
 
 export function Hero() {
-  const demoAppTiles = [
-    {
-      name: "ChatGPT Plus",
-      desc: "GPT-4o & Canvas",
-      icon: "/images/icons/chatgpt.svg",
-      slug: "chatgpt-plus",
-    },
-    {
-      name: "Canva Pro",
-      desc: "Brand Kit & AI",
-      icon: "/images/icons/canva.svg",
-      slug: "canva-pro",
-    },
-    {
-      name: "CapCut Pro",
-      desc: "VIP 4K Auto-Captions",
-      icon: "/images/icons/capcut.svg",
-      slug: "capcut-pro",
-    },
-    {
-      name: "Google Gemini",
-      desc: "1.5 Pro & 2TB Cloud",
-      icon: "/images/icons/gemini.svg",
-      slug: "google-gemini-advanced",
-    },
-    {
-      name: "Microsoft 365",
-      desc: "Word, Excel + 1TB",
-      icon: "/images/icons/microsoft.svg",
-      slug: "microsoft-365-family-seat",
-    },
-    {
-      name: "NordVPN",
-      desc: "High Speed & Security",
-      icon: "/images/icons/nordvpn.svg",
-      slug: "nordvpn-complete-security",
-    },
-  ];
+  const { getFeaturedProducts } = useProducts();
+  const featuredProducts = getFeaturedProducts().slice(0, 6);
 
   return (
     <section className="relative w-full bg-gradient-to-b from-white via-[#FFF9F5]/70 to-[#FFF2E8]/30 border-b border-[#E8E8EE] overflow-hidden">
@@ -116,29 +81,29 @@ export function Hero() {
 
           </div>
 
-          {/* RIGHT HERO AREA (5 Cols: 3 by 2 Product Tiles with Dedicated Crisp Icons) */}
+          {/* RIGHT HERO AREA (5 Cols: 3 by 2 Product Tiles from Featured Products) */}
           <div className="lg:col-span-5">
             <div className="grid grid-cols-3 gap-2.5 sm:gap-3 p-3.5 bg-white/80 backdrop-blur-xs rounded-2xl border border-[#E8E8EE] shadow-sm">
-              {demoAppTiles.map((tile) => (
+              {featuredProducts.map((prod) => (
                 <Link
-                  key={tile.name}
-                  href={`/product/${tile.slug}`}
+                  key={prod.id}
+                  href={`/product/${prod.slug}`}
                   className="group flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl border border-[#E8E8EE] hover:border-[#FC5C03] hover:shadow-cardHover transition-all text-center"
                 >
                   <div className="w-12 h-12 sm:w-14 sm:h-14 relative rounded-xl overflow-hidden mb-2.5 shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
                     <SafeImage
-                      src={tile.icon}
-                      alt={tile.name}
+                      src={prod.image}
+                      alt={prod.name}
                       aspectRatio="1/1"
                       objectFit="contain"
                       sizes="56px"
                     />
                   </div>
                   <h4 className="text-[11.5px] sm:text-xs font-bold text-[#1A1D26] group-hover:text-[#FC5C03] transition-colors truncate w-full">
-                    {tile.name}
+                    {prod.name.split("(")[0].trim()}
                   </h4>
                   <span className="text-[9.5px] text-[#7A8190] truncate w-full mt-0.5">
-                    {tile.desc}
+                    ৳{prod.minPriceBDT} থেকে
                   </span>
                 </Link>
               ))}

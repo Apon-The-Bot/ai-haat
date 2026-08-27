@@ -10,6 +10,8 @@ interface ProductsContextType {
   refreshProducts: () => Promise<void>;
   getProductBySlug: (slug: string) => Product | undefined;
   getProductsByCategory: (category: string) => Product[];
+  getFeaturedProducts: () => Product[];
+  getBestProducts: () => Product[];
 }
 
 const ProductsContext = createContext<ProductsContextType>({
@@ -18,6 +20,8 @@ const ProductsContext = createContext<ProductsContextType>({
   refreshProducts: async () => {},
   getProductBySlug: () => undefined,
   getProductsByCategory: () => [],
+  getFeaturedProducts: () => [],
+  getBestProducts: () => [],
 });
 
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
@@ -56,12 +60,39 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const getProductsByCategory = useCallback(
     (category: string) => {
       if (category === "All") return products;
+
+      if (category === "Best Product") {
+        const best = products.filter(
+          (p) => p.isBestProduct || p.badge === "Best Product" || (p.categories && p.categories.includes("Best Product"))
+        );
+        return best.length > 0 ? best : products.slice(0, 8);
+      }
+
+      if (category === "Best Selling") {
+        const bestSelling = products.filter(
+          (p) => p.isBestSelling || p.badge === "Best Selling" || (p.categories && p.categories.includes("Best Selling"))
+        );
+        return bestSelling.length > 0 ? bestSelling : products.slice(0, 8);
+      }
+
       return products.filter(
         (p) => p.category === category || (p.categories && p.categories.includes(category))
       );
     },
     [products]
   );
+
+  const getFeaturedProducts = useCallback(() => {
+    const featured = products.filter((p) => p.isFeatured);
+    return featured.length > 0 ? featured : products.slice(0, 6);
+  }, [products]);
+
+  const getBestProducts = useCallback(() => {
+    const best = products.filter(
+      (p) => p.isBestProduct || p.isBestSelling || p.badge?.includes("Best")
+    );
+    return best.length > 0 ? best : products.slice(0, 8);
+  }, [products]);
 
   return (
     <ProductsContext.Provider
@@ -71,6 +102,8 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         refreshProducts,
         getProductBySlug,
         getProductsByCategory,
+        getFeaturedProducts,
+        getBestProducts,
       }}
     >
       {children}

@@ -296,24 +296,45 @@ export default function ProductDetailPage() {
             </div>
 
             {/* 7. Buy Now & 8. Add to Cart Buttons */}
-            <div className="space-y-2 pt-2">
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="w-full py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-sm font-bold rounded-lg shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-1.5"
-              >
-                <span>সরাসরি কিনুন (Buy Now) - {formatPrice(selectedVariation.priceBDT * quantity)}</span>
-              </button>
+            {product.inStock === false || selectedVariation.inStock === false ? (
+              <div className="space-y-3 pt-2">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-center space-y-1">
+                  <span className="text-sm font-black text-red-600 block">
+                    ❌ এই ভ্যারিয়েন্ট / প্রোডাক্টটি সাময়িকভাবে স্টক আউট
+                  </span>
+                  <p className="text-xs text-red-700/80">
+                    স্টক আসার সাথে সাথেই পুনরায় অর্ডার করা যাবে। আপনি অন্য কোনো ভ্যারিয়েন্ট নির্বাচন করতে পারেন।
+                  </p>
+                </div>
 
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="w-full py-2.5 bg-white hover:bg-[#FFF2E8] border border-[#FC5C03] text-[#FC5C03] text-sm font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span>কার্টে যুক্ত করুন (Add to Cart)</span>
-              </button>
-            </div>
+                <button
+                  type="button"
+                  disabled
+                  className="w-full py-3 bg-gray-200 text-gray-500 text-sm font-bold rounded-lg cursor-not-allowed flex items-center justify-center gap-1.5"
+                >
+                  <span>স্টক আউট (Out of Stock)</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="w-full py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-sm font-bold rounded-lg shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>সরাসরি কিনুন (Buy Now) - {formatPrice(selectedVariation.priceBDT * quantity)}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="w-full py-2.5 bg-white hover:bg-[#FFF2E8] border border-[#FC5C03] text-[#FC5C03] text-sm font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>কার্টে যুক্ত করুন (Add to Cart)</span>
+                </button>
+              </div>
+            )}
 
             {/* 9. AI Haat Verification Banner */}
             <div className="p-3 bg-gray-50 rounded-xl border border-[#E8E8EE] flex items-center gap-2.5">
