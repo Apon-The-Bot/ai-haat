@@ -25,21 +25,74 @@ export default function AdminWalletPage() {
   const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(null);
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleApprove = (id: string, userName: string, amount: number) => {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "APPROVED" } : r))
-    );
-    showToast(`৳${amount} deposit approved for ${userName}!`, "success");
+  const fetchRequests = async (silent = false) => {
+    try {
+      if (!silent) setIsLoading(true);
+      const res = await fetch("/api/wallet/transactions?all=true");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.transactions) {
+          setRequests(data.transactions);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      if (!silent) setIsLoading(false);
+    }
   };
 
-  const confirmReject = () => {
+  React.useEffect(() => {
+    fetchRequests();
+    const interval = setInterval(() => fetchRequests(true), 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleApprove = async (id: string, userName: string, amount: number) => {
+    try {
+      const res = await fetch("/api/wallet/transactions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionId: id, status: "APPROVED" }),
+      });
+
+      if (res.ok) {
+        setRequests((prev) =>
+          prev.map((r) => (r.id === id ? { ...r, status: "APPROVED" } : r))
+        );
+        showToast(`৳${amount} deposit approved for ${userName}! Balance credited.`, "success");
+      } else {
+        showToast("Failed to approve transaction", "error");
+      }
+    } catch {
+      showToast("Server error", "error");
+    }
+  };
+
+  const confirmReject = async () => {
     if (!rejectingRequestId) return;
-    setRequests((prev) =>
-      prev.map((r) => (r.id === rejectingRequestId ? { ...r, status: "REJECTED" } : r))
-    );
-    showToast("ডিপোজিট রিকোয়েস্ট বাতিল করা হয়েছে।", "error");
-    setRejectingRequestId(null);
+    try {
+      const res = await fetch("/api/wallet/transactions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionId: rejectingRequestId, status: "REJECTED" }),
+      });
+
+      if (res.ok) {
+        setRequests((prev) =>
+          prev.map((r) => (r.id === rejectingRequestId ? { ...r, status: "REJECTED" } : r))
+        );
+        showToast("ডিপোজিট রিকোয়েস্ট বাতিল করা হয়েছে।", "info");
+      } else {
+        showToast("Failed to reject transaction", "error");
+      }
+    } catch {
+      showToast("Server error", "error");
+    } finally {
+      setRejectingRequestId(null);
+    }
   };
 
   const filtered = requests.filter((r) => {

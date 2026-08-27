@@ -14,6 +14,8 @@ export async function GET(req: NextRequest) {
   const siteUrl = `${proto}://${host}`;
 
   let verifiedStatus = ppStatus || "completed";
+  let verifiedAmount = 0;
+  let customerEmail = "";
 
   // Verify payment on PipraPay API if transaction reference is available
   if (transactionRef) {
@@ -36,14 +38,78 @@ export async function GET(req: NextRequest) {
         if (verifyData?.status) {
           verifiedStatus = verifyData.status.toLowerCase();
         }
+        if (verifyData?.amount) {
+          verifiedAmount = Number(verifyData.amount);
+        }
+        if (verifyData?.customer_email) {
+          customerEmail = verifyData.customer_email;
+        }
       }
     } catch (err) {
       console.error("[Verify Callback Error]:", err);
     }
   }
 
-  // Update order status in database if verified
+  const isWalletTopup = orderId.startsWith("WT-");
+
+  // Handle Successful Payment
   if (verifiedStatus === "completed" || verifiedStatus === "success") {
+    // 1. WALLET TOP-UP FLOW
+    if (isWalletTopup) {
+      try {
+        let user = null;
+        if (customerEmail) {
+          user = await prisma.user.findUnique({ where: { email: customerEmail.toLowerCase() } });
+        }
+
+        const topupAmount = verifiedAmount || Number(searchParams.get("amount")) || 0;
+
+        if (user && topupAmount > 0) {
+          // Credit user wallet balance in MySQL DB
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              walletBalanceBDT: {
+                increment: topupAmount,
+              },
+            },
+          });
+
+          // Record deposit transaction
+          await prisma.walletTransaction.create({
+            data: {
+              userId: user.id,
+              amountBDT: topupAmount,
+              type: "DEPOSIT",
+              method: "gateway",
+              senderNumber: "GATEWAY",
+              trxId: transactionRef || orderId,
+              status: "APPROVED",
+              note: `Automated Gateway Top-up (${transactionRef})`,
+            },
+          });
+
+          // Add notification
+          await prisma.notification.create({
+            data: {
+              userId: user.id,
+              title: "ওয়ালেট রিচার্জ সফল!",
+              message: `আপনার ওয়ালেটে ৳${topupAmount} সফলভাবে জমা হয়েছে।`,
+              type: "WALLET",
+              link: "/dashboard/wallet",
+            },
+          });
+        }
+      } catch (wErr) {
+        console.error("[Wallet Topup Callback Error]:", wErr);
+      }
+
+      return NextResponse.redirect(
+        `${siteUrl}/dashboard/wallet?topup=success&amount=${encodeURIComponent(String(verifiedAmount))}&trxId=${encodeURIComponent(transactionRef)}`
+      );
+    }
+
+    // 2. REGULAR STORE ORDER FLOW
     if (orderId) {
       try {
         await prisma.order.updateMany({
@@ -67,12 +133,12 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Payment Verified & Completed -> Redirect to Success Page
+    // Redirect to Success Page
     return NextResponse.redirect(
       `${siteUrl}/checkout/success?orderId=${encodeURIComponent(orderId)}&status=completed&trxId=${encodeURIComponent(transactionRef)}`
     );
   } else if (verifiedStatus === "pending") {
-    if (orderId) {
+    if (orderId && !isWalletTopup) {
       try {
         await prisma.order.updateMany({
           where: {
@@ -95,14 +161,17 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Payment Pending Verification
     return NextResponse.redirect(
-      `${siteUrl}/checkout/success?orderId=${encodeURIComponent(orderId)}&status=pending&trxId=${encodeURIComponent(transactionRef)}`
+      isWalletTopup
+        ? `${siteUrl}/dashboard/wallet?topup=pending&trxId=${encodeURIComponent(transactionRef)}`
+        : `${siteUrl}/checkout/success?orderId=${encodeURIComponent(orderId)}&status=pending&trxId=${encodeURIComponent(transactionRef)}`
     );
   } else {
-    // Payment Failed or Canceled -> Return to Checkout with message
+    // Payment Failed or Canceled
     return NextResponse.redirect(
-      `${siteUrl}/checkout?payment_status=${encodeURIComponent(verifiedStatus || "failed")}&orderId=${encodeURIComponent(orderId)}`
+      isWalletTopup
+        ? `${siteUrl}/dashboard/wallet?topup=failed`
+        : `${siteUrl}/checkout?payment_status=${encodeURIComponent(verifiedStatus || "failed")}&orderId=${encodeURIComponent(orderId)}`
     );
   }
 }
@@ -113,24 +182,47 @@ export async function POST(req: NextRequest) {
     const orderId = body?.metadata?.orderId || body?.orderId || body?.pp_id || "";
     const status = (body?.status || "").toLowerCase();
     const trxId = body?.transaction_id || body?.trx_id || body?.pp_id || "";
+    const amount = Number(body?.amount || 0);
+    const email = body?.customer_email || body?.metadata?.email || "";
 
-    if (orderId && (status === "completed" || status === "success")) {
-      await prisma.order.updateMany({
-        where: {
-          OR: [{ orderNumber: orderId }, { id: orderId }],
-        },
-        data: {
-          paymentStatus: "VERIFIED",
-          deliveryStatus: "PROCESSING",
+    if (status === "completed" || status === "success") {
+      if (orderId.startsWith("WT-") && email && amount > 0) {
+        const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+        if (user) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { walletBalanceBDT: { increment: amount } },
+          });
+          await prisma.walletTransaction.create({
+            data: {
+              userId: user.id,
+              amountBDT: amount,
+              type: "DEPOSIT",
+              method: "gateway",
+              trxId: trxId || orderId,
+              status: "APPROVED",
+              note: `Automated Gateway IPN (${trxId})`,
+            },
+          });
+        }
+      } else if (orderId) {
+        await prisma.order.updateMany({
+          where: {
+            OR: [{ orderNumber: orderId }, { id: orderId }],
+          },
+          data: {
+            paymentStatus: "VERIFIED",
+            deliveryStatus: "PROCESSING",
+            trxId: trxId || undefined,
+          },
+        });
+
+        updateOrderStatus(orderId, {
+          paymentStatus: "Completed",
+          deliveryStatus: "Processing",
           trxId: trxId || undefined,
-        },
-      });
-
-      updateOrderStatus(orderId, {
-        paymentStatus: "Completed",
-        deliveryStatus: "Processing",
-        trxId: trxId || undefined,
-      });
+        });
+      }
     }
 
     return NextResponse.json({ success: true, received: true });

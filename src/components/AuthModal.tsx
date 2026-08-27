@@ -9,21 +9,23 @@ import { Logo } from "@/components/Logo";
 
 export function AuthModal() {
   const router = useRouter();
-  const { isAuthModalOpen, setIsAuthModalOpen, login } = useAuth();
+  const { isAuthModalOpen, setIsAuthModalOpen, login, redirectCallbackUrl } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isAuthModalOpen) return null;
 
+  const targetUrl = redirectCallbackUrl || "/";
+
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      await signIn("google", { callbackUrl: "/dashboard" });
+      await signIn("google", { callbackUrl: targetUrl });
     } catch (err) {
       console.error("Google login redirect:", err);
-      // Fallback local session demo
-      login("mdamanullahsheikhapon@gmail.com");
+      // Fallback local session
+      login("mdamanullahsheikhapon@gmail.com", targetUrl);
       setIsAuthModalOpen(false);
-      router.push("/dashboard");
+      router.push(targetUrl);
     } finally {
       setIsLoading(false);
     }

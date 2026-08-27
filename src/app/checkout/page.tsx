@@ -33,7 +33,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotalBDT, clearCart } = useCart();
   const { formatPrice } = useCurrency();
-  const { user } = useAuth();
+  const { user, openLoginModal, refreshUser } = useAuth();
   const { showToast } = useToast();
 
   const [paymentMethod, setPaymentMethod] = useState<"gateway" | "wallet">("gateway");
@@ -47,6 +47,15 @@ export default function CheckoutPage() {
   const [hasWhatsAppDelivery, setHasWhatsAppDelivery] = useState(false);
   const [hasMessengerDelivery, setHasMessengerDelivery] = useState(false);
   const [orderSummaryText, setOrderSummaryText] = useState("");
+
+  // Sync user info when user logs in
+  React.useEffect(() => {
+    if (user) {
+      if (!fullName) setFullName(user.name || "");
+      if (!email) setEmail(user.email || "");
+      if (!phone && user.phone) setPhone(user.phone);
+    }
+  }, [user]);
 
   // Coupon state
   const [couponCodeInput, setCouponCodeInput] = useState("");
@@ -89,6 +98,14 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. Mandatory Login Guard: Guest users MUST login before placing order
+    if (!user) {
+      showToast("অর্ডার সম্পন্ন করতে অনুগ্রহ করে আগে লগইন করুন।", "error");
+      openLoginModal("/checkout");
+      return;
+    }
+
     if (items.length === 0) {
       showToast("Your cart is empty!", "error");
       return;
@@ -135,8 +152,8 @@ export default function CheckoutPage() {
           couponCode: appliedCoupon?.code || null,
           totalBDT: finalTotalBDT,
           paymentMethod,
-          senderNumber: "GATEWAY",
-          trxId: "GATEWAY_PENDING",
+          senderNumber: paymentMethod === "wallet" ? "WALLET" : "GATEWAY",
+          trxId: paymentMethod === "wallet" ? `WAL-${orderNum}` : "GATEWAY_PENDING",
           notes,
         }),
       });
@@ -147,7 +164,46 @@ export default function CheckoutPage() {
       console.error("Order save:", e);
     }
 
-    // If Automated Gateway payment selected, trigger gateway session & redirect
+    // A. Wallet Balance Payment Method Flow
+    if (paymentMethod === "wallet") {
+      const currentBal = user.walletBalanceBDT || 0;
+      if (currentBal < finalTotalBDT) {
+        showToast(`ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই! বর্তমান ব্যালেন্স: ৳${currentBal}, প্রয়োজন: ৳${finalTotalBDT}।`, "error");
+        setIsSubmitting(false);
+        return;
+      }
+
+      try {
+        const wRes = await fetch("/api/wallet/purchase", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: orderNum,
+            amountBDT: finalTotalBDT,
+            customerEmail: user.email,
+          }),
+        });
+
+        const wData = await wRes.json();
+        if (!wRes.ok || !wData.success) {
+          showToast(wData.error || "ওয়ালেট পেমেন্ট সম্পন্ন করতে সমস্যা হয়েছে।", "error");
+          setIsSubmitting(false);
+          return;
+        }
+
+        refreshUser();
+        clearCart();
+        window.location.href = `/checkout/success?orderId=${encodeURIComponent(orderNum)}&status=completed&trxId=WAL-${encodeURIComponent(orderNum)}`;
+        return;
+      } catch (err) {
+        console.error("Wallet checkout error:", err);
+        showToast("ওয়ালেট পেমেন্ট ত্রুটি।", "error");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    // B. Automated Gateway payment flow
     if (paymentMethod === "gateway") {
       try {
         const res = await fetch("/api/payment/create", {
@@ -214,6 +270,33 @@ export default function CheckoutPage() {
             <span>256-Bit SSL Encrypted</span>
           </div>
         </div>
+
+        {/* Guest User Login Guard Banner */}
+        {!user && (
+          <div className="p-5 sm:p-6 bg-gradient-to-r from-[#1A1D26] via-[#2A2E3B] to-[#1A1D26] rounded-3xl text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-slate-700">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#FC5C03] text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
+                <Lock className="w-3 h-3" />
+                <span>লগইন আবশ্যক (Login Required)</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-white">
+                চেকআউট সম্পন্ন করতে অনুগ্রহ করে আগে লগইন করুন
+              </h3>
+              <p className="text-xs text-gray-300 max-w-md leading-relaxed">
+                অর্ডার ট্র্যাকিং, ইনস্ট্যান্ট ডেলিভারি ও ডিজিটাল ভল্টে আপনার সাবস্ক্রিপশন কি সেভ রাখার জন্য একটি একাউন্ট থাকা বাধ্যতামূলক।
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => openLoginModal("/checkout")}
+              className="px-6 py-3.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs sm:text-sm font-bold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+            >
+              <Zap className="w-4 h-4" />
+              <span>গুগল দিয়ে লগইন করুন</span>
+            </button>
+          </div>
+        )}
 
         {items.length > 0 ? (
           <form onSubmit={handlePlaceOrder}>
