@@ -2,15 +2,15 @@ import nodemailer from "nodemailer";
 import { generateDeliveryHtml } from "./emailTemplate";
 
 export function getTransporter() {
-  const host = process.env.SMTP_HOST || "smtp.hostinger.com";
-  const port = parseInt(process.env.SMTP_PORT || "465", 10);
-  const user = process.env.SMTP_USER || "delivery@aihaat.shop";
-  const pass = process.env.SMTP_PASS || "Rk#delivery@aihaat.sh0p";
+  const host = "smtp.hostinger.com";
+  const port = 465;
+  const user = "delivery@aihaat.shop";
+  const pass = "Rk#delivery@aihaat.sh0p";
 
   return nodemailer.createTransport({
     host,
     port,
-    secure: port === 465,
+    secure: true,
     auth: {
       user,
       pass,
