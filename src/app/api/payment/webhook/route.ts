@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { updateOrderStatus } from "@/lib/orders-db";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -10,28 +12,62 @@ export async function POST(req: NextRequest) {
     const orderId = body?.metadata?.orderId || body?.orderId || body?.pp_id || "";
     const status = (body?.status || "").toLowerCase();
     const trxId = body?.transaction_id || body?.trx_id || body?.pp_id || "";
-    const amount = Number(body?.amount || 0);
-    const email = body?.customer_email || body?.metadata?.email || "";
+    const amount = Number(body?.amount || body?.total || 0);
+    const email = (body?.email_address || body?.customer_email || body?.metadata?.email || "").toLowerCase().trim();
+    const userId = body?.metadata?.userId || "";
 
     if (orderId && (status === "completed" || status === "success")) {
-      if (orderId.startsWith("WT-") && email && amount > 0) {
-        const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-        if (user) {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { walletBalanceBDT: { increment: amount } },
-          });
-          await prisma.walletTransaction.create({
-            data: {
-              userId: user.id,
-              amountBDT: amount,
-              type: "DEPOSIT",
-              method: "gateway",
-              trxId: trxId || orderId,
-              status: "APPROVED",
-              note: `Automated Gateway IPN (${trxId})`,
+      if (orderId.startsWith("WT-") && (email || userId) && amount > 0) {
+        let user = null;
+        if (userId) {
+          user = await prisma.user.findUnique({ where: { id: userId } });
+        }
+        if (!user && email) {
+          user = await prisma.user.findFirst({
+            where: {
+              OR: [{ email }, { email: email.toLowerCase() }],
             },
           });
+        }
+
+        if (user) {
+          const existing = await prisma.walletTransaction.findFirst({
+            where: {
+              trxId: trxId || orderId,
+              status: "APPROVED",
+            },
+          });
+
+          if (!existing) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { walletBalanceBDT: { increment: amount } },
+            });
+
+            await prisma.walletTransaction.create({
+              data: {
+                userId: user.id,
+                amountBDT: amount,
+                type: "DEPOSIT",
+                method: "gateway",
+                senderNumber: "GATEWAY",
+                trxId: trxId || orderId,
+                status: "APPROVED",
+                note: `Automated Gateway IPN (${trxId})`,
+              },
+            });
+
+            await prisma.notification.create({
+              data: {
+                userId: user.id,
+                title: "ওয়ালেট রিচার্জ সফল!",
+                message: `আপনার ওয়ালেটে ৳${amount} সফলভাবে জমা হয়েছে।`,
+                type: "WALLET",
+                link: "/dashboard/wallet",
+              },
+            });
+            console.log(`✓ Webhook credited ৳${amount} to user ${user.email}`);
+          }
         }
       } else {
         try {

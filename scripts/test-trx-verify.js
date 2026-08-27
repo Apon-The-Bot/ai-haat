@@ -1,0 +1,27 @@
+const fetch = require('node-fetch');
+
+async function testPiprapay() {
+  const baseUrl = "https://pay.aihaat.shop";
+  const apiKey = "6efac52b56d3a19e2b7f39d54df43a8653e5dd21fe93249f84";
+
+  console.log("1. Testing verify-payment with transaction_id: KKQ3TEYT7D");
+  try {
+    const res = await fetch(`${baseUrl}/api/verify-payment`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "MHS-PIPRAPAY-API-KEY": apiKey,
+        "X-Api-Key": apiKey,
+      },
+      body: JSON.stringify({ transaction_id: "KKQ3TEYT7D", trx_id: "KKQ3TEYT7D", pp_id: "KKQ3TEYT7D" }),
+    });
+
+    console.log("Status:", res.status);
+    const data = await res.json();
+    console.log("Response:", JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.error("Error:", e);
+  }
+}
+
+testPiprapay();
