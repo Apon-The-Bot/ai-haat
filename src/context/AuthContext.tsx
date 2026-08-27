@@ -148,11 +148,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     setUser(null);
-    localStorage.removeItem("aihaat_user");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("aihaat_user");
+      sessionStorage.clear();
+    }
     try {
-      await signOut({ redirect: false });
-    } catch {}
-    showToast("লগআউট সম্পন্ন হয়েছে", "info");
+      await signOut({ callbackUrl: "/", redirect: true });
+    } catch {
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    }
   };
 
   const rechargeWallet = (amountBDT: number) => {

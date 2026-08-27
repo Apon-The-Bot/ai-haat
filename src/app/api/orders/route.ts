@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getAllOrders, saveOrder, updateOrderStatus, findOrderByNumberOrPhone } from "@/lib/orders-db";
 import { sendNewOrderTelegramAlert } from "@/utils/telegram";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -15,9 +17,13 @@ export async function GET(req: NextRequest) {
       const whereClause: any = {};
 
       if (email) {
-        whereClause.customerEmail = {
-          equals: email.trim(),
-        };
+        const clean = email.trim().toLowerCase();
+        whereClause.OR = [
+          { customerEmail: { equals: clean } },
+          { customerEmail: { contains: clean } },
+          { customerEmail: { equals: email.trim() } },
+          { user: { email: { equals: clean } } },
+        ];
       }
 
       if (phone) {
@@ -49,49 +55,47 @@ export async function GET(req: NextRequest) {
         },
       });
 
-      if (dbOrders && dbOrders.length > 0) {
-        const formatted = dbOrders.map((o) => ({
-          id: o.orderNumber || o.id,
-          orderNumber: o.orderNumber || o.id,
-          userId: o.userId,
-          customerName: o.customerName,
-          customerEmail: o.customerEmail,
-          customerPhone: o.customerPhone,
-          items: o.items.map((it) => ({
-            productId: it.productId,
-            productName: it.productName,
-            variationName: it.variationName,
-            quantity: it.quantity,
-            priceBDT: it.priceBDT,
-            image: it.image,
-          })),
-          totalBDT: o.totalBDT,
-          subtotalBDT: o.subtotalBDT,
-          discountBDT: o.discountBDT,
-          paymentMethod: o.paymentMethod,
-          senderNumber: o.senderNumber,
-          trxId: o.trxId,
-          paymentStatus: o.paymentStatus === "VERIFIED" ? "Completed" : o.paymentStatus === "FAILED" ? "Failed" : "Pending",
-          deliveryStatus:
-            o.deliveryStatus === "DELIVERED"
-              ? "Delivered"
-              : o.deliveryStatus === "CANCELLED"
-              ? "Cancelled"
-              : o.deliveryStatus === "PROCESSING"
-              ? "Processing"
-              : o.deliveryStatus === "PREPARING"
-              ? "Preparing"
-              : "Order Placed",
-          credentialsDelivered: o.deliveredKeys?.[0]?.credentials || null,
-          deliveryInstructions: o.deliveredKeys?.[0]?.instructions || null,
-          notes: o.notes,
-          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Today",
-          createdAt: o.createdAt.toISOString(),
-          updatedAt: o.updatedAt.toISOString(),
-        }));
+      const formatted = dbOrders.map((o) => ({
+        id: o.orderNumber || o.id,
+        orderNumber: o.orderNumber || o.id,
+        userId: o.userId,
+        customerName: o.customerName,
+        customerEmail: o.customerEmail,
+        customerPhone: o.customerPhone,
+        items: o.items.map((it) => ({
+          productId: it.productId,
+          productName: it.productName,
+          variationName: it.variationName,
+          quantity: it.quantity,
+          priceBDT: it.priceBDT,
+          image: it.image,
+        })),
+        totalBDT: o.totalBDT,
+        subtotalBDT: o.subtotalBDT,
+        discountBDT: o.discountBDT,
+        paymentMethod: o.paymentMethod,
+        senderNumber: o.senderNumber,
+        trxId: o.trxId,
+        paymentStatus: o.paymentStatus === "VERIFIED" ? "Completed" : o.paymentStatus === "FAILED" ? "Failed" : "Pending",
+        deliveryStatus:
+          o.deliveryStatus === "DELIVERED"
+            ? "Delivered"
+            : o.deliveryStatus === "CANCELLED"
+            ? "Cancelled"
+            : o.deliveryStatus === "PROCESSING"
+            ? "Processing"
+            : o.deliveryStatus === "PREPARING"
+            ? "Preparing"
+            : "Order Placed",
+        credentialsDelivered: o.deliveredKeys?.[0]?.credentials || null,
+        deliveryInstructions: o.deliveredKeys?.[0]?.instructions || null,
+        notes: o.notes,
+        date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Today",
+        createdAt: o.createdAt.toISOString(),
+        updatedAt: o.updatedAt.toISOString(),
+      }));
 
-        return NextResponse.json({ success: true, orders: formatted });
-      }
+      return NextResponse.json({ success: true, orders: formatted });
     } catch (dbErr) {
       console.warn("[Prisma GET Orders fallback to JSON]:", dbErr);
     }
@@ -163,7 +167,7 @@ export async function POST(req: NextRequest) {
       id: generatedNumber,
       orderNumber: generatedNumber,
       customerName,
-      customerEmail: customerEmail || "",
+      customerEmail: customerEmail ? customerEmail.trim().toLowerCase() : "",
       customerPhone,
       items: parsedItems,
       totalBDT: Number(totalBDT) || 0,
@@ -184,8 +188,13 @@ export async function POST(req: NextRequest) {
     try {
       let userRecord = null;
       if (customerEmail) {
-        userRecord = await prisma.user.findUnique({
-          where: { email: customerEmail },
+        userRecord = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: customerEmail.trim().toLowerCase() },
+              { email: customerEmail.trim() },
+            ],
+          },
         });
       }
 
@@ -196,7 +205,7 @@ export async function POST(req: NextRequest) {
           orderNumber: generatedNumber,
           userId: userRecord?.id || null,
           customerName,
-          customerEmail: customerEmail || "customer@aihaat.shop",
+          customerEmail: customerEmail ? customerEmail.trim().toLowerCase() : "customer@aihaat.shop",
           customerPhone,
           notes: notes || null,
           subtotalBDT: Number(subtotalBDT || totalBDT) || 0,
@@ -219,8 +228,9 @@ export async function POST(req: NextRequest) {
           },
         },
         update: {
+          userId: userRecord?.id || undefined,
           customerName,
-          customerEmail: customerEmail || "customer@aihaat.shop",
+          customerEmail: customerEmail ? customerEmail.trim().toLowerCase() : "customer@aihaat.shop",
           customerPhone,
           totalBDT: Number(totalBDT) || 0,
           paymentMethod: paymentMethod || "gateway",
@@ -243,102 +253,94 @@ export async function POST(req: NextRequest) {
         customerPhone,
         customerEmail: customerEmail || "customer@aihaat.shop",
         items: parsedItems,
-        totalBDT,
+        totalBDT: Number(totalBDT) || 0,
         paymentMethod: paymentMethod || "gateway",
-        senderNumber,
-        trxId,
-        notes,
+        senderNumber: senderNumber || undefined,
+        trxId: trxId || undefined,
       });
-    } catch (tgErr) {
-      console.warn("[Telegram Alert Error - Non-fatal]:", tgErr);
+    } catch (teleErr) {
+      console.warn("[Telegram Dispatch Warning]:", teleErr);
     }
 
     return NextResponse.json({
       success: true,
-      message: "Order placed and saved successfully.",
-      orderNumber: generatedNumber,
+      message: "Order placed and saved successfully",
       order: newOrder,
     });
   } catch (error: any) {
     console.error("[Orders POST Error]:", error);
-    return NextResponse.json({ error: error?.message || "Failed to process order" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "Failed to create order" },
+      { status: 500 }
+    );
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { orderId, paymentStatus, deliveryStatus, credentialsDelivered, deliveryInstructions } = body;
+    const {
+      orderId,
+      orderNumber,
+      paymentStatus,
+      deliveryStatus,
+      credentialsDelivered,
+      deliveryInstructions,
+      downloadUrl,
+      cancelReason,
+    } = body;
 
-    if (!orderId) {
+    const targetId = orderNumber || orderId;
+    if (!targetId) {
       return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
     }
 
-    // 1. Update in Prisma MySQL
+    // 1. Sync to Prisma MySQL
     try {
-      const pStatus =
-        paymentStatus === "Completed" || paymentStatus === "VERIFIED"
-          ? "VERIFIED"
-          : paymentStatus === "Failed"
-          ? "FAILED"
-          : "PENDING";
-
-      const dStatus =
-        deliveryStatus === "Delivered" || deliveryStatus === "DELIVERED"
-          ? "DELIVERED"
-          : deliveryStatus === "Cancelled" || deliveryStatus === "CANCELLED"
-          ? "CANCELLED"
-          : deliveryStatus === "Processing" || deliveryStatus === "PROCESSING"
-          ? "PROCESSING"
-          : deliveryStatus === "Preparing"
-          ? "PREPARING"
-          : "ORDER_PLACED";
-
-      const orderRecord = await prisma.order.findFirst({
-        where: {
-          OR: [{ orderNumber: orderId }, { id: orderId }],
-        },
-      });
-
-      if (orderRecord) {
-        await prisma.order.update({
-          where: { id: orderRecord.id },
-          data: {
-            ...(paymentStatus ? { paymentStatus: pStatus as any } : {}),
-            ...(deliveryStatus ? { deliveryStatus: dStatus as any } : {}),
-          },
-        });
-
-        if (credentialsDelivered) {
-          await prisma.deliveredKey.create({
-            data: {
-              orderId: orderRecord.id,
-              userId: orderRecord.userId,
-              productName: "Delivered Service",
-              accountType: "Digital Credentials",
-              credentials: credentialsDelivered,
-              instructions: deliveryInstructions || null,
-            },
-          });
-        }
+      const updateData: any = {};
+      if (paymentStatus) {
+        updateData.paymentStatus =
+          paymentStatus.toUpperCase() === "COMPLETED" || paymentStatus.toUpperCase() === "VERIFIED"
+            ? "VERIFIED"
+            : paymentStatus.toUpperCase() === "FAILED"
+            ? "FAILED"
+            : "PENDING";
       }
-    } catch (prismaErr) {
-      console.warn("[Prisma Order PATCH error]:", prismaErr);
+
+      if (deliveryStatus) {
+        updateData.deliveryStatus =
+          deliveryStatus.toUpperCase() === "DELIVERED"
+            ? "DELIVERED"
+            : deliveryStatus.toUpperCase() === "CANCELLED"
+            ? "CANCELLED"
+            : deliveryStatus.toUpperCase() === "PROCESSING"
+            ? "PROCESSING"
+            : deliveryStatus.toUpperCase() === "PREPARING"
+            ? "PREPARING"
+            : "ORDER_PLACED";
+      }
+
+      await prisma.order.updateMany({
+        where: {
+          OR: [{ orderNumber: targetId }, { id: targetId }],
+        },
+        data: updateData,
+      });
+    } catch (err) {
+      console.warn("[Prisma PATCH Error - Non-fatal]:", err);
     }
 
-    // 2. Update in JSON DB
-    const updated = updateOrderStatus(orderId, {
-      ...(paymentStatus ? { paymentStatus } : {}),
-      ...(deliveryStatus ? { deliveryStatus } : {}),
-      ...(credentialsDelivered !== undefined ? { credentialsDelivered } : {}),
-      ...(deliveryInstructions !== undefined ? { deliveryInstructions } : {}),
+    // 2. Sync to JSON fallback
+    const updated = updateOrderStatus(targetId, {
+      paymentStatus,
+      deliveryStatus,
+      credentialsDelivered,
+      deliveryInstructions,
+      downloadUrl,
+      cancelReason,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Order updated successfully.",
-      order: updated,
-    });
+    return NextResponse.json({ success: true, order: updated });
   } catch (error: any) {
     console.error("[Orders PATCH Error]:", error);
     return NextResponse.json({ error: error?.message || "Failed to update order" }, { status: 500 });

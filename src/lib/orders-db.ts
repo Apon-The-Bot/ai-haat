@@ -26,6 +26,8 @@ export interface StoredOrder {
   deliveryStatus: "Order Placed" | "Preparing" | "Processing" | "Delivered" | "Cancelled";
   credentialsDelivered?: string;
   deliveryInstructions?: string;
+  downloadUrl?: string | null;
+  cancelReason?: string | null;
   notes?: string;
   date: string;
   createdAt: string;
