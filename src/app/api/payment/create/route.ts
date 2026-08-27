@@ -13,8 +13,17 @@ export async function POST(req: Request) {
     } = body;
 
     const baseUrl = process.env.PIPRAPAY_BASE_URL || "https://pay.aihaat.shop";
-    const apiKey = process.env.PIPRAPAY_API_KEY || "";
-    const siteUrl = process.env.NEXTAUTH_URL || "https://aihaat.shop";
+    const apiKey = process.env.PIPRAPAY_API_KEY || "6efac52b56d3a19e2b7f39d54df43a8653e5dd21fe93249f84";
+    
+    // Determine dynamic site URL
+    const reqOrigin = req.headers.get("origin") || req.headers.get("referer") || "https://aihaat.shop";
+    let siteUrl = "https://aihaat.shop";
+    try {
+      const parsed = new URL(reqOrigin);
+      siteUrl = parsed.origin;
+    } catch {
+      siteUrl = process.env.NEXTAUTH_URL || "https://aihaat.shop";
+    }
 
     if (!amount || amount <= 0) {
       return NextResponse.json(
