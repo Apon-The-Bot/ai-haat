@@ -37,15 +37,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const email = user?.email || session?.user?.email;
       if (!email) return;
 
-      const res = await fetch(`/api/auth/me?email=${encodeURIComponent(email)}`);
+      const res = await fetch(`/api/auth/me?email=${encodeURIComponent(email)}`, {
+        cache: "no-store",
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.user) {
-          setUser((prev) => ({
-            ...(prev || {}),
-            ...data.user,
-          }));
-          localStorage.setItem("aihaat_user", JSON.stringify(data.user));
+          setUser((prev) => {
+            const next = {
+              ...(prev || {}),
+              ...data.user,
+            };
+            if (typeof window !== "undefined") {
+              localStorage.setItem("aihaat_user", JSON.stringify(next));
+            }
+            return next;
+          });
         }
       }
     } catch (e) {
@@ -62,18 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email === "mdamanullahsheikhapon@gmail.com" ||
         email === "admin@aihaat.com";
 
-      const googleUser: User = {
-        id: (session.user as any).id || `google-${email}`,
-        name: session.user.name || "AI Haat Member",
-        email: session.user.email || "",
-        phone: "",
-        avatar: session.user.image || undefined,
+      const sessionUser = session.user;
+      setUser((prev) => ({
+        id: (sessionUser as any).id || prev?.id || `google-${email}`,
+        name: sessionUser.name || prev?.name || "AI Haat Member",
+        email: sessionUser.email || prev?.email || "",
+        phone: prev?.phone || "",
+        avatar: sessionUser.image || prev?.avatar || undefined,
         role: isAdmin ? "ADMIN" : "USER",
-        walletBalanceBDT: (session.user as any).walletBalanceBDT || 0,
-      };
-
-      setUser(googleUser);
-      localStorage.setItem("aihaat_user", JSON.stringify(googleUser));
+        walletBalanceBDT: prev?.walletBalanceBDT ?? (sessionUser as any).walletBalanceBDT ?? 0,
+      }));
       refreshUser();
     } else {
       try {

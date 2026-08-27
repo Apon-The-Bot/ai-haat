@@ -68,16 +68,25 @@ export default function DashboardWalletPage() {
           : `৳${topupAmount || ""} successfully added to your wallet!`,
         "success"
       );
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
     } else if (topupStatus === "cancelled") {
       showToast(
         isBn ? "পেমেন্ট বাতিল করা হয়েছে।" : "Payment was cancelled.",
         "info"
       );
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
     } else if (topupStatus === "failed") {
       showToast(
         isBn ? "পেমেন্ট ব্যর্থ হয়েছে।" : "Payment failed. Please try again.",
         "error"
       );
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
     }
   }, [searchParams]);
 
