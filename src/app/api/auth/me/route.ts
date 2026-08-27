@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
 
     const cleanEmail = email.trim().toLowerCase();
 
+    let lastDbError = null;
     // 1. Try Prisma MySQL Database
     try {
       let dbUser = await prisma.user.findFirst({
@@ -96,7 +97,8 @@ export async function GET(req: NextRequest) {
           },
         });
       }
-    } catch (dbErr) {
+    } catch (dbErr: any) {
+      lastDbError = dbErr?.message || String(dbErr);
       console.warn("[Prisma /api/auth/me fallback to JSON]:", dbErr);
     }
 
@@ -120,6 +122,7 @@ export async function GET(req: NextRequest) {
         role: localUser.role,
         walletBalanceBDT: localUser.walletBalanceBDT || 0,
       },
+      _dbError: lastDbError,
     });
   } catch (error: any) {
     console.error("[Auth /api/auth/me Fatal Error]:", error);
