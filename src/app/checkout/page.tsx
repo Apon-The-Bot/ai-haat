@@ -39,11 +39,9 @@ export default function CheckoutPage() {
   const [hasMessengerDelivery, setHasMessengerDelivery] = useState(false);
   const [orderSummaryText, setOrderSummaryText] = useState("");
 
-  // Prompt login immediately if guest enters checkout
+  // Populate customer info if logged in
   useEffect(() => {
-    if (!user) {
-      openLoginModal("/checkout");
-    } else {
+    if (user) {
       if (!fullName) setFullName(user.name || "");
       if (!email) setEmail(user.email || "");
       if (!phone && user.phone) setPhone(user.phone);
