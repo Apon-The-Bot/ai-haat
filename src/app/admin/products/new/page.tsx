@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { PRODUCTS } from "@/data/products";
 import { useToast } from "@/context/ToastContext";
+import { ImageUpload } from "@/components/ImageUpload";
 import { Product } from "@/types";
 
 export default function AdminNewProductPage() {
@@ -261,15 +262,11 @@ export default function AdminNewProductPage() {
               </div>
 
               <div>
-                <label className="text-sm font-bold text-slate-800 block mb-1.5">
-                  Product Image URL (Optional)
-                </label>
-                <input
-                  type="text"
+                <ImageUpload
                   value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="/images/products/chatgpt-plus.svg"
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-hidden focus:border-[#FC5C03]"
+                  onChange={setImageUrl}
+                  label="Product Image"
+                  description="Upload product logo or banner from your device (PNG, JPG, WebP, SVG)"
                 />
               </div>
             </div>

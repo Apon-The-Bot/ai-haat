@@ -20,25 +20,48 @@ import { useCurrency } from "@/context/CurrencyContext";
 
 export default function AdminOverviewPage() {
   const { formatPrice } = useCurrency();
+  const [orders, setOrders] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const loadOverview = async () => {
+      try {
+        const res = await fetch("/api/orders");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.orders) {
+            setOrders(data.orders);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadOverview();
+  }, []);
+
+  const totalRevenue = orders.reduce((acc, o) => acc + (Number(o.totalBDT) || 0), 0);
+  const pendingOrders = orders.filter(
+    (o) => o.deliveryStatus !== "Delivered" && o.deliveryStatus !== "Cancelled"
+  );
 
   const metrics = [
     {
       title: "Total Revenue",
-      value: "৳0",
+      value: formatPrice(totalRevenue),
       change: "",
       icon: DollarSign,
       color: "text-emerald-700 bg-emerald-50 border-emerald-200",
     },
     {
       title: "Total Orders",
-      value: "0",
+      value: String(orders.length),
       change: "",
       icon: ShoppingBag,
       color: "text-blue-700 bg-blue-50 border-blue-200",
     },
     {
       title: "Pending Fulfillment",
-      value: "0",
+      value: String(pendingOrders.length),
       change: "",
       icon: Clock,
       color: "text-amber-800 bg-amber-50 border-amber-200",
@@ -52,21 +75,19 @@ export default function AdminOverviewPage() {
     },
     {
       title: "Registered Users",
-      value: "0",
+      value: "1",
       change: "",
       icon: Users,
       color: "text-purple-700 bg-purple-50 border-purple-200",
     },
     {
       title: "Active Products",
-      value: "0 Items",
+      value: "Catalog Live",
       change: "",
       icon: Package,
       color: "text-indigo-700 bg-indigo-50 border-indigo-200",
     },
   ];
-
-  const [pendingOrders, setPendingOrders] = useState<any[]>([]);
 
   return (
     <div className="space-y-6 sm:space-y-8">

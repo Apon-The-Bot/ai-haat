@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { KeyRound, Copy, Check, ShieldCheck, ExternalLink, Download, FileDown, FolderArchive, ShoppingBag } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface VaultKey {
   id: string;
@@ -21,10 +22,41 @@ interface VaultKey {
 
 export default function DigitalVaultPage() {
   const { language } = useLanguage();
+  const { user } = useAuth();
   const isBn = language === "bn";
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [keys, setKeys] = useState<VaultKey[]>([]);
+
+  React.useEffect(() => {
+    const fetchKeys = async () => {
+      try {
+        const query = user?.email ? `?email=${encodeURIComponent(user.email)}` : "";
+        const res = await fetch(`/api/orders${query}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.orders) {
+            const delivered = data.orders
+              .filter((o: any) => o.credentialsDelivered && o.deliveryStatus === "Delivered")
+              .map((o: any) => ({
+                id: o.orderNumber || o.id,
+                orderId: o.orderNumber || o.id,
+                productName: o.items?.[0]?.productName || "Digital Subscription",
+                accountType: o.items?.[0]?.variationName || "Official Access",
+                credentials: o.credentialsDelivered,
+                instructions: o.deliveryInstructions || "Log in using the credentials above.",
+                validUntil: "Active / Full Warranty",
+                deliveredAt: o.updatedAt ? new Date(o.updatedAt).toLocaleDateString() : "Recently",
+              }));
+            setKeys(delivered);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchKeys();
+  }, [user]);
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);

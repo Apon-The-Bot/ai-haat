@@ -48,6 +48,46 @@ export default function AdminOrdersPage() {
   const { showToast } = useToast();
 
   const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchOrders = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/orders");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.orders) {
+          setOrders(
+            data.orders.map((o: any) => ({
+              id: o.orderNumber || o.id,
+              customerName: o.customerName || "Customer",
+              customerEmail: o.customerEmail || "",
+              customerPhone: o.customerPhone || "",
+              productName: o.items?.[0]?.productName || "Digital Product",
+              variationName: o.items?.[0]?.variationName || "Standard",
+              totalBDT: o.totalBDT || 0,
+              paymentMethod: o.paymentMethod || "gateway",
+              senderNumber: o.senderNumber || "",
+              trxId: o.trxId || "",
+              status: (o.deliveryStatus === "Delivered" ? "DELIVERED" : o.deliveryStatus === "Cancelled" ? "CANCELLED" : "PENDING"),
+              createdAt: o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "Today"),
+              deliveredKey: o.credentialsDelivered || null,
+              downloadUrl: o.downloadUrl || null,
+              cancelReason: o.cancelReason || null,
+            }))
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load orders:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [search, setSearch] = useState("");
@@ -108,6 +148,7 @@ export default function AdminOrdersPage() {
 
     setIsSending(true);
     try {
+      // Send Email
       await fetch("/api/admin/send-delivery-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -121,6 +162,19 @@ export default function AdminOrdersPage() {
           downloadUrl: downloadUrl.trim() || null,
           instructions,
           subject: emailSubject,
+        }),
+      });
+
+      // Update Order Status in Backend
+      await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: selectedOrder.id,
+          deliveryStatus: "Delivered",
+          paymentStatus: "Completed",
+          credentialsDelivered: credentials,
+          deliveryInstructions: instructions,
         }),
       });
 
@@ -147,8 +201,23 @@ export default function AdminOrdersPage() {
   };
 
   // Cancel Order Handler
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = async () => {
     if (!cancellingOrder) return;
+    
+    try {
+      await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: cancellingOrder.id,
+          deliveryStatus: "Cancelled",
+          paymentStatus: "Failed",
+        }),
+      });
+    } catch (e) {
+      console.error(e);
+    }
+
     setOrders((prev) =>
       prev.map((o) =>
         o.id === cancellingOrder.id
@@ -160,7 +229,7 @@ export default function AdminOrdersPage() {
           : o
       )
     );
-    showToast(`Order #${cancellingOrder.id} has been cancelled.`, "info");
+    showToast(`Order #${cancellingOrder.id} cancelled.`, "info");
     setCancellingOrder(null);
   };
 

@@ -22,6 +22,35 @@ export default function DashboardOverviewPage() {
 
   const [recentOrders, setRecentOrders] = useState<{id:string;productName:string;amountBDT:number;status:string;date:string;hasKey:boolean}[]>([]);
 
+  React.useEffect(() => {
+    const fetchRecentOrders = async () => {
+      try {
+        const query = user?.email ? `?email=${encodeURIComponent(user.email)}` : "";
+        const res = await fetch(`/api/orders${query}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.orders) {
+            setRecentOrders(
+              data.orders.slice(0, 5).map((o: any) => ({
+                id: o.orderNumber || o.id,
+                productName: o.items?.[0]?.productName || "Digital Subscription",
+                amountBDT: o.totalBDT || 0,
+                status: o.deliveryStatus === "Delivered" ? "COMPLETED" : "PROCESSING",
+                date: o.date || "Today",
+                hasKey: Boolean(o.credentialsDelivered),
+              }))
+            );
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchRecentOrders();
+  }, [user]);
+
+  const keysCount = recentOrders.filter((o) => o.hasKey).length;
+
   return (
     <div className="space-y-6">
       
@@ -88,7 +117,7 @@ export default function DashboardOverviewPage() {
             <span className="text-xs font-bold text-[#7A8190] block">
               {isBn ? "ভল্টে সংরক্ষিত কি" : "Keys in Vault"}
             </span>
-            <span className="text-2xl font-black text-[#1A1D26]">0</span>
+            <span className="text-2xl font-black text-[#1A1D26]">{keysCount}</span>
             <Link href="/dashboard/keys" className="text-[11px] text-emerald-600 font-bold hover:underline block mt-0.5">
               {isBn ? "ভল্ট ওপেন করুন →" : "Open Vault →"}
             </Link>

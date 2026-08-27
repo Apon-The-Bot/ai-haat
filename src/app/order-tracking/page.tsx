@@ -20,12 +20,37 @@ function OrderTrackingContent() {
     }
   }, [initialId]);
 
-  const handleSearch = (idToSearch?: string) => {
+  const handleSearch = async (idToSearch?: string) => {
     const q = idToSearch || orderQuery;
     if (!q.trim()) return;
 
     setSearched(true);
-    // Simulate real lookup
+    try {
+      const res = await fetch(`/api/orders?query=${encodeURIComponent(q.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.orders && data.orders.length > 0) {
+          const ord = data.orders[0];
+          const isDelivered = ord.deliveryStatus === "Delivered";
+          const isProcessing = ord.deliveryStatus === "Processing" || ord.deliveryStatus === "Preparing";
+          
+          setOrderData({
+            orderId: ord.orderNumber || ord.id,
+            productName: ord.items?.[0]?.productName || "Digital Product",
+            orderDate: ord.date || "Recently",
+            amount: ord.totalBDT || 0,
+            paymentMethod: ord.paymentMethod || "bKash",
+            status: ord.deliveryStatus || "Processing",
+            currentStep: isDelivered ? 4 : isProcessing ? 3 : 2,
+            deliveryType: "ইমেইল ও লাইভ একাউন্ট ভেরিফিকেশন",
+            eta: isDelivered ? "ডেলিভারি সম্পন্ন" : "৫-১৫ মিনিট",
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
     setOrderData(null);
   };
 

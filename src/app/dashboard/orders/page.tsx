@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShoppingBag, KeyRound, Search, Clock, PackageOpen } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface CustomerOrder {
   id: string;
@@ -21,12 +22,42 @@ interface CustomerOrder {
 export default function DashboardOrdersPage() {
   const { formatPrice } = useCurrency();
   const { language } = useLanguage();
+  const { user } = useAuth();
   const isBn = language === "bn";
 
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
-
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
+
+  React.useEffect(() => {
+    const fetchUserOrders = async () => {
+      try {
+        const query = user?.email ? `?email=${encodeURIComponent(user.email)}` : "";
+        const res = await fetch(`/api/orders${query}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.orders) {
+            setOrders(
+              data.orders.map((o: any) => ({
+                id: o.orderNumber || o.id,
+                productName: o.items?.[0]?.productName || "Digital Subscription",
+                variation: o.items?.[0]?.variationName || "Standard",
+                amountBDT: o.totalBDT || 0,
+                paymentMethod: o.paymentMethod || "gateway",
+                trxId: o.trxId || "N/A",
+                status: o.deliveryStatus === "Delivered" ? "DELIVERED" : "PROCESSING",
+                date: o.date || "Today",
+                deliveredKey: o.credentialsDelivered || null,
+              }))
+            );
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchUserOrders();
+  }, [user]);
 
   const filteredOrders = orders.filter((o) => {
     const matchesFilter = filter === "ALL" || o.status === filter;
