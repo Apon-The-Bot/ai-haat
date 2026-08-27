@@ -3,13 +3,9 @@ import { generateDeliveryHtml } from "./emailTemplate";
 
 export function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.hostinger.com";
-  const port = parseInt(process.env.SMTP_PORT || "465");
+  const port = parseInt(process.env.SMTP_PORT || "465", 10);
   const user = process.env.SMTP_USER || "delivery@aihaat.shop";
   const pass = process.env.SMTP_PASS || "Rk#delivery@aihaat.sh0p";
-
-  if (!pass) {
-    return null;
-  }
 
   return nodemailer.createTransport({
     host,
@@ -22,7 +18,7 @@ export function getTransporter() {
     tls: {
       rejectUnauthorized: false,
     },
-  });
+  } as any);
 }
 
 export { generateDeliveryHtml };
@@ -53,18 +49,14 @@ export async function sendWelcomeEmail(user: { name: string; email: string }) {
   </div>
   `;
 
-  if (!transporter) {
-    console.log(`[Welcome Email Simulated] to ${user.email}`);
-    return false;
-  }
-
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: '"AI Haat Delivery" <delivery@aihaat.shop>',
       to: user.email,
       subject: "Welcome to AI Haat - Account Ready!",
       html,
     });
+    console.log(`[Welcome Email Sent] ID: ${info.messageId} to ${user.email}`);
     return true;
   } catch (error) {
     console.error("[Welcome Email Error]:", error);
@@ -89,11 +81,6 @@ export async function sendOrderDeliveryEmail(data: {
   const transporter = getTransporter();
   const html = generateDeliveryHtml(data);
   const subject = data.subject || `Your AI Haat Delivery: ${data.productName} (Order #${data.orderId})`;
-
-  if (!transporter) {
-    console.log(`[Hostinger SMTP Simulated] Email to ${data.customerEmail} - Subject: ${subject}`);
-    return { success: true, simulated: true };
-  }
 
   try {
     const info = await transporter.sendMail({

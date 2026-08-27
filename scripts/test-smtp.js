@@ -1,49 +1,48 @@
 const nodemailer = require('nodemailer');
 
 async function testSMTP() {
-  console.log('Testing SMTP connection to Hostinger...');
-  
-  // Try port 465 SSL
-  const transporterSSL = nodemailer.createTransport({
-    host: 'smtp.hostinger.com',
-    port: 465,
+  const host = "smtp.hostinger.com";
+  const port = 465;
+  const user = "delivery@aihaat.shop";
+  const pass = "Rk#delivery@aihaat.sh0p";
+
+  console.log(`Connecting to SMTP server ${host}:${port} with user ${user}...`);
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
     secure: true,
     auth: {
-      user: 'delivery@aihaat.shop',
-      pass: 'Rk#delivery@aihaat.sh0p',
+      user,
+      pass,
     },
     tls: {
       rejectUnauthorized: false,
     },
+    debug: true,
+    logger: true,
   });
 
   try {
-    const verified = await transporterSSL.verify();
-    console.log('✓ Hostinger SMTP SSL 465 Verified:', verified);
-  } catch (err) {
-    console.log('✗ Port 465 failed:', err.message);
-  }
+    console.log("Verifying transporter connection...");
+    await transporter.verify();
+    console.log("✓ Transporter verified successfully!");
 
-  // Try port 587 TLS
-  const transporterTLS = nodemailer.createTransport({
-    host: 'smtp.hostinger.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: 'delivery@aihaat.shop',
-      pass: 'Rk#delivery@aihaat.sh0p',
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
+    console.log("Sending test email to mdamanullahsheikhapon@gmail.com...");
+    const info = await transporter.sendMail({
+      from: '"AI Haat Delivery" <delivery@aihaat.shop>',
+      to: "mdamanullahsheikhapon@gmail.com",
+      subject: "Test Delivery Email from AI Haat",
+      text: "This is a test email sent directly from AI Haat SMTP configuration.",
+      html: "<h3>AI Haat Delivery Test</h3><p>Your SMTP is working properly!</p>",
+    });
 
-  try {
-    const verifiedTLS = await transporterTLS.verify();
-    console.log('✓ Hostinger SMTP TLS 587 Verified:', verifiedTLS);
+    console.log("✓ Test email sent successfully! Message ID:", info.messageId);
+    console.log("Envelope:", info.envelope);
+    console.log("Accepted:", info.accepted);
   } catch (err) {
-    console.log('✗ Port 587 failed:', err.message);
+    console.error("❌ SMTP Error:", err);
   }
 }
 
-testSMTP().catch(console.error);
+testSMTP();
