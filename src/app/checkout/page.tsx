@@ -26,6 +26,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { SafeImage } from "@/components/SafeImage";
+import { PaymentLogo } from "@/components/PaymentLogo";
 import { validateCoupon } from "@/data/coupons";
 import { Coupon } from "@/types";
 
@@ -36,7 +37,7 @@ export default function CheckoutPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const [paymentMethod, setPaymentMethod] = useState<"gateway" | "bkash" | "nagad" | "rocket" | "wallet">("gateway");
+  const [paymentMethod, setPaymentMethod] = useState<"gateway" | "bkash" | "nagad" | "rocket" | "upay" | "wallet">("gateway");
   const [fullName, setFullName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState(user?.phone || "");
@@ -294,7 +295,7 @@ export default function CheckoutPage() {
                         <Zap className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
                           <span className="text-sm font-bold text-[#1A1D26]">
                             ইনস্ট্যান্ট পেমেন্ট গেটওয়ে (Automated Gateway)
                           </span>
@@ -302,9 +303,15 @@ export default function CheckoutPage() {
                             Fast & Auto
                           </span>
                         </div>
-                        <p className="text-[11px] text-gray-500 mt-0.5">
-                          bKash, Nagad, Rocket ও Cards — অটোমেটেড ভেরিফিকেশন ও ইনস্ট্যান্ট অর্ডার কনফার্ম।
+                        <p className="text-[11px] text-gray-500 mt-0.5 mb-2">
+                          bKash, Nagad, Rocket, Upay — অটোমেটেড ভেরিফিকেশন ও ইনস্ট্যান্ট অর্ডার কনফার্ম।
                         </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <PaymentLogo method="bkash" width={48} height={18} className="border border-pink-100 shadow-2xs" />
+                          <PaymentLogo method="nagad" width={48} height={18} className="border border-orange-100 shadow-2xs" />
+                          <PaymentLogo method="rocket" width={48} height={18} className="border border-purple-100 shadow-2xs" />
+                          <PaymentLogo method="upay" width={48} height={18} className="border border-blue-100 shadow-2xs" />
+                        </div>
                       </div>
                     </button>
 
@@ -312,16 +319,14 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("bkash")}
-                      className={`p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
                         paymentMethod === "bkash"
                           ? "border-[#E2136E] bg-[#FFF0F6] shadow-xs"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-gray-200 hover:border-gray-300 bg-white"
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-[#E2136E] text-white flex items-center justify-center font-black text-xs shrink-0">
-                        bK
-                      </div>
-                      <div>
+                      <PaymentLogo method="bkash" width={56} height={24} className="shrink-0" />
+                      <div className="min-w-0 flex-1">
                         <span className="text-xs font-bold text-[#1A1D26] block">bKash (Manual)</span>
                         <span className="text-[10px] text-gray-500">Send Money + TrxID</span>
                       </div>
@@ -331,16 +336,14 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("nagad")}
-                      className={`p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
                         paymentMethod === "nagad"
                           ? "border-[#F7941D] bg-[#FFF7ED] shadow-xs"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-gray-200 hover:border-gray-300 bg-white"
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-[#F7941D] text-white flex items-center justify-center font-black text-xs shrink-0">
-                        NG
-                      </div>
-                      <div>
+                      <PaymentLogo method="nagad" width={56} height={24} className="shrink-0" />
+                      <div className="min-w-0 flex-1">
                         <span className="text-xs font-bold text-[#1A1D26] block">Nagad (Manual)</span>
                         <span className="text-[10px] text-gray-500">Send Money + TrxID</span>
                       </div>
@@ -350,37 +353,52 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("rocket")}
-                      className={`p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
                         paymentMethod === "rocket"
                           ? "border-[#8C3494] bg-[#FAF5FF] shadow-xs"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-gray-200 hover:border-gray-300 bg-white"
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-[#8C3494] text-white flex items-center justify-center font-black text-xs shrink-0">
-                        RK
-                      </div>
-                      <div>
+                      <PaymentLogo method="rocket" width={56} height={24} className="shrink-0" />
+                      <div className="min-w-0 flex-1">
                         <span className="text-xs font-bold text-[#1A1D26] block">Rocket (Manual)</span>
                         <span className="text-[10px] text-gray-500">Send Money + TrxID</span>
                       </div>
                     </button>
 
-                    {/* Option E: Wallet Balance */}
+                    {/* Option E: Manual Upay */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("upay")}
+                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
+                        paymentMethod === "upay"
+                          ? "border-[#002D62] bg-[#F0F7FF] shadow-xs"
+                          : "border-gray-200 hover:border-gray-300 bg-white"
+                      }`}
+                    >
+                      <PaymentLogo method="upay" width={56} height={24} className="shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-bold text-[#1A1D26] block">Upay (Manual)</span>
+                        <span className="text-[10px] text-gray-500">Send Money + TrxID</span>
+                      </div>
+                    </button>
+
+                    {/* Option F: Wallet Balance */}
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("wallet")}
-                      className={`p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 sm:col-span-2 ${
                         paymentMethod === "wallet"
                           ? "border-[#FC5C03] bg-[#FFF2E8] shadow-xs"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-gray-200 hover:border-gray-300 bg-white"
                       }`}
                     >
                       <div className="w-8 h-8 rounded-lg bg-[#1A1D26] text-[#FC5C03] flex items-center justify-center font-black text-xs shrink-0">
                         ৳
                       </div>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <span className="text-xs font-bold text-[#1A1D26] block">Wallet Balance</span>
-                        <span className="text-[10px] text-gray-500">Balance: {formatPrice(user?.walletBalanceBDT || 0)}</span>
+                        <span className="text-[10px] text-gray-500">Available: {formatPrice(user?.walletBalanceBDT || 0)}</span>
                       </div>
                     </button>
                   </div>

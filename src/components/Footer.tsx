@@ -31,9 +31,9 @@ export function Footer() {
     { name: "bKash", icon: "/images/payments/bkash.svg" },
     { name: "Nagad", icon: "/images/payments/nagad.svg" },
     { name: "Rocket", icon: "/images/payments/rocket.svg" },
+    { name: "Upay", icon: "/images/payments/upay.svg" },
     { name: "Visa", icon: "/images/payments/visa.svg" },
     { name: "Mastercard", icon: "/images/payments/mastercard.svg" },
-    { name: "SSLCommerz", icon: "/images/payments/sslcommerz.svg" },
   ];
 
   return (

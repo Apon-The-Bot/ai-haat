@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 50" width="160" height="50">
+  <rect width="160" height="50" rx="8" fill="#002D62"/>
+  <!-- Upay U Symbol -->
+  <g transform="translate(14, 10) scale(0.6)">
+    <path d="M6,8 L6,26 C6,36 15,44 25,44 C35,44 44,36 44,26 L44,8 L32,8 L32,24 C32,28 29,32 25,32 C21,32 18,28 18,24 L18,8 Z" fill="#FFC72C"/>
+    <circle cx="38" cy="8" r="5" fill="#FFC72C"/>
+  </g>
+  <!-- Upay Text -->
+  <text x="50" y="32" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="21" font-weight="900" fill="#FFFFFF" letter-spacing="-0.3">upay</text>
+</svg>

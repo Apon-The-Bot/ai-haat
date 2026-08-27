@@ -24,6 +24,7 @@ import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 import { HowToOrder } from "@/components/home/HowToOrder";
 import { SafeImage } from "@/components/SafeImage";
+import { PaymentLogo } from "@/components/PaymentLogo";
 import { Variation, Review } from "@/types";
 
 export default function ProductDetailPage() {
@@ -334,6 +335,17 @@ export default function ProductDetailPage() {
               <div className="p-2.5 bg-gray-50/70 rounded-xl border border-[#E8E8EE]">
                 <Headphones className="w-3.5 h-3.5 text-[#FC5C03] mx-auto mb-1" />
                 <span className="text-[10.5px] font-bold text-[#1A1D26] block">২৪/৭ সাপোর্ট</span>
+              </div>
+            </div>
+
+            {/* Accepted Payments Strip */}
+            <div className="px-3 py-2 bg-white rounded-xl border border-[#E8E8EE] flex items-center justify-between gap-2 flex-wrap">
+              <span className="text-[11px] font-bold text-gray-600">পেমেন্ট মেথড:</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <PaymentLogo method="bkash" width={48} height={18} className="border border-pink-100 shadow-2xs" />
+                <PaymentLogo method="nagad" width={48} height={18} className="border border-orange-100 shadow-2xs" />
+                <PaymentLogo method="rocket" width={48} height={18} className="border border-purple-100 shadow-2xs" />
+                <PaymentLogo method="upay" width={48} height={18} className="border border-blue-100 shadow-2xs" />
               </div>
             </div>
 

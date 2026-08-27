@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useToast } from "@/context/ToastContext";
+import { PaymentLogo } from "@/components/PaymentLogo";
 
 export default function DashboardWalletPage() {
   const { user } = useAuth();
@@ -23,9 +24,10 @@ export default function DashboardWalletPage() {
   const [copiedNumber, setCopiedNumber] = useState(false);
 
   const paymentNumbers = {
-    bkash: "01712-345678 (Send Money / Personal)",
-    nagad: "01823-456789 (Send Money / Personal)",
-    rocket: "01934-567890-4 (Send Money / Personal)",
+    bkash: "017XXXXXXXX (Send Money / Personal)",
+    nagad: "017XXXXXXXX (Send Money / Personal)",
+    rocket: "017XXXXXXXX-4 (Send Money / Personal)",
+    upay: "017XXXXXXXX (Send Money / Personal)",
   };
 
   const [transactions, setTransactions] = useState<Array<{
@@ -204,19 +206,20 @@ export default function DashboardWalletPage() {
                 <label className="block text-xs font-bold text-[#1A1D26] mb-1.5">
                   {isBn ? "পেমেন্ট মাধ্যম সিলেক্ট করুন" : "Select Payment Method"}
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {["bkash", "nagad", "rocket"].map((m) => (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {["bkash", "nagad", "rocket", "upay"].map((m) => (
                     <button
                       type="button"
                       key={m}
                       onClick={() => setMethod(m)}
-                      className={`py-2 px-3 rounded-xl border text-xs font-bold capitalize transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         method === m
-                          ? "border-[#FC5C03] bg-[#FFF2E8] text-[#FC5C03]"
-                          : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                          ? "border-[#FC5C03] bg-[#FFF2E8] shadow-xs"
+                          : "border-gray-200 bg-white hover:border-gray-300"
                       }`}
                     >
-                      {m}
+                      <PaymentLogo method={m} width={52} height={20} />
+                      <span className="text-[10px] font-bold text-gray-700 capitalize">{m}</span>
                     </button>
                   ))}
                 </div>

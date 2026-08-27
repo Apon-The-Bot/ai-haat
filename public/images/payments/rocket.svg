@@ -1,4 +1,17 @@
-<svg width="76" height="32" viewBox="0 0 76 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="76" height="32" rx="6" fill="#8C3494"/>
-    <text x="38" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF" text-anchor="middle">Rocket</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 50" width="160" height="50">
+  <rect width="160" height="50" rx="8" fill="#8C3494"/>
+  <!-- DBBL Rocket Emblem -->
+  <g transform="translate(14, 10) scale(0.6)">
+    <!-- Rocket Body -->
+    <path d="M25,2 C18,8 14,20 16,36 L25,48 L34,36 C36,20 32,8 25,2 Z" fill="#FFFFFF"/>
+    <!-- Wings -->
+    <path d="M16,28 L4,38 L15,40 Z" fill="#E1BEE7"/>
+    <path d="M34,28 L46,38 L35,40 Z" fill="#E1BEE7"/>
+    <!-- Window -->
+    <circle cx="25" cy="18" r="4.5" fill="#8C3494"/>
+    <!-- Flame -->
+    <polygon points="21,48 25,56 29,48" fill="#FFB74D"/>
+  </g>
+  <!-- Rocket Text -->
+  <text x="52" y="32" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="21" font-weight="900" fill="#FFFFFF" letter-spacing="-0.3">Rocket</text>
+</svg>

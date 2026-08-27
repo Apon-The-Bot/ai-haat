@@ -1,4 +1,16 @@
-<svg width="76" height="32" viewBox="0 0 76 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="76" height="32" rx="6" fill="#F7941D"/>
-    <text x="38" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#FFFFFF" text-anchor="middle">Nagad</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 50" width="160" height="50">
+  <defs>
+    <linearGradient id="nagadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E83A2F"/>
+      <stop offset="100%" stop-color="#F7931E"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="50" rx="8" fill="url(#nagadGrad)"/>
+  <!-- Nagad Flame Symbol -->
+  <g transform="translate(14, 10) scale(0.6)">
+    <path d="M12,40 C5,32 5,18 16,8 C16,14 19,18 24,18 C28,14 30,8 30,2 C38,10 44,22 40,34 C36,44 22,46 12,40 Z" fill="#FFFFFF"/>
+    <path d="M18,36 C14,30 15,22 22,16 C23,20 25,23 28,23 C30,21 31,17 31,13 C35,18 38,26 35,32 C32,38 23,40 18,36 Z" fill="#FCE4EC" opacity="0.9"/>
+  </g>
+  <!-- Nagad Text -->
+  <text x="52" y="32" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="21" font-weight="900" fill="#FFFFFF" letter-spacing="-0.3">Nagad</text>
+</svg>
