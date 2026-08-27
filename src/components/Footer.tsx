@@ -28,10 +28,10 @@ export function Footer() {
   };
 
   const paymentLogos = [
-    { name: "bKash", icon: "/images/payments/bkash.svg" },
-    { name: "Nagad", icon: "/images/payments/nagad.svg" },
-    { name: "Rocket", icon: "/images/payments/rocket.svg" },
-    { name: "Upay", icon: "/images/payments/upay.svg" },
+    { name: "bKash", icon: "/images/payments/bkash.png" },
+    { name: "Nagad", icon: "/images/payments/nagad.png" },
+    { name: "Rocket", icon: "/images/payments/rocket.png" },
+    { name: "Upay", icon: "/images/payments/upay.png" },
     { name: "Visa", icon: "/images/payments/visa.svg" },
     { name: "Mastercard", icon: "/images/payments/mastercard.svg" },
   ];
