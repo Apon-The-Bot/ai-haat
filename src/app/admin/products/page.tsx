@@ -16,8 +16,30 @@ import { Product } from "@/types";
 
 export default function AdminProductsPage() {
   const { showToast } = useToast();
-  const [productList, setProductList] = useState<Product[]>(initialProducts);
+  const [productList, setProductList] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/products");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.products) {
+          setProductList(data.products);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const filtered = productList.filter((p) => {
     const matchSearch =
@@ -34,10 +56,15 @@ export default function AdminProductsPage() {
     showToast("Stock status updated.", "success");
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
-      setProductList((prev) => prev.filter((p) => p.id !== id));
-      showToast("Product deleted successfully.", "success");
+      try {
+        await fetch(`/api/products?id=${id}`, { method: "DELETE" });
+        setProductList((prev) => prev.filter((p) => p.id !== id));
+        showToast("Product deleted successfully.", "success");
+      } catch (err) {
+        showToast("Failed to delete product.", "error");
+      }
     }
   };
 

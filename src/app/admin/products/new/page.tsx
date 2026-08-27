@@ -104,7 +104,7 @@ export default function AdminNewProductPage() {
     setVariants((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       showToast("Product name is required.", "error");
@@ -180,9 +180,23 @@ export default function AdminNewProductPage() {
       inStock,
     };
 
-    PRODUCTS.unshift(newProd);
-    showToast(`Product added successfully!`, "success");
-    router.push("/admin/products");
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newProd),
+      });
+
+      if (res.ok) {
+        showToast("Product added to database successfully!", "success");
+        router.push("/admin/products");
+      } else {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save product");
+      }
+    } catch (err: any) {
+      showToast(err.message || "Failed to save product", "error");
+    }
   };
 
   return (

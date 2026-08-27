@@ -122,7 +122,7 @@ export default function AdminEditProductPage() {
     setVariants((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       showToast("Product name is required.", "error");
@@ -157,40 +157,55 @@ export default function AdminEditProductPage() {
       maxPrice = Math.max(...variants.map((v) => Number(v.priceBDT) || 0));
     }
 
-    const idx = PRODUCTS.findIndex((p) => p.id === existingProduct.id);
-    if (idx !== -1) {
-      PRODUCTS[idx] = {
-        ...PRODUCTS[idx],
-        name,
-        category: finalCategory,
-        categories: [finalCategory],
-        image: imageUrl.trim() || PRODUCTS[idx].image,
-        minPriceBDT: minPrice,
-        maxPriceBDT: maxPrice,
-        deliveryMethod,
-        shortDesc: description || PRODUCTS[idx].shortDesc,
-        info: {
-          ...PRODUCTS[idx].info,
-          deliveryType:
-            deliveryMethod === "WHATSAPP"
-              ? "WhatsApp Live Activation"
-              : deliveryMethod === "MESSENGER"
-              ? "Facebook Messenger Live Activation"
-              : "Email & Digital Vault Dispatch",
-        },
-        variations: calculatedVariations.map((v, i) => ({
-          id: v.id || `v-${i}`,
-          name: v.name,
-          priceBDT: Number(v.priceBDT) || 0,
-          originalPriceBDT: Number(v.originalPriceBDT) || undefined,
-          inStock: v.inStock,
-        })),
-        inStock,
-      };
-    }
+    const updatedProd: Product = {
+      id: existingProduct.id,
+      slug: existingProduct.slug,
+      name,
+      category: finalCategory,
+      categories: [finalCategory],
+      image: imageUrl.trim() || existingProduct.image,
+      rating: existingProduct.rating || 5.0,
+      ratingCount: existingProduct.ratingCount || 1,
+      viewCount: existingProduct.viewCount || 100,
+      minPriceBDT: minPrice,
+      maxPriceBDT: maxPrice,
+      deliveryMethod,
+      shortDesc: description || existingProduct.shortDesc,
+      descriptionBangla: description || existingProduct.descriptionBangla,
+      descriptionEnglish: description || existingProduct.descriptionEnglish,
+      features: existingProduct.features || ["Instant Delivery", "Full Warranty"],
+      info: {
+        ...existingProduct.info,
+        deliveryType:
+          deliveryMethod === "WHATSAPP"
+            ? "WhatsApp Live Activation"
+            : deliveryMethod === "MESSENGER"
+            ? "Facebook Messenger Live Activation"
+            : "Email & Digital Vault Dispatch",
+      },
+      reviews: existingProduct.reviews || [],
+      variations: calculatedVariations.map((v, i) => ({
+        id: v.id || `v-${i}`,
+        name: v.name,
+        priceBDT: Number(v.priceBDT) || 0,
+        originalPriceBDT: Number(v.originalPriceBDT) || undefined,
+        description: "",
+        inStock: v.inStock,
+      })),
+      inStock,
+    };
 
-    showToast(`Product updated successfully!`, "success");
-    router.push("/admin/products");
+    try {
+      await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedProd),
+      });
+      showToast(`Product updated in database successfully!`, "success");
+      router.push("/admin/products");
+    } catch (err: any) {
+      showToast(err.message || "Failed to update product", "error");
+    }
   };
 
   return (

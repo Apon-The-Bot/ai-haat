@@ -11,10 +11,20 @@ function ShopContent() {
   const initialCategory = searchParams.get("category") || "All";
   const initialQuery = searchParams.get("q") || "";
 
+  const [products, setProducts] = useState(PRODUCTS);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
   const [sortBy, setSortBy] = useState<string>("default");
   const [displayCount, setDisplayCount] = useState<number>(18);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.products && d.products.length > 0) setProducts(d.products);
+      })
+      .catch(() => {});
+  }, []);
 
   // Sync category param if URL changes
   useEffect(() => {
@@ -26,7 +36,7 @@ function ShopContent() {
 
   // Filter & Sort Products
   const filteredProducts = useMemo(() => {
-    let result = [...PRODUCTS];
+    let result = [...products];
 
     // Category Filter
     if (selectedCategory && selectedCategory !== "All") {
