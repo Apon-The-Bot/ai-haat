@@ -26,7 +26,6 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { SafeImage } from "@/components/SafeImage";
-import { PaymentLogo } from "@/components/PaymentLogo";
 import { validateCoupon } from "@/data/coupons";
 import { Coupon } from "@/types";
 
@@ -37,13 +36,11 @@ export default function CheckoutPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const [paymentMethod, setPaymentMethod] = useState<"gateway" | "bkash" | "nagad" | "rocket" | "upay" | "wallet">("gateway");
+  const [paymentMethod, setPaymentMethod] = useState<"gateway" | "wallet">("gateway");
   const [fullName, setFullName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [notes, setNotes] = useState("");
-  const [senderNumber, setSenderNumber] = useState("");
-  const [trxId, setTrxId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState("");
@@ -102,11 +99,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentMethod !== "gateway" && paymentMethod !== "wallet" && (!senderNumber || !trxId)) {
-      showToast("Please enter sender number and Transaction ID (TrxID).", "error");
-      return;
-    }
-
     setIsSubmitting(true);
 
     const orderNum = `AH-${Math.floor(10000 + Math.random() * 90000)}`;
@@ -140,8 +132,8 @@ export default function CheckoutPage() {
           couponCode: appliedCoupon?.code || null,
           totalBDT: finalTotalBDT,
           paymentMethod,
-          senderNumber: paymentMethod === "gateway" ? "GATEWAY" : senderNumber,
-          trxId: paymentMethod === "gateway" ? "GATEWAY_PENDING" : trxId,
+          senderNumber: "GATEWAY",
+          trxId: "GATEWAY_PENDING",
           notes,
         }),
       });
@@ -149,7 +141,7 @@ export default function CheckoutPage() {
       console.error("Order save:", e);
     }
 
-    // If Automated Gateway payment selected, trigger gateway session
+    // If Automated Gateway payment selected, trigger gateway session & redirect
     if (paymentMethod === "gateway") {
       try {
         const res = await fetch("/api/payment/create", {
@@ -173,9 +165,16 @@ export default function CheckoutPage() {
           clearCart();
           window.location.href = data.pp_url;
           return;
+        } else {
+          showToast(data.error || "পেমেন্ট গেটওয়ে চালু করতে সমস্যা হয়েছে।", "error");
+          setIsSubmitting(false);
+          return;
         }
       } catch (err) {
         console.error("Gateway redirect error:", err);
+        showToast("গেটওয়ে সংযোগ ব্যর্থ হয়েছে।", "error");
+        setIsSubmitting(false);
+        return;
       }
     }
 
@@ -280,185 +279,69 @@ export default function CheckoutPage() {
                     <span>Select Payment Method</span>
                   </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Option A: Automated Gateway (Recommended) */}
-                    <button
-                      type="button"
+                  <div className="space-y-3">
+                    {/* Option A: Automated Gateway (Default & Recommended) */}
+                    <div
                       onClick={() => setPaymentMethod("gateway")}
-                      className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start gap-3 sm:col-span-2 ${
+                      className={`p-5 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start gap-4 ${
                         paymentMethod === "gateway"
                           ? "border-[#FC5C03] bg-[#FFF9F5] shadow-xs"
                           : "border-gray-200 hover:border-gray-300 bg-white"
                       }`}
                     >
-                      <div className="w-10 h-10 rounded-xl bg-[#FC5C03] text-white flex items-center justify-center shrink-0">
-                        <Zap className="w-5 h-5" />
+                      <div className="w-11 h-11 rounded-xl bg-[#FC5C03] text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <Zap className="w-6 h-6" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <span className="text-sm font-bold text-[#1A1D26]">
-                            ইনস্ট্যান্ট পেমেন্ট গেটওয়ে (Automated Gateway)
+                        <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                          <span className="text-base font-bold text-[#1A1D26]">
+                            ইনস্ট্যান্ট পেমেন্ট গেটওয়ে (Automated Gateway)
                           </span>
-                          <span className="px-2 py-0.5 text-[9px] font-bold uppercase bg-[#FC5C03] text-white rounded-md">
+                          <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase bg-[#FC5C03] text-white rounded-full">
                             Fast & Auto
                           </span>
                         </div>
-                        <p className="text-[11px] text-gray-500 mt-0.5 mb-2">
-                          bKash, Nagad, Rocket, Upay — অটোমেটেড ভেরিফিকেশন ও ইনস্ট্যান্ট অর্ডার কনফার্ম।
+                        <p className="text-xs text-gray-600 leading-relaxed mb-3">
+                          নিচের <b>&quot;পেমেন্ট করুন&quot;</b> বাটনে ক্লিক করলে সরাসরি পেমেন্ট গেটওয়েতে নিয়ে যাওয়া হবে। সেখানে bKash, Nagad, Rocket, Upay ও কার্ড দিয়ে পেমেন্ট করলে স্বয়ংক্রিয়ভাবে অর্ডার কনফার্ম হবে।
                         </p>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <PaymentLogo method="bkash" width={48} height={18} className="border border-pink-100 shadow-2xs" />
-                          <PaymentLogo method="nagad" width={48} height={18} className="border border-orange-100 shadow-2xs" />
-                          <PaymentLogo method="rocket" width={48} height={18} className="border border-purple-100 shadow-2xs" />
-                          <PaymentLogo method="upay" width={48} height={18} className="border border-blue-100 shadow-2xs" />
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-orange-200/80 shadow-2xs">
+                          <span className="text-[11px] font-bold text-gray-600">গৃহীত পেমেন্ট:</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 bg-pink-50 text-[#E2136E] border border-pink-200 text-[10px] font-extrabold rounded-md">bKash</span>
+                            <span className="px-2 py-0.5 bg-orange-50 text-[#F7941D] border border-orange-200 text-[10px] font-extrabold rounded-md">Nagad</span>
+                            <span className="px-2 py-0.5 bg-purple-50 text-[#8C3494] border border-purple-200 text-[10px] font-extrabold rounded-md">Rocket</span>
+                            <span className="px-2 py-0.5 bg-blue-50 text-[#002D62] border border-blue-200 text-[10px] font-extrabold rounded-md">Upay</span>
+                            <span className="px-2 py-0.5 bg-slate-50 text-slate-700 border border-slate-200 text-[10px] font-extrabold rounded-md">Cards</span>
+                          </div>
                         </div>
                       </div>
-                    </button>
+                    </div>
 
-                    {/* Option B: Manual bKash */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("bkash")}
-                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
-                        paymentMethod === "bkash"
-                          ? "border-[#E2136E] bg-[#FFF0F6] shadow-xs"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
-                    >
-                      <PaymentLogo method="bkash" width={56} height={24} className="shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-[#1A1D26] block">bKash (Manual)</span>
-                        <span className="text-[10px] text-gray-500">Send Money + TrxID</span>
+                    {/* Option B: Wallet Balance */}
+                    {user && (
+                      <div
+                        onClick={() => setPaymentMethod("wallet")}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center gap-3.5 ${
+                          paymentMethod === "wallet"
+                            ? "border-[#FC5C03] bg-[#FFF2E8] shadow-xs"
+                            : "border-gray-200 hover:border-gray-300 bg-white"
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-[#1A1D26] text-[#FC5C03] flex items-center justify-center font-black text-sm shrink-0">
+                          ৳
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm font-bold text-[#1A1D26] block">Wallet Balance</span>
+                          <span className="text-xs text-gray-500">
+                            Available Balance: {formatPrice(user?.walletBalanceBDT || 0)}
+                          </span>
+                        </div>
+                        <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 border-[#FC5C03]">
+                          {paymentMethod === "wallet" && <div className="w-2.5 h-2.5 rounded-full bg-[#FC5C03]" />}
+                        </div>
                       </div>
-                    </button>
-
-                    {/* Option C: Manual Nagad */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("nagad")}
-                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
-                        paymentMethod === "nagad"
-                          ? "border-[#F7941D] bg-[#FFF7ED] shadow-xs"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
-                    >
-                      <PaymentLogo method="nagad" width={56} height={24} className="shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-[#1A1D26] block">Nagad (Manual)</span>
-                        <span className="text-[10px] text-gray-500">Send Money + TrxID</span>
-                      </div>
-                    </button>
-
-                    {/* Option D: Manual Rocket */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("rocket")}
-                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
-                        paymentMethod === "rocket"
-                          ? "border-[#8C3494] bg-[#FAF5FF] shadow-xs"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
-                    >
-                      <PaymentLogo method="rocket" width={56} height={24} className="shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-[#1A1D26] block">Rocket (Manual)</span>
-                        <span className="text-[10px] text-gray-500">Send Money + TrxID</span>
-                      </div>
-                    </button>
-
-                    {/* Option E: Manual Upay */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("upay")}
-                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
-                        paymentMethod === "upay"
-                          ? "border-[#002D62] bg-[#F0F7FF] shadow-xs"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
-                    >
-                      <PaymentLogo method="upay" width={56} height={24} className="shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-[#1A1D26] block">Upay (Manual)</span>
-                        <span className="text-[10px] text-gray-500">Send Money + TrxID</span>
-                      </div>
-                    </button>
-
-                    {/* Option F: Wallet Balance */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("wallet")}
-                      className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 sm:col-span-2 ${
-                        paymentMethod === "wallet"
-                          ? "border-[#FC5C03] bg-[#FFF2E8] shadow-xs"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-[#1A1D26] text-[#FC5C03] flex items-center justify-center font-black text-xs shrink-0">
-                        ৳
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-[#1A1D26] block">Wallet Balance</span>
-                        <span className="text-[10px] text-gray-500">Available: {formatPrice(user?.walletBalanceBDT || 0)}</span>
-                      </div>
-                    </button>
+                    )}
                   </div>
-
-                  {/* Instructions for Gateway */}
-                  {paymentMethod === "gateway" && (
-                    <div className="p-4 bg-orange-50/70 rounded-xl border border-orange-200 space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs font-bold text-orange-950">
-                        <Sparkles className="w-4 h-4 text-[#FC5C03]" />
-                        <span>অটোমেটেড গেটওয়ে পেমেন্ট</span>
-                      </div>
-                      <p className="text-[11.5px] text-orange-900/80 leading-relaxed">
-                        নিচের <b>&quot;পেমেন্ট করুন ({formatPrice(finalTotalBDT)})&quot;</b> বাটনে ক্লিক করলে আপনাকে সুরক্ষিত গেটওয়েতে নিয়ে যাওয়া হবে। সেখানে bKash/Nagad/Rocket দিয়ে পেমেন্ট করলেই স্বয়ংক্রিয়ভাবে অর্ডার কনফার্ম হবে।
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Manual Instructions for bKash/Nagad/Rocket */}
-                  {paymentMethod !== "gateway" && paymentMethod !== "wallet" && (
-                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                      <div className="text-xs text-slate-700 space-y-1">
-                        <p className="font-bold text-slate-900">
-                          Send Money to our official number: <span className="font-mono text-[#FC5C03]">01XXXXXXXXX</span>
-                        </p>
-                        <p className="text-[11px] text-slate-500">
-                          Go to your {paymentMethod.toUpperCase()} app &gt; Send Money &gt; Enter Amount ({formatPrice(finalTotalBDT)}) &gt; Put your TrxID below.
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Your {paymentMethod.toUpperCase()} Number *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={senderNumber}
-                            onChange={(e) => setSenderNumber(e.target.value)}
-                            placeholder="017XXXXXXXX"
-                            className="w-full text-xs p-2.5 bg-white rounded-xl border border-slate-200 focus:outline-hidden focus:border-[#FC5C03]"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Transaction ID (TrxID) *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={trxId}
-                            onChange={(e) => setTrxId(e.target.value.toUpperCase())}
-                            placeholder="e.g. BL90X84Q"
-                            className="w-full text-xs p-2.5 bg-white rounded-xl border border-slate-200 font-mono focus:outline-hidden focus:border-[#FC5C03]"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
               </div>
