@@ -50,9 +50,9 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const res = await fetch("/api/orders");
       if (res.ok) {
         const data = await res.json();
@@ -81,12 +81,16 @@ export default function AdminOrdersPage() {
     } catch (err) {
       console.error("Failed to load orders:", err);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   React.useEffect(() => {
     fetchOrders();
+    const interval = setInterval(() => {
+      fetchOrders(true);
+    }, 4000);
+    return () => clearInterval(interval);
   }, []);
 
   const [statusFilter, setStatusFilter] = useState("ALL");

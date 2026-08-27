@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Wallet, Check, X, Search, Clock, CheckCircle2, Copy } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 interface WalletRequest {
   id: string;
@@ -21,6 +22,7 @@ export default function AdminWalletPage() {
   const { showToast } = useToast();
 
   const [requests, setRequests] = useState<WalletRequest[]>([]);
+  const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(null);
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
 
@@ -31,13 +33,13 @@ export default function AdminWalletPage() {
     showToast(`৳${amount} deposit approved for ${userName}!`, "success");
   };
 
-  const handleReject = (id: string) => {
-    if (confirm("Are you sure you want to reject this deposit request?")) {
-      setRequests((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, status: "REJECTED" } : r))
-      );
-      showToast("Deposit request rejected.", "error");
-    }
+  const confirmReject = () => {
+    if (!rejectingRequestId) return;
+    setRequests((prev) =>
+      prev.map((r) => (r.id === rejectingRequestId ? { ...r, status: "REJECTED" } : r))
+    );
+    showToast("ডিপোজিট রিকোয়েস্ট বাতিল করা হয়েছে।", "error");
+    setRejectingRequestId(null);
   };
 
   const filtered = requests.filter((r) => {
@@ -170,7 +172,7 @@ export default function AdminWalletPage() {
                             <span>Approve</span>
                           </button>
                           <button
-                            onClick={() => handleReject(req.id)}
+                            onClick={() => setRejectingRequestId(req.id)}
                             className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors cursor-pointer"
                             title="Reject"
                           >
@@ -198,6 +200,17 @@ export default function AdminWalletPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={Boolean(rejectingRequestId)}
+        onClose={() => setRejectingRequestId(null)}
+        onConfirm={confirmReject}
+        title="ডিপোজিট রিকোয়েস্ট বাতিল নিশ্চিতকরণ"
+        message="আপনি কি নিশ্চিতভাবে এই ওয়ালেট রিচার্জ রিকোয়েস্টটি বাতিল করতে চান?"
+        confirmText="বাতিল করুন"
+        cancelText="ফিরে যান"
+        variant="warning"
+      />
 
     </div>
   );

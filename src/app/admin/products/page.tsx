@@ -11,8 +11,9 @@ import {
 } from "lucide-react";
 import { PRODUCTS as initialProducts } from "@/data/products";
 import { SafeImage } from "@/components/SafeImage";
-import { useToast } from "@/context/ToastContext";
 import { Product } from "@/types";
+import { useToast } from "@/context/ToastContext";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 export default function AdminProductsPage() {
   const { showToast } = useToast();
@@ -49,6 +50,9 @@ export default function AdminProductsPage() {
     return matchSearch;
   });
 
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const toggleStock = (id: string) => {
     setProductList((prev) =>
       prev.map((p) => (p.id === id ? { ...p, inStock: !p.inStock } : p))
@@ -56,15 +60,18 @@ export default function AdminProductsPage() {
     showToast("Stock status updated.", "success");
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      try {
-        await fetch(`/api/products?id=${id}`, { method: "DELETE" });
-        setProductList((prev) => prev.filter((p) => p.id !== id));
-        showToast("Product deleted successfully.", "success");
-      } catch (err) {
-        showToast("Failed to delete product.", "error");
-      }
+  const confirmDelete = async () => {
+    if (!deletingProductId) return;
+    setIsDeleting(true);
+    try {
+      await fetch(`/api/products?id=${deletingProductId}`, { method: "DELETE" });
+      setProductList((prev) => prev.filter((p) => p.id !== deletingProductId));
+      showToast("প্রোডাক্ট সফলভাবে মুছে ফেলা হয়েছে।", "success");
+    } catch (err) {
+      showToast("প্রোডাক্ট মুছতে সমস্যা হয়েছে।", "error");
+    } finally {
+      setIsDeleting(false);
+      setDeletingProductId(null);
     }
   };
 
@@ -215,7 +222,7 @@ export default function AdminProductsPage() {
                       </Link>
 
                       <button
-                        onClick={() => handleDelete(prod.id)}
+                        onClick={() => setDeletingProductId(prod.id)}
                         className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         title="Delete Product"
                       >
@@ -230,6 +237,18 @@ export default function AdminProductsPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={Boolean(deletingProductId)}
+        onClose={() => setDeletingProductId(null)}
+        onConfirm={confirmDelete}
+        title="প্রোডাক্ট মুছে ফেলা নিশ্চিতকরণ"
+        message="আপনি কি নিশ্চিতভাবে এই প্রোডাক্টটি মুছে ফেলতে চান? প্রোডাক্টটি ডিলিট করলে আর ফিরিয়ে আনা সম্ভব হবে না।"
+        confirmText="হ্যাঁ, মুছে ফেলুন"
+        cancelText="বাতিল"
+        variant="danger"
+        isLoading={isDeleting}
+      />
 
     </div>
   );

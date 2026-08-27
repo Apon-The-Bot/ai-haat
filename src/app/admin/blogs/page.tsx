@@ -4,20 +4,22 @@ import React, { useState } from "react";
 import { FileText, Plus, Trash2, Edit, Search, Check, Sparkles, X } from "lucide-react";
 import { BLOGS as initialBlogs } from "@/data/blogs";
 import { useToast } from "@/context/ToastContext";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 export default function AdminBlogsPage() {
   const { showToast } = useToast();
   const [blogsList, setBlogsList] = useState<any[]>([]);
+  const [deletingBlogId, setDeletingBlogId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("AI & Tech");
   const [excerpt, setExcerpt] = useState("");
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this blog post?")) {
-      setBlogsList((prev) => prev.filter((b) => b.id !== id));
-      showToast("Blog post deleted successfully.", "success");
-    }
+  const confirmDelete = () => {
+    if (!deletingBlogId) return;
+    setBlogsList((prev) => prev.filter((b) => b.id !== deletingBlogId));
+    showToast("ব্লগ পোস্টটি সফলভাবে মুছে ফেলা হয়েছে।", "success");
+    setDeletingBlogId(null);
   };
 
   const handleAddBlog = (e: React.FormEvent) => {
@@ -82,7 +84,7 @@ export default function AdminBlogsPage() {
             <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
               <span className="text-[10px] text-slate-400 font-mono">{b.date}</span>
               <button
-                onClick={() => handleDelete(b.id)}
+                onClick={() => setDeletingBlogId(b.id)}
                 className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
                 title="Delete Article"
               >
@@ -161,6 +163,17 @@ export default function AdminBlogsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={Boolean(deletingBlogId)}
+        onClose={() => setDeletingBlogId(null)}
+        onConfirm={confirmDelete}
+        title="আর্টিকেল মুছে ফেলা নিশ্চিতকরণ"
+        message="আপনি কি নিশ্চিতভাবে এই আর্টিকেলটি মুছে ফেলতে চান?"
+        confirmText="মুছে ফেলুন"
+        cancelText="বাতিল"
+        variant="danger"
+      />
 
     </div>
   );

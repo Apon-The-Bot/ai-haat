@@ -15,11 +15,13 @@ import { Coupon } from "@/types";
 import { COUPONS } from "@/data/coupons";
 import { PRODUCTS } from "@/data/products";
 import { useToast } from "@/context/ToastContext";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 export default function AdminCouponsPage() {
   const { showToast } = useToast();
   const [coupons, setCoupons] = useState<Coupon[]>(COUPONS);
   const [search, setSearch] = useState("");
+  const [deletingCouponId, setDeletingCouponId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
@@ -47,11 +49,11 @@ export default function AdminCouponsPage() {
     showToast("Coupon status updated.", "success");
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this coupon?")) {
-      setCoupons((prev) => prev.filter((c) => c.id !== id));
-      showToast("Coupon deleted successfully.", "success");
-    }
+  const confirmDelete = () => {
+    if (!deletingCouponId) return;
+    setCoupons((prev) => prev.filter((c) => c.id !== deletingCouponId));
+    showToast("কুপনটি সফলভাবে মুছে ফেলা হয়েছে।", "success");
+    setDeletingCouponId(null);
   };
 
   const handleCopyCode = (couponCode: string) => {
@@ -251,7 +253,7 @@ export default function AdminCouponsPage() {
                   {/* Delete Action */}
                   <td className="py-3.5 px-4 text-right">
                     <button
-                      onClick={() => handleDelete(c.id)}
+                      onClick={() => setDeletingCouponId(c.id)}
                       className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors cursor-pointer"
                       title="Delete Coupon"
                     >
@@ -456,6 +458,17 @@ export default function AdminCouponsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={Boolean(deletingCouponId)}
+        onClose={() => setDeletingCouponId(null)}
+        onConfirm={confirmDelete}
+        title="কুপন মুছে ফেলা নিশ্চিতকরণ"
+        message="আপনি কি নিশ্চিতভাবে এই ডিসকাউন্ট কুপনটি মুছে ফেলতে চান?"
+        confirmText="মুছে ফেলুন"
+        cancelText="বাতিল"
+        variant="danger"
+      />
 
     </div>
   );

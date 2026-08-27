@@ -19,13 +19,16 @@ import {
   ExternalLink,
   ShieldAlert,
   LogIn,
+  Bell,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
+import { useNotification } from "@/context/NotificationContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, openLoginModal } = useAuth();
+  const { unreadCount } = useNotification();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -128,6 +131,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Push Notification & Live Alert Bell */}
+          <div className="relative">
+            <Link
+              href="/admin/orders"
+              className="relative p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-black border border-slate-200 transition-all flex items-center justify-center cursor-pointer"
+              title="Live Orders & Notifications"
+            >
+              <Bell className="w-4 h-4 text-slate-600" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FC5C03] text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
+          </div>
+
           <Link
             href="/"
             className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-black text-xs font-bold rounded-xl border border-slate-200 transition-all"

@@ -4,21 +4,23 @@ import React, { useState } from "react";
 import { ShieldCheck, Plus, Trash2, Check, X, Star } from "lucide-react";
 import { PROOFS as initialProofs } from "@/data/proofs";
 import { useToast } from "@/context/ToastContext";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 export default function AdminProofsPage() {
   const { showToast } = useToast();
   const [proofList, setProofList] = useState(initialProofs);
+  const [deletingProofId, setDeletingProofId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [productName, setProductName] = useState("");
   const [amount, setAmount] = useState("");
   const [customerNote, setCustomerNote] = useState("");
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this delivery proof?")) {
-      setProofList((prev) => prev.filter((p) => p.id !== id));
-      showToast("Delivery proof removed.", "success");
-    }
+  const confirmDelete = () => {
+    if (!deletingProofId) return;
+    setProofList((prev) => prev.filter((p) => p.id !== deletingProofId));
+    showToast("ডেলিভারি প্রুফ সফলভাবে মুছে ফেলা হয়েছে।", "success");
+    setDeletingProofId(null);
   };
 
   const handleAddProof = (e: React.FormEvent) => {
@@ -92,7 +94,7 @@ export default function AdminProofsPage() {
                 </div>
 
                 <button
-                  onClick={() => handleDelete(proof.id)}
+                  onClick={() => setDeletingProofId(proof.id)}
                   className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
                   title="Delete Proof"
                 >
@@ -136,7 +138,7 @@ export default function AdminProofsPage() {
                   required
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
-                  placeholder="e.g. ChatGPT Plus (1 Month)"
+                  placeholder="e.g. ChatGPT Plus 1 Month"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
                 />
               </div>
@@ -154,7 +156,6 @@ export default function AdminProofsPage() {
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
                   />
                 </div>
-
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Amount (৳ BDT) *
@@ -193,6 +194,17 @@ export default function AdminProofsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={Boolean(deletingProofId)}
+        onClose={() => setDeletingProofId(null)}
+        onConfirm={confirmDelete}
+        title="ডেলিভারি প্রুফ মুছে ফেলা নিশ্চিতকরণ"
+        message="আপনি কি নিশ্চিতভাবে এই কাস্টমার রিভিউ ও প্রুফটি মুছে ফেলতে চান?"
+        confirmText="মুছে ফেলুন"
+        cancelText="বাতিল"
+        variant="danger"
+      />
 
     </div>
   );

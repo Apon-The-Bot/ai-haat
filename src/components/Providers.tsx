@@ -7,6 +7,7 @@ import { CurrencyProvider } from "@/context/CurrencyContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 import { ProductsProvider } from "@/context/ProductsContext";
 import { AppShell } from "@/components/AppShell";
 
@@ -19,7 +20,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <ProductsProvider>
               <CartProvider>
                 <AuthProvider>
-                  <AppShell>{children}</AppShell>
+                  <NotificationProvider>
+                    <AppShell>{children}</AppShell>
+                  </NotificationProvider>
                 </AuthProvider>
               </CartProvider>
             </ProductsProvider>

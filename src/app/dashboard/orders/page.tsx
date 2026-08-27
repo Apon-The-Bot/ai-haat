@@ -56,7 +56,10 @@ export default function DashboardOrdersPage() {
         console.error(e);
       }
     };
+
     fetchUserOrders();
+    const interval = setInterval(fetchUserOrders, 4500);
+    return () => clearInterval(interval);
   }, [user]);
 
   const filteredOrders = orders.filter((o) => {
