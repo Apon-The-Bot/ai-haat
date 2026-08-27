@@ -177,25 +177,27 @@ export default function AdminOverviewPage() {
             {pendingOrders.length > 0 ? (
               pendingOrders.map((order) => (
                 <div
-                  key={order.id}
+                  key={order.id || order.orderNumber}
                   className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-[#FC5C03]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-[#FC5C03]">{order.id}</span>
+                      <span className="font-mono text-xs font-bold text-[#FC5C03]">{order.orderNumber || order.id}</span>
                       <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200">
-                        {order.time}
+                        {order.date || order.time || "Pending"}
                       </span>
                     </div>
-                    <h4 className="text-xs font-bold text-slate-900 mt-1">{order.product}</h4>
+                    <h4 className="text-xs font-bold text-slate-900 mt-1">
+                      {order.items?.[0]?.productName || order.product || "Digital Product"}
+                    </h4>
                     <span className="text-[11px] text-slate-500 font-mono block">
-                      {order.customer} • TrxID: <b>{order.trxId}</b>
+                      {order.customerName || order.customer || "Customer"} • TrxID: <b>{order.trxId || "Gateway"}</b>
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3 self-end sm:self-auto">
                     <span className="text-sm font-black text-slate-900">
-                      {formatPrice(order.amountBDT)}
+                      {formatPrice(order.totalBDT ?? order.amountBDT ?? 0)}
                     </span>
                     <Link
                       href="/admin/orders"

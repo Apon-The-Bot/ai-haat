@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "MHS-PIPRAPAY-API-KEY": apiKey,
           "X-Api-Key": apiKey,
         },
         body: JSON.stringify({ pp_id: transactionRef }),

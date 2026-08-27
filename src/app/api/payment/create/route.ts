@@ -59,6 +59,7 @@ export async function POST(req: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "MHS-PIPRAPAY-API-KEY": apiKey,
         "X-Api-Key": apiKey,
       },
       body: JSON.stringify(payload),
