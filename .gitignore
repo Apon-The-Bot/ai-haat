@@ -20,6 +20,11 @@
 *.zip
 *.jpg
 *.png
+!public/images/**/*.png
+!public/images/**/*.jpg
+!public/images/**/*.jpeg
+!public/images/**/*.webp
+!public/images/**/*.svg
 *.json
 !package.json
 !package-lock.json
