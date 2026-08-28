@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Tag,
   Plus,
@@ -34,6 +34,7 @@ export default function AdminCouponsPage() {
   const [discountValue, setDiscountValue] = useState("");
   const [appliesTo, setAppliesTo] = useState<"ALL" | "SPECIFIC_PRODUCTS">("ALL");
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [productSearchQuery, setProductSearchQuery] = useState("");
   const [minOrderBDT, setMinOrderBDT] = useState("200");
   const [maxDiscountBDT, setMaxDiscountBDT] = useState("");
   const [usageLimit, setUsageLimit] = useState("100");
@@ -77,6 +78,7 @@ export default function AdminCouponsPage() {
     setDiscountValue("");
     setAppliesTo("ALL");
     setSelectedProductIds([]);
+    setProductSearchQuery("");
     setMinOrderBDT("200");
     setMaxDiscountBDT("");
     setUsageLimit("100");
@@ -91,6 +93,7 @@ export default function AdminCouponsPage() {
     setDiscountValue(String(c.discountValue));
     setAppliesTo(c.appliesTo as any);
     setSelectedProductIds(Array.isArray(c.productIds) ? c.productIds : []);
+    setProductSearchQuery("");
     setMinOrderBDT(String(c.minOrderBDT || 0));
     setMaxDiscountBDT(c.maxDiscountBDT ? String(c.maxDiscountBDT) : "");
     setUsageLimit(String(c.usageLimit || 100));
@@ -105,11 +108,33 @@ export default function AdminCouponsPage() {
     setDiscountValue(String(c.discountValue));
     setAppliesTo(c.appliesTo as any);
     setSelectedProductIds(Array.isArray(c.productIds) ? c.productIds : []);
+    setProductSearchQuery("");
     setMinOrderBDT(String(c.minOrderBDT || 0));
     setMaxDiscountBDT(c.maxDiscountBDT ? String(c.maxDiscountBDT) : "");
     setUsageLimit(String(c.usageLimit || 100));
     setValidUntil(c.validUntil ? c.validUntil.split("T")[0] : "2026-12-31");
     setIsModalOpen(true);
+  };
+
+  const filteredDbProducts = useMemo(() => {
+    if (!productSearchQuery.trim()) return dbProducts;
+    const q = productSearchQuery.trim().toLowerCase();
+    return dbProducts.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.slug.toLowerCase().includes(q) ||
+        (p.category && p.category.toLowerCase().includes(q))
+    );
+  }, [dbProducts, productSearchQuery]);
+
+  const handleSelectAllFiltered = () => {
+    const filteredSlugs = filteredDbProducts.map((p) => p.slug);
+    setSelectedProductIds((prev) => Array.from(new Set([...prev, ...filteredSlugs])));
+  };
+
+  const handleDeselectAllFiltered = () => {
+    const filteredSlugs = new Set(filteredDbProducts.map((p) => p.slug));
+    setSelectedProductIds((prev) => prev.filter((slug) => !filteredSlugs.has(slug)));
   };
 
   const toggleProductSelect = (slug: string) => {
@@ -527,27 +552,92 @@ export default function AdminCouponsPage() {
                 </div>
 
                 {appliesTo === "SPECIFIC_PRODUCTS" && (
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 max-h-44 overflow-y-auto space-y-1.5">
-                    <span className="text-[11px] text-slate-500 block mb-1 font-semibold">
-                      Select Eligible Products from Database:
-                    </span>
-                    {dbProducts.map((prod) => {
-                      const isChecked = selectedProductIds.includes(prod.slug);
-                      return (
-                        <label
-                          key={prod.id}
-                          className="flex items-center gap-2 text-xs text-slate-700 hover:text-black cursor-pointer py-1 px-2 rounded hover:bg-slate-100"
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                    {/* Header with Search and Selection Count */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-bold text-slate-700">
+                          প্রোডাক্ট সিলেক্ট করুন:
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFF2E8] text-[#FC5C03] border border-[#FC5C03]/20">
+                          {selectedProductIds.length} টি সিলেক্টেড
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px]">
+                        <button
+                          type="button"
+                          onClick={handleSelectAllFiltered}
+                          className="text-[#FC5C03] hover:underline font-bold cursor-pointer"
                         >
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => toggleProductSelect(prod.slug)}
-                            className="rounded border-slate-300 text-[#FC5C03] focus:ring-0"
-                          />
-                          <span className="truncate">{prod.name} ({prod.category})</span>
-                        </label>
-                      );
-                    })}
+                          সবগুলো সিলেক্ট
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <button
+                          type="button"
+                          onClick={handleDeselectAllFiltered}
+                          className="text-slate-500 hover:text-slate-700 hover:underline font-medium cursor-pointer"
+                        >
+                          আনচেক
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Product Search Input */}
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                      <input
+                        type="text"
+                        value={productSearchQuery}
+                        onChange={(e) => setProductSearchQuery(e.target.value)}
+                        placeholder="প্রোডাক্ট বা ক্যাটাগরি সার্চ করুন..."
+                        className="w-full pl-8 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#FC5C03] focus:outline-hidden shadow-2xs"
+                      />
+                      {productSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setProductSearchQuery("")}
+                          className="absolute right-2 top-2 p-0.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 cursor-pointer"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Product List Scroll Area */}
+                    <div className="max-h-48 overflow-y-auto space-y-1 pr-1 divide-y divide-slate-100">
+                      {filteredDbProducts.length === 0 ? (
+                        <div className="py-4 text-center text-xs text-slate-400">
+                          "{productSearchQuery}" নামে কোনো প্রোডাক্ট পাওয়া যায়নি।
+                        </div>
+                      ) : (
+                        filteredDbProducts.map((prod) => {
+                          const isChecked = selectedProductIds.includes(prod.slug);
+                          return (
+                            <label
+                              key={prod.id}
+                              className={`flex items-center justify-between gap-2 text-xs py-1.5 px-2.5 rounded-xl cursor-pointer transition-colors ${
+                                isChecked
+                                  ? "bg-orange-50/80 text-slate-900 font-semibold"
+                                  : "text-slate-700 hover:bg-slate-100"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleProductSelect(prod.slug)}
+                                  className="rounded border-slate-300 text-[#FC5C03] focus:ring-0 cursor-pointer w-4 h-4 accent-[#FC5C03]"
+                                />
+                                <span className="truncate">{prod.name}</span>
+                              </div>
+                              <span className="shrink-0 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">
+                                {prod.category || "General"}
+                              </span>
+                            </label>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
