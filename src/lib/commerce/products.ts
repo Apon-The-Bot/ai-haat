@@ -117,14 +117,16 @@ export async function getPublicProducts(filters: {
   page?: number;
   limit?: number;
   featured?: boolean;
+  status?: string;
 }) {
-  const { category, search, sort, page = 1, limit = 20, featured } = filters;
+  const { category, search, sort, page = 1, limit = 100, featured, status } = filters;
   const skip = (page - 1) * limit;
 
-  const where: any = {
-    status: "ACTIVE",
-    visibility: "PUBLIC",
-  };
+  const where: any = {};
+
+  if (status && status !== "ALL") {
+    where.status = status;
+  }
 
   if (category && category !== "ALL") {
     where.category = category;
@@ -147,21 +149,21 @@ export async function getPublicProducts(filters: {
   else if (sort === "newest") orderBy = { createdAt: "desc" };
   else if (sort === "rating") orderBy = { rating: "desc" };
 
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy,
-      include: {
-        variations: {
-          where: { inStock: true },
-          orderBy: { sortOrder: "asc" },
+  try {
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: {
+          variations: {
+            orderBy: { sortOrder: "asc" },
+          },
         },
-      },
-    }),
-    prisma.product.count({ where }),
-  ]);
+      }),
+      prisma.product.count({ where }),
+    ]);
 
   const data = products.map((p) => {
     let featuresList: string[] = [];
@@ -217,16 +219,30 @@ export async function getPublicProducts(filters: {
     };
   });
 
-  return {
-    success: true,
-    products: data,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
+    return {
+      success: true,
+      products: data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  } catch (err: any) {
+    console.warn("[getPublicProducts DB error]:", err);
+    return {
+      success: false,
+      error: err.message,
+      products: [],
+      pagination: {
+        total: 0,
+        page: 1,
+        limit,
+        totalPages: 0,
+      },
+    };
+  }
 }
 
 export async function getPublicProductBySlug(slug: string, previewToken?: boolean) {
