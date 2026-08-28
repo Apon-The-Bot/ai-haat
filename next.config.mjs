@@ -37,15 +37,6 @@ const nextConfig = {
       },
     ],
   },
-  async redirects() {
-    return [
-      {
-        source: "/order-success",
-        destination: "/order-tracking",
-        permanent: true,
-      },
-    ];
-  },
   async headers() {
     return [
       {
