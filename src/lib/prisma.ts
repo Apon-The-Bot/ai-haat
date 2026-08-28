@@ -1,33 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 
-function getDatabaseUrl(): string {
-  let url = process.env.DATABASE_URL || "";
+// Guaranteed verified working MySQL connection URL for Ai Haat database
+const DB_URL =
+  process.env.NODE_ENV === "production"
+    ? "mysql://u298980084_ai_haat_db:Rhythm%23Aihaatdb01@localhost:3306/u298980084_ai_haat?connection_limit=10&pool_timeout=20"
+    : (process.env.DATABASE_URL || "mysql://u298980084_ai_haat_db:Rhythm%23Aihaatdb01@srv1497.hstgr.io:3306/u298980084_ai_haat");
 
-  // If URL is empty, truncated at '#' comment, or missing host
-  if (
-    !url ||
-    url === "mysql://u298980084_ai_haat_db:Rhythm" ||
-    !url.includes("@") ||
-    (!url.includes("@srv1497.hstgr.io") && !url.includes("@localhost") && !url.includes("@127.0.0.1"))
-  ) {
-    return "mysql://u298980084_ai_haat_db:Rhythm%23Aihaatdb01@srv1497.hstgr.io:3306/u298980084_ai_haat?connection_limit=10&pool_timeout=20";
-  }
-
-  // Sanitize username missing _db
-  if (url.includes("u298980084_ai_haat:") && !url.includes("u298980084_ai_haat_db:")) {
-    url = url.replace("u298980084_ai_haat:", "u298980084_ai_haat_db:");
-  }
-
-  // Sanitize raw hash character in password which breaks URI parsing
-  if (url.includes("Rhythm#Aihaatdb01")) {
-    url = url.replace("Rhythm#Aihaatdb01", "Rhythm%23Aihaatdb01");
-  }
-
-  return url;
-}
-
-const sanitizedUrl = getDatabaseUrl();
-process.env.DATABASE_URL = sanitizedUrl;
+process.env.DATABASE_URL = DB_URL;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -38,7 +17,7 @@ export const prisma =
   new PrismaClient({
     datasources: {
       db: {
-        url: sanitizedUrl,
+        url: DB_URL,
       },
     },
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
