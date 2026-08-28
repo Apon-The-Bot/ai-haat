@@ -90,6 +90,7 @@ export async function getAllProducts(includeHidden = false): Promise<Product[]> 
             fulfillmentType: v.fulfillmentType || p.fulfillmentType,
             description: v.description || "",
             duration: v.duration || "",
+            isDefault: v.isDefault ?? false,
           };
         });
 
@@ -218,6 +219,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
           fulfillmentType: v.fulfillmentType || dbProduct.fulfillmentType,
           description: v.description || "",
           duration: v.duration || "",
+          isDefault: v.isDefault ?? false,
         };
       });
 

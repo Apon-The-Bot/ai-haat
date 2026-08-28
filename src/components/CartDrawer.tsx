@@ -92,7 +92,7 @@ export function CartDrawer() {
           couponCode: cleanCode,
           items: items.map((it) => ({
             productId: it.product.id,
-            variationId: it.selectedVariation.id,
+            variationId: it.selectedVariation?.id === "default" ? null : (it.selectedVariation?.id || null),
             quantity: it.quantity,
           })),
         }),

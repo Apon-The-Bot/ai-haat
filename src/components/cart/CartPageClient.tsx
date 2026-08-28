@@ -104,9 +104,9 @@ export function CartPageClient() {
           code: cleanCode,
           items: items.map((i) => ({
             productId: i.product.id,
-            variationId: i.selectedVariation.id,
+            variationId: i.selectedVariation?.id === "default" ? null : (i.selectedVariation?.id || null),
             productName: i.product.name,
-            variationName: i.selectedVariation.name,
+            variationName: i.selectedVariation?.name || "Standard",
             quantity: i.quantity,
           })),
         }),

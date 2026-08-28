@@ -14,6 +14,7 @@ export interface Variation {
   type?: "DURATION" | "CREDITS" | "TIER" | "CUSTOM";
   duration?: string | null;
   credits?: string | number;
+  isDefault?: boolean;
 }
 
 export interface Review {

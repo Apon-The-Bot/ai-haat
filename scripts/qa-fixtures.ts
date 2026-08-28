@@ -137,6 +137,13 @@ export async function createProductFixture(
 
   tracker.productIds.push(product.id);
   tracker.variationIds.push(product.variations[0].id);
+
+  if (fType === "AUTO_STOCK") {
+    for (let i = 0; i < 5; i++) {
+      const stock = await createStockFixture(tracker, product.id, product.variations[0].id);
+    }
+  }
+
   return { product, variation: product.variations[0] };
 }
 

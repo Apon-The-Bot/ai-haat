@@ -107,22 +107,68 @@ export async function calculateOrderQuote(
     }
 
     // Match variation — validate it belongs to this product
+    const variationsCount = Array.isArray(product.variations) ? product.variations.length : 0;
     let chosenVariation: Variation | undefined = undefined;
-    if (raw.variationId) {
-      chosenVariation = product.variations?.find((v) => v.id === raw.variationId);
-      if (!chosenVariation) {
+
+    if (variationsCount === 0) {
+      // CASE A: Product has ZERO database variations (single-tier base product)
+      if (raw.variationId && raw.variationId !== "default") {
         return {
           isValid: false,
           error: `Variation "${raw.variationId}" does not belong to product "${product.name}".`,
           quote: { items: [], subtotalBDT: 0, discountBDT: 0, totalBDT: 0, couponCode: null, couponId: null },
         };
       }
-    }
-    if (!chosenVariation && raw.variationName) {
-      chosenVariation = product.variations?.find((v) => v.name.toLowerCase() === raw.variationName?.toLowerCase());
-    }
-    if (!chosenVariation) {
-      chosenVariation = product.variations?.[0];
+      chosenVariation = undefined;
+    } else if (variationsCount === 1) {
+      // CASE B: Product has EXACTLY ONE database variation
+      if (raw.variationId && raw.variationId !== "default") {
+        chosenVariation = product.variations.find((v) => v.id === raw.variationId);
+        if (!chosenVariation) {
+          return {
+            isValid: false,
+            error: `Variation "${raw.variationId}" does not belong to product "${product.name}".`,
+            quote: { items: [], subtotalBDT: 0, discountBDT: 0, totalBDT: 0, couponCode: null, couponId: null },
+          };
+        }
+      } else if (raw.variationName) {
+        chosenVariation = product.variations.find((v) => v.name.toLowerCase() === raw.variationName?.toLowerCase());
+      }
+
+      // If omitted or "default", safely resolve to the single legitimate variation
+      if (!chosenVariation) {
+        chosenVariation = product.variations[0];
+      }
+    } else {
+      // CASE C & D: Product has MULTIPLE database variations (> 1)
+      if (raw.variationId && raw.variationId !== "default") {
+        chosenVariation = product.variations.find((v) => v.id === raw.variationId);
+        if (!chosenVariation) {
+          return {
+            isValid: false,
+            error: `Variation "${raw.variationId}" does not belong to product "${product.name}".`,
+            quote: { items: [], subtotalBDT: 0, discountBDT: 0, totalBDT: 0, couponCode: null, couponId: null },
+          };
+        }
+      } else if (raw.variationName) {
+        chosenVariation = product.variations.find((v) => v.name.toLowerCase() === raw.variationName?.toLowerCase());
+      }
+
+      // If no valid variation was explicitly provided:
+      if (!chosenVariation) {
+        const explicitDefault = product.variations.find((v) => v.isDefault === true);
+        if (explicitDefault) {
+          // CASE C: Resolved ONLY to the explicitly configured default
+          chosenVariation = explicitDefault;
+        } else {
+          // CASE D: Multiple variations without explicit default -> STRICTLY REJECT
+          return {
+            isValid: false,
+            error: `Please select a variation for product "${product.name}".`,
+            quote: { items: [], subtotalBDT: 0, discountBDT: 0, totalBDT: 0, couponCode: null, couponId: null },
+          };
+        }
+      }
     }
 
     // Validate variation is in stock
