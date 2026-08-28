@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   PackageCheck,
   Plus,
@@ -73,6 +74,23 @@ interface ReplacementItem {
 }
 
 export default function AdminInventoryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center p-12">
+          <RefreshCw className="w-6 h-6 animate-spin text-[#FC5C03]" />
+        </div>
+      }
+    >
+      <AdminInventoryContent />
+    </Suspense>
+  );
+}
+
+function AdminInventoryContent() {
+  const searchParams = useSearchParams();
+  const productParam = searchParams?.get("product") || searchParams?.get("productId");
+
   const [activeTab, setActiveTab] = useState<"stocks" | "replacements">("stocks");
   const [summary, setSummary] = useState<StockSummary[]>([]);
   const [stocks, setStocks] = useState<StockItem[]>([]);
@@ -82,7 +100,7 @@ export default function AdminInventoryPage() {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [productFilter, setProductFilter] = useState("ALL");
+  const [productFilter, setProductFilter] = useState(productParam || "ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modals
@@ -92,7 +110,7 @@ export default function AdminInventoryPage() {
   const [copiedKey, setCopiedKey] = useState(false);
 
   // Add Single Form State
-  const [selectedProduct, setSelectedProduct] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(productParam || "");
   const [selectedVariation, setSelectedVariation] = useState("");
   const [stockType, setStockType] = useState("LICENSE_KEY");
   const [payloadText, setPayloadText] = useState("");
@@ -105,6 +123,13 @@ export default function AdminInventoryPage() {
   const [bulkLines, setBulkLines] = useState("");
   const [bulkResult, setBulkResult] = useState<any>(null);
 
+  useEffect(() => {
+    if (productParam) {
+      setProductFilter(productParam);
+      setSelectedProduct(productParam);
+    }
+  }, [productParam]);
+
   const fetchInventory = async () => {
     try {
       setLoading(true);
@@ -116,8 +141,8 @@ export default function AdminInventoryPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          setSummary(data.summary || []);
-          setStocks(data.recentStocks || []);
+          setSummary(Array.isArray(data.summary) ? data.summary : []);
+          setStocks(Array.isArray(data.recentStocks) ? data.recentStocks : []);
         }
       }
 
@@ -126,15 +151,20 @@ export default function AdminInventoryPage() {
       if (repRes.ok) {
         const repData = await repRes.json();
         if (repData.success) {
-          setReplacements(repData.requests || []);
+          setReplacements(Array.isArray(repData.requests) ? repData.requests : []);
         }
       }
 
       // Fetch products list for dropdowns
-      const prodRes = await fetch("/api/products");
+      const prodRes = await fetch("/api/products?limit=100&status=ALL");
       if (prodRes.ok) {
         const prodData = await prodRes.json();
-        setProductsList(prodData || []);
+        const list = Array.isArray(prodData)
+          ? prodData
+          : Array.isArray(prodData?.products)
+          ? prodData.products
+          : [];
+        setProductsList(list);
       }
     } catch (error) {
       console.error("Failed to load inventory data:", error);
@@ -370,7 +400,7 @@ export default function AdminInventoryPage() {
         <>
           {/* Stock KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {summary.slice(0, 4).map((s, idx) => (
+            {(Array.isArray(summary) ? summary : []).slice(0, 4).map((s, idx) => (
               <div
                 key={idx}
                 className={`p-5 rounded-2xl border shadow-xs transition-all ${
@@ -436,7 +466,7 @@ export default function AdminInventoryPage() {
                 className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none max-w-xs"
               >
                 <option value="ALL">সকল প্রোডাক্ট (All Products)</option>
-                {productsList.map((p) => (
+                {(Array.isArray(productsList) ? productsList : []).map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
@@ -653,7 +683,7 @@ export default function AdminInventoryPage() {
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
                 >
                   <option value="">-- প্রোডাক্ট নির্বাচন করুন --</option>
-                  {productsList.map((p) => (
+                  {(Array.isArray(productsList) ? productsList : []).map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
                     </option>
@@ -670,7 +700,7 @@ export default function AdminInventoryPage() {
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
                   >
                     <option value="">Standard (No Variation)</option>
-                    {productsList
+                    {(Array.isArray(productsList) ? productsList : [])
                       .find((p) => p.id === selectedProduct)
                       ?.variations?.map((v: any) => (
                         <option key={v.id} value={v.id}>
@@ -800,7 +830,7 @@ export default function AdminInventoryPage() {
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
                   >
                     <option value="">-- সিলেক্ট করুন --</option>
-                    {productsList.map((p) => (
+                    {(Array.isArray(productsList) ? productsList : []).map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name}
                       </option>
