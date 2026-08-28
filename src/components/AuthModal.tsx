@@ -11,6 +11,7 @@ export function AuthModal() {
   const router = useRouter();
   const { isAuthModalOpen, setIsAuthModalOpen, login, redirectCallbackUrl } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isAuthModalOpen) return null;
 
@@ -18,14 +19,12 @@ export function AuthModal() {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    setErrorMsg(null);
     try {
       await signIn("google", { callbackUrl: targetUrl });
     } catch (err) {
       console.error("Google login redirect:", err);
-      // Fallback local session
-      login("mdamanullahsheikhapon@gmail.com", targetUrl);
-      setIsAuthModalOpen(false);
-      router.push(targetUrl);
+      setErrorMsg("Failed to sign in with Google. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +59,12 @@ export function AuthModal() {
         {/* Modal Body */}
         <div className="p-6 sm:p-7 space-y-5">
           
+          {errorMsg && (
+            <div className="text-red-500 text-sm text-center font-medium bg-red-50 p-2.5 rounded-lg border border-red-100">
+              {errorMsg}
+            </div>
+          )}
+
           {/* Prominent Google Sign-In Button */}
           <button
             type="button"

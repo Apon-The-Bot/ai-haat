@@ -29,15 +29,26 @@ export function Header() {
 
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll when mobile menu or mobile search is open
+  // Lock body scroll when mobile menu or mobile search is open, and handle Escape key
   useEffect(() => {
     if (isMobileMenuOpen || isMobileSearchOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMobileMenuOpen(false);
+        setIsMobileSearchOpen(false);
+        setIsSearchFocused(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isMobileMenuOpen, isMobileSearchOpen]);
 
@@ -267,7 +278,7 @@ export function Header() {
                   <User className="w-3.5 h-3.5 text-[#FC5C03]" />
                   <span>{isBn ? "ড্যাশবোর্ড" : "Dashboard"}</span>
                 </Link>
-                {(user.role === "ADMIN" || user.email === "mdamanullahsheikhapon@gmail.com") && (
+                {user.role === "ADMIN" && (
                   <Link
                     href="/admin"
                     className="flex items-center gap-1.5 h-8 px-3 bg-slate-800 hover:bg-slate-900 text-slate-200 text-xs font-bold rounded-full transition-all border border-slate-700"
@@ -300,7 +311,7 @@ export function Header() {
               const isActive =
                 link.href === "/"
                   ? pathname === "/"
-                  : pathname === link.href || pathname.startsWith(link.href + "/");
+                  : pathname === link.href || (pathname ? pathname.startsWith(link.href + "/") : false);
 
               return (
                 <Link
@@ -392,7 +403,7 @@ export function Header() {
                   const isActive =
                     link.href === "/"
                       ? pathname === "/"
-                      : pathname === link.href || pathname.startsWith(link.href + "/");
+                      : pathname === link.href || (pathname ? pathname.startsWith(link.href + "/") : false);
 
                   return (
                     <Link

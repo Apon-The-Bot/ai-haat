@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const rateLimit = checkRateLimit(`payment-create:${ip}`, 6, 60 * 1000);
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit.retryAfterMs, "পেমেন্ট রিকোয়েস্ট সীমা অতিক্রম করেছে। কিছুক্ষণ পর আবার চেষ্টা করুন।");
+  }
+
   try {
     const body = await req.json();
     const {
@@ -14,23 +22,65 @@ export async function POST(req: Request) {
       metadata,
     } = body;
 
-    const baseUrl = process.env.PIPRAPAY_BASE_URL || "https://pay.aihaat.shop";
-    const apiKey = process.env.PIPRAPAY_API_KEY || "6efac52b56d3a19e2b7f39d54df43a8653e5dd21fe93249f84";
-    
-    // Determine dynamic site URL
-    const reqOrigin = req.headers.get("origin") || req.headers.get("referer") || "https://aihaat.shop";
-    let siteUrl = "https://aihaat.shop";
-    try {
-      const parsed = new URL(reqOrigin);
-      siteUrl = parsed.origin;
-    } catch {
-      siteUrl = process.env.NEXTAUTH_URL || "https://aihaat.shop";
+    const baseUrl = process.env.PIPRAPAY_BASE_URL;
+    const apiKey = process.env.PIPRAPAY_API_KEY;
+
+    if (!baseUrl || !apiKey) {
+      return NextResponse.json(
+        { success: false, message: "PipraPay Payment Gateway is not configured." },
+        { status: 503 }
+      );
     }
 
-    const numAmount = Number(amount);
-    if (!numAmount || numAmount <= 0) {
+    // SECURITY FIX: Use canonical server-configured URL instead of request headers
+    const siteUrl = process.env.NEXTAUTH_URL || "https://aihaat.shop";
+
+    const currentOrderId = (orderId || `AH-${Date.now().toString().slice(-5)}`).trim();
+    let payableAmount = 0;
+
+    // 1. Derive authoritative payable amount
+    if (!currentOrderId.startsWith("WT-")) {
+      // STORE ORDER: Amount MUST come from database — never trust client
+      const orderRecord = await prisma.order.findFirst({
+        where: {
+          OR: [
+            { orderNumber: currentOrderId },
+            { id: currentOrderId },
+          ],
+        },
+      });
+
+      if (!orderRecord) {
+        return NextResponse.json(
+          { success: false, message: "Order not found." },
+          { status: 404 }
+        );
+      }
+
+      // V12 FIX: Block re-payment of already verified orders
+      if (orderRecord.paymentStatus === "VERIFIED") {
+        return NextResponse.json(
+          { success: false, message: "This order is already paid." },
+          { status: 400 }
+        );
+      }
+
+      payableAmount = Number(orderRecord.totalBDT);
+    } else {
+      // WALLET TOP-UP: Accept client amount but enforce minimum
+      payableAmount = Number(amount);
+      const MIN_RECHARGE_BDT = 10;
+      if (!payableAmount || payableAmount < MIN_RECHARGE_BDT) {
+        return NextResponse.json(
+          { success: false, message: `Minimum recharge amount is ৳${MIN_RECHARGE_BDT}.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (!payableAmount || payableAmount <= 0) {
       return NextResponse.json(
-        { success: false, message: "Invalid payment amount" },
+        { success: false, message: "Invalid payment amount." },
         { status: 400 }
       );
     }
@@ -38,15 +88,14 @@ export async function POST(req: Request) {
     const cleanEmail = (customerEmail || "").trim().toLowerCase();
     const cleanPhone = (customerPhone || "01700000000").trim();
     const cleanName = (customerName || "Customer").trim();
-    const currentOrderId = orderId || `AH-${Date.now().toString().slice(-5)}`;
 
-    const returnUrl = `${siteUrl}/api/payment/callback?orderId=${encodeURIComponent(currentOrderId)}&customerEmail=${encodeURIComponent(cleanEmail)}&amount=${encodeURIComponent(String(numAmount))}&userId=${encodeURIComponent(metadata?.userId || "")}`;
+    const returnUrl = `${siteUrl}/api/payment/callback?orderId=${encodeURIComponent(currentOrderId)}`;
 
     const payload = {
       full_name: cleanName,
       email_address: cleanEmail || "customer@aihaat.shop",
       mobile_number: cleanPhone,
-      amount: numAmount.toFixed(2),
+      amount: payableAmount.toFixed(2),
       currency: "BDT",
       return_url: returnUrl,
       webhook_url: `${siteUrl}/api/payment/webhook`,
@@ -58,22 +107,33 @@ export async function POST(req: Request) {
       },
     };
 
-    if (!apiKey) {
-      return NextResponse.json({
-        success: false,
-        message: "PipraPay API Key is not configured",
-      }, { status: 500 });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+    let response;
+    try {
+      response = await fetch(`${baseUrl}/api/checkout/redirect`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "MHS-PIPRAPAY-API-KEY": apiKey,
+          "X-Api-Key": apiKey,
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } catch (fetchErr: any) {
+      clearTimeout(timeout);
+      if (fetchErr.name === "AbortError") {
+        return NextResponse.json(
+          { success: false, message: "Payment gateway timed out. Please try again." },
+          { status: 504 }
+        );
+      }
+      throw fetchErr;
     }
 
-    const response = await fetch(`${baseUrl}/api/checkout/redirect`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "MHS-PIPRAPAY-API-KEY": apiKey,
-        "X-Api-Key": apiKey,
-      },
-      body: JSON.stringify(payload),
-    });
+    clearTimeout(timeout);
 
     const data = await response.json();
 
@@ -89,14 +149,13 @@ export async function POST(req: Request) {
       {
         success: false,
         message: data?.error?.message || data?.message || "Failed to generate gateway payment URL",
-        details: data,
       },
       { status: 400 }
     );
   } catch (error: any) {
     console.error("[Payment Create Error]:", error);
     return NextResponse.json(
-      { success: false, message: error?.message || "Internal server error" },
+      { success: false, message: "Failed to initialize payment. Please try again." },
       { status: 500 }
     );
   }

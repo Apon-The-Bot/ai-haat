@@ -1,258 +1,415 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  DollarSign,
+  TrendingUp,
   ShoppingBag,
   Clock,
-  Wallet,
+  KeyRound,
   Users,
-  Package,
-  TrendingUp,
+  Wallet,
   ArrowRight,
-  ShieldCheck,
-  Send,
   Sparkles,
+  ExternalLink,
+  Plus,
+  Send,
+  AlertCircle,
   Tag,
+  CheckCircle2,
+  RefreshCw,
+  CreditCard,
 } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useToast } from "@/context/ToastContext";
 
-export default function AdminOverviewPage() {
+interface DashboardStats {
+  period: string;
+  revenue: number;
+  totalOrders: number;
+  verifiedOrdersCount: number;
+  averageOrderValue: number;
+  pendingFulfillment: number;
+  pendingDeposits: number;
+  totalCustomers: number;
+  availableStockCount: number;
+  gatewayDistribution: Record<string, number>;
+  dailyTrend: Array<{ date: string; revenue: number; orders: number }>;
+  recentOrders: Array<{
+    id: string;
+    orderNumber: string;
+    customerName: string;
+    customerEmail: string;
+    totalBDT: number;
+    paymentMethod: string;
+    paymentStatus: string;
+    deliveryStatus: string;
+    itemsSummary: string;
+    createdAt: string;
+  }>;
+}
+
+export default function AdminDashboardPage() {
   const { formatPrice } = useCurrency();
-  const [orders, setOrders] = useState<any[]>([]);
+  const { showToast } = useToast();
 
-  React.useEffect(() => {
-    const loadOverview = async () => {
-      try {
-        const res = await fetch("/api/orders");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.orders) {
-            setOrders(data.orders);
-          }
+  const [period, setPeriod] = useState<"TODAY" | "7D" | "30D" | "ALL">("7D");
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      const res = await fetch(`/api/admin/dashboard/stats?period=${period}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.stats) {
+          setStats(data.stats);
         }
-      } catch (e) {
-        console.error(e);
       }
-    };
-    loadOverview();
-  }, []);
+    } catch (err) {
+      console.error("Failed to load dashboard stats:", err);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [period]);
 
-  const totalRevenue = orders.reduce((acc, o) => acc + (Number(o.totalBDT) || 0), 0);
-  const pendingOrders = orders.filter(
-    (o) => o.deliveryStatus !== "Delivered" && o.deliveryStatus !== "Cancelled"
-  );
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
-  const metrics = [
-    {
-      title: "Total Revenue",
-      value: formatPrice(totalRevenue),
-      change: "",
-      icon: DollarSign,
-      color: "text-emerald-700 bg-emerald-50 border-emerald-200",
-    },
-    {
-      title: "Total Orders",
-      value: String(orders.length),
-      change: "",
-      icon: ShoppingBag,
-      color: "text-blue-700 bg-blue-50 border-blue-200",
-    },
-    {
-      title: "Pending Fulfillment",
-      value: String(pendingOrders.length),
-      change: "",
-      icon: Clock,
-      color: "text-amber-800 bg-amber-50 border-amber-200",
-    },
-    {
-      title: "Wallet Deposits",
-      value: "0 Pending",
-      change: "",
-      icon: Wallet,
-      color: "text-[#FC5C03] bg-orange-50 border-orange-200",
-    },
-    {
-      title: "Registered Users",
-      value: "1",
-      change: "",
-      icon: Users,
-      color: "text-purple-700 bg-purple-50 border-purple-200",
-    },
-    {
-      title: "Active Products",
-      value: "Catalog Live",
-      change: "",
-      icon: Package,
-      color: "text-indigo-700 bg-indigo-50 border-indigo-200",
-    },
-  ];
+  // Periodic refresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchStats(true);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [fetchStats]);
+
+  const maxDailyRevenue = stats?.dailyTrend ? Math.max(...stats.dailyTrend.map((d) => d.revenue), 1000) : 1000;
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 max-w-[1500px] mx-auto pb-16">
       
-      {/* Top Welcome Banner (White Theme) */}
-      <div className="p-6 sm:p-7 bg-white rounded-3xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-xs">
+      {/* Top Banner & Period Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF2E8] border border-[#FC5C03]/20 rounded-full text-[#FC5C03] text-xs font-extrabold uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF2E8] text-[#FC5C03] rounded-full text-xs font-bold uppercase tracking-wider mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Haat Operations Hub</span>
+            <span>Mission Control</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-            Store Overview & Revenue Velocity
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            Admin Overview & Operations
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
-            Live order queue, real-time revenue stats, wallet approval requests, and inventory health.
+          <p className="text-sm text-slate-500 mt-0.5">
+            Real-time analytics, revenue tracking, pending fulfillment queues, and financial health.
           </p>
         </div>
 
-        <div className="flex gap-2.5">
-          <Link
-            href="/admin/orders"
-            className="px-4 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer"
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Period Tabs */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            {[
+              { id: "TODAY", label: "Today" },
+              { id: "7D", label: "7 Days" },
+              { id: "30D", label: "30 Days" },
+              { id: "ALL", label: "All Time" },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setPeriod(t.id as any)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  period === t.id
+                    ? "bg-white text-[#FC5C03] shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => fetchStats()}
+            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all cursor-pointer"
+            title="Refresh data"
           >
-            <Send className="w-4 h-4" />
-            <span>Open Order Queue</span>
-          </Link>
-          <Link
-            href="/admin/coupons"
-            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl border border-slate-200 transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <Tag className="w-4 h-4 text-emerald-600" />
-            <span>Coupons</span>
-          </Link>
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
         </div>
       </div>
 
-      {/* 6 Metric Cards (White Theme) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-        {metrics.map((m) => {
-          const Icon = m.icon;
-          return (
-            <div
-              key={m.title}
-              className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 hover:border-[#FC5C03]/40 transition-all shadow-xs"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500">{m.title}</span>
-                <div className={`p-2.5 rounded-xl border ${m.color}`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-              </div>
-
-              <div>
-                <div className="text-2xl font-black text-slate-900">{m.value}</div>
-                <span className="text-[11px] text-slate-500 font-semibold block mt-0.5">
-                  {m.change}
-                </span>
-              </div>
+      {/* 6 High-Impact Operational KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        
+        {/* KPI 1: Authoritative Verified Revenue */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500">Verified Revenue</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
             </div>
-          );
-        })}
+          </div>
+          <span className="text-2xl font-black text-slate-900 block">
+            {formatPrice(stats?.revenue || 0)}
+          </span>
+          <span className="text-[11px] text-emerald-600 font-semibold block">
+            {stats?.verifiedOrdersCount || 0} paid orders
+          </span>
+        </div>
+
+        {/* KPI 2: Total Orders */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500">Total Orders</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <ShoppingBag className="w-4 h-4" />
+            </div>
+          </div>
+          <span className="text-2xl font-black text-slate-900 block">
+            {stats?.totalOrders || 0}
+          </span>
+          <span className="text-[11px] text-slate-400 font-semibold block">
+            AOV: {formatPrice(stats?.averageOrderValue || 0)}
+          </span>
+        </div>
+
+        {/* KPI 3: Pending Delivery */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500">Pending Delivery</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <span className="text-2xl font-black text-[#FC5C03] block">
+            {stats?.pendingFulfillment || 0}
+          </span>
+          <Link href="/admin/orders?deliveryStatus=ORDER_PLACED" className="text-[11px] text-[#FC5C03] font-bold hover:underline block">
+            Fulfill Orders →
+          </Link>
+        </div>
+
+        {/* KPI 4: Pending Wallet Approvals */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500">Wallet Requests</span>
+            <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#FC5C03] flex items-center justify-center">
+              <Wallet className="w-4 h-4" />
+            </div>
+          </div>
+          <span className="text-2xl font-black text-slate-900 block">
+            {stats?.pendingDeposits || 0}
+          </span>
+          <Link href="/admin/wallet" className="text-[11px] text-[#FC5C03] font-bold hover:underline block">
+            Approve Top-ups →
+          </Link>
+        </div>
+
+        {/* KPI 5: Digital Stock Pool */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500">Available Vault Keys</span>
+            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+              <KeyRound className="w-4 h-4" />
+            </div>
+          </div>
+          <span className="text-2xl font-black text-slate-900 block">
+            {stats?.availableStockCount || 0}
+          </span>
+          <Link href="/admin/inventory" className="text-[11px] text-purple-600 font-bold hover:underline block">
+            Manage Vault →
+          </Link>
+        </div>
+
+        {/* KPI 6: Registered Customers */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500">Customers</span>
+            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+          <span className="text-2xl font-black text-slate-900 block">
+            {stats?.totalCustomers || 0}
+          </span>
+          <Link href="/admin/users" className="text-[11px] text-slate-500 font-bold hover:underline block">
+            View Users →
+          </Link>
+        </div>
+
       </div>
 
-      {/* 2-Column Section: Pending Orders & Quick Actions */}
+      {/* Visual Analytics & Gateway Velocity Row */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left: Pending Orders (8 Cols) */}
-        <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-600" />
-              <h3 className="text-sm font-bold text-slate-900">
-                Pending Orders Requiring Fulfillment
-              </h3>
+        {/* Left: 7-Day Revenue & Velocity Chart (8 cols) */}
+        <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-2xs space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-slate-900">Revenue & Sales Velocity Trend</h3>
+              <p className="text-xs text-slate-500">Daily verified volume over the selected window</p>
             </div>
-            <Link
-              href="/admin/orders"
-              className="text-xs font-bold text-[#FC5C03] hover:underline flex items-center gap-1"
-            >
-              <span>View All</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <span className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg font-mono">
+              7 Days Velocity
+            </span>
           </div>
 
-          <div className="space-y-3">
-            {pendingOrders.length > 0 ? (
-              pendingOrders.map((order) => (
-                <div
-                  key={order.id || order.orderNumber}
-                  className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-[#FC5C03]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-[#FC5C03]">{order.orderNumber || order.id}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200">
-                        {order.date || order.time || "Pending"}
-                      </span>
+          {/* Bar / Trend Chart */}
+          <div className="pt-4">
+            <div className="grid grid-cols-7 gap-2 sm:gap-4 items-end h-44 border-b border-slate-100 pb-3">
+              {stats?.dailyTrend && stats.dailyTrend.map((day, idx) => {
+                const heightPercent = Math.max(8, Math.round((day.revenue / maxDailyRevenue) * 100));
+                return (
+                  <div key={idx} className="flex flex-col items-center gap-2 group relative">
+                    {/* Tooltip */}
+                    <div className="absolute -top-10 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      ৳{day.revenue} ({day.orders} orders)
                     </div>
-                    <h4 className="text-xs font-bold text-slate-900 mt-1">
-                      {order.items?.[0]?.productName || order.product || "Digital Product"}
-                    </h4>
-                    <span className="text-[11px] text-slate-500 font-mono block">
-                      {order.customerName || order.customer || "Customer"} • TrxID: <b>{order.trxId || "Gateway"}</b>
+
+                    <div className="w-full max-w-[36px] bg-slate-100 rounded-xl overflow-hidden h-36 flex items-end">
+                      <div
+                        style={{ height: `${heightPercent}%` }}
+                        className="w-full bg-gradient-to-t from-[#FC5C03] to-[#FF8540] rounded-xl transition-all group-hover:brightness-110"
+                      />
+                    </div>
+                    <span className="text-[10.5px] font-semibold text-slate-500 font-mono text-center truncate max-w-full">
+                      {day.date.split(" ")[0]}
                     </span>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-                  <div className="flex items-center gap-3 self-end sm:self-auto">
-                    <span className="text-sm font-black text-slate-900">
-                      {formatPrice(order.totalBDT ?? order.amountBDT ?? 0)}
-                    </span>
-                    <Link
-                      href="/admin/orders"
-                      className="px-3 py-1.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center gap-1"
+        {/* Right: Payment Gateway Distribution & Quick Actions (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Payment Gateways Breakdown */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs space-y-4">
+            <h3 className="text-base font-black text-slate-900">Gateway Distribution</h3>
+            
+            <div className="space-y-3">
+              {stats?.gatewayDistribution && Object.keys(stats.gatewayDistribution).length > 0 ? (
+                Object.entries(stats.gatewayDistribution).map(([gw, vol]) => {
+                  const percent = stats.revenue > 0 ? Math.round((vol / stats.revenue) * 100) : 0;
+                  return (
+                    <div key={gw} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="font-bold text-slate-800 uppercase">{gw}</span>
+                        <span className="font-mono text-slate-500">{formatPrice(vol)} ({percent}%)</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          style={{ width: `${percent}%` }}
+                          className="h-full bg-[#FC5C03] rounded-full"
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-xs text-slate-400 py-4 text-center">No payment transactions in this period.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Operational Shortcuts */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs space-y-3">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/admin/products/new"
+                className="p-3 bg-slate-50 hover:bg-[#FFF2E8] hover:text-[#FC5C03] rounded-xl text-xs font-bold text-slate-700 border border-slate-200 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#FC5C03]" />
+                <span>Add Product</span>
+              </Link>
+
+              <Link
+                href="/admin/inventory"
+                className="p-3 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl text-xs font-bold text-slate-700 border border-slate-200 transition-colors flex items-center gap-2"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Import Stock</span>
+              </Link>
+
+              <Link
+                href="/admin/coupons"
+                className="p-3 bg-slate-50 hover:bg-purple-50 hover:text-purple-700 rounded-xl text-xs font-bold text-slate-700 border border-slate-200 transition-colors flex items-center gap-2"
+              >
+                <Tag className="w-3.5 h-3.5 text-purple-600" />
+                <span>New Coupon</span>
+              </Link>
+
+              <Link
+                href="/admin/reports"
+                className="p-3 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 rounded-xl text-xs font-bold text-slate-700 border border-slate-200 transition-colors flex items-center gap-2"
+              >
+                <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+                <span>Sales Reports</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Recent Orders Stream */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4 text-[#FC5C03]" />
+            <h3 className="text-base font-black text-slate-900">Recent Customer Purchases</h3>
+          </div>
+          <Link
+            href="/admin/orders"
+            className="text-xs font-bold text-[#FC5C03] hover:underline flex items-center gap-1"
+          >
+            <span>View All Orders</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="space-y-3 divide-y divide-slate-100">
+          {stats?.recentOrders && stats.recentOrders.length > 0 ? (
+            stats.recentOrders.map((o) => (
+              <div key={o.id} className="pt-3 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-slate-900">#{o.orderNumber || o.id}</span>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        o.deliveryStatus === "DELIVERED"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : o.deliveryStatus === "CANCELLED"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
                     >
-                      <Send className="w-3 h-3" />
-                      <span>Fulfill</span>
-                    </Link>
+                      {o.deliveryStatus}
+                    </span>
+                    <span className="text-slate-400">• {new Date(o.createdAt).toLocaleDateString()}</span>
                   </div>
+                  <h4 className="font-bold text-slate-900 mt-1">{o.itemsSummary || "Digital Subscription"}</h4>
+                  <span className="text-slate-400">Customer: {o.customerName} ({o.customerEmail})</span>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-6 text-sm text-slate-500">No pending orders.</div>
-            )}
-          </div>
+
+                <div className="flex items-center gap-3 self-end sm:self-auto">
+                  <span className="font-black text-sm text-slate-900">{formatPrice(o.totalBDT)}</span>
+                  <Link
+                    href={`/admin/orders?orderId=${o.orderNumber || o.id}`}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors"
+                  >
+                    View Order
+                  </Link>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-xs text-slate-400 py-8 text-center">No orders found.</p>
+          )}
         </div>
-
-        {/* Right: Quick Admin Shortcuts (4 Cols) */}
-        <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 pb-3 border-b border-slate-100">
-            Quick Actions
-          </h3>
-
-          <div className="space-y-2">
-            <Link
-              href="/admin/products"
-              className="w-full p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 flex items-center justify-between transition-colors block"
-            >
-              <span>Manage Products & Stock</span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </Link>
-            <Link
-              href="/admin/coupons"
-              className="w-full p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 flex items-center justify-between transition-colors block"
-            >
-              <span>Create Discount Coupon</span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </Link>
-            <Link
-              href="/admin/wallet"
-              className="w-full p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 flex items-center justify-between transition-colors block"
-            >
-              <span>Approve Wallet Deposits</span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </Link>
-            <Link
-              href="/admin/settings"
-              className="w-full p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 flex items-center justify-between transition-colors block"
-            >
-              <span>Telegram & Email API Keys</span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </Link>
-          </div>
-        </div>
-
       </div>
 
     </div>

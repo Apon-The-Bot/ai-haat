@@ -48,6 +48,201 @@ enum NotificationType {
   PROMO
 }
 
+enum DiscountType {
+  PERCENTAGE
+  FLAT_BDT
+}
+
+enum StockStatus {
+  AVAILABLE
+  RESERVED
+  DELIVERED
+  INVALID
+  REPLACED
+  REFUNDED
+  EXPIRED
+}
+
+enum StockType {
+  LICENSE_KEY
+  ACCOUNT_CREDENTIAL
+  DOWNLOAD_LINK
+  TEXT_INSTRUCTIONS
+}
+
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  FULFILLED
+  REJECTED
+}
+
+enum FulfillmentType {
+  AUTO_STOCK
+  MANUAL
+  PROTECTED_DOWNLOAD
+  WORKSPACE_INVITE
+  EXTERNAL_ACTIVATION
+}
+
+enum ReplacementStatus {
+  REQUESTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum RefundStatus {
+  REQUESTED
+  UNDER_REVIEW
+  APPROVED
+  PROCESSING
+  REFUNDED
+  REJECTED
+  FAILED
+  CANCELLED
+}
+
+enum RefundMethod {
+  WALLET
+  BKASH
+  NAGAD
+  ROCKET
+  BANK
+  ORIGINAL_PAYMENT
+}
+
+enum MfaLevel {
+  NONE
+  PRIMARY_ONLY
+  MFA_VERIFIED
+}
+
+enum TicketStatus {
+  OPEN
+  WAITING_FOR_ADMIN
+  WAITING_FOR_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TicketCategory {
+  PAYMENT
+  DELIVERY
+  PRODUCT_ACCESS
+  LICENSE_KEY
+  ACCOUNT_CREDENTIAL
+  WALLET
+  REPLACEMENT
+  REFUND
+  TECHNICAL_HELP
+  PRODUCT_REQUEST
+  OTHER
+}
+
+enum MessageSenderType {
+  CUSTOMER
+  ADMIN
+  SYSTEM
+}
+
+enum AffiliateTier {
+  BRONZE
+  SILVER
+  GOLD
+  CUSTOM
+}
+
+enum AffiliateStatus {
+  ACTIVE
+  PENDING_REVIEW
+  SUSPENDED
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+  CANCELLED
+}
+
+enum PayoutMethod {
+  WALLET
+  BKASH
+  NAGAD
+  ROCKET
+  BANK
+}
+
+enum PayoutStatus {
+  REQUESTED
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+enum OtpPurpose {
+  LOGIN_NEW_DEVICE
+  MFA_SETUP
+  MFA_DISABLE
+  MFA_RESET
+  ADMIN_STEP_UP
+  SECURITY_CHANGE
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum ProductType {
+  SUBSCRIPTION
+  LICENSE_KEY
+  ACCOUNT
+  DIGITAL_CREDIT
+  WORKSPACE_ACCESS
+  DOWNLOAD
+  SERVICE
+}
+
+enum ProductVisibility {
+  PUBLIC
+  HIDDEN
+  DIRECT_LINK_ONLY
+}
+
+enum SecurityEvent {
+  PRIMARY_LOGIN
+  TOTP_SETUP
+  TOTP_ENABLED
+  TOTP_VERIFY_OK
+  TOTP_VERIFY_FAIL
+  EMAIL_OTP_SENT
+  EMAIL_OTP_OK
+  EMAIL_OTP_FAIL
+  RECOVERY_USED
+  MFA_DISABLED
+  MFA_RESET
+  DEVICE_TRUSTED
+  DEVICE_REVOKED
+  SESSION_REVOKED
+  STEP_UP_OK
+  STEP_UP_FAIL
+  RATE_LIMIT_HIT
+}
+
 model User {
   id               String              @id @default(cuid())
   name             String?
@@ -66,6 +261,19 @@ model User {
   transactions     WalletTransaction[]
   notifications    Notification[]
   deliveredKeys    DeliveredKey[]
+  security         UserSecurity?
+  mfaSessions      MfaSession[]
+  trustedDevices   TrustedDevice[]
+  otpChallenges    OtpChallenge[]
+  recoveryCodes    RecoveryCode[]
+  securityLogs     SecurityAuditLog[]
+  replacements     ReplacementRequest[]
+  refunds          Refund[]
+  supportTickets   SupportTicket[]
+  affiliateProfile AffiliateProfile?
+  affiliatePayouts AffiliatePayoutRequest[]
+  emailContact     EmailContact?
+  campaignRecipients EmailCampaignRecipient[]
 
   @@map("users")
 }
@@ -101,50 +309,93 @@ model Session {
 }
 
 model Product {
-  id                 String      @id @default(cuid())
-  slug               String      @unique
+  id                 String            @id @default(cuid())
+  slug               String            @unique
   name               String
   category           String
-  categories         String      @default("[]") // JSON string array
+  categories         String            @default("[]") // JSON string array
   image              String
-  rating             Float       @default(5.0)
-  ratingCount        Int         @default(0)
-  viewCount          Int         @default(0)
+  rating             Float             @default(5.0)
+  ratingCount        Int               @default(0)
+  viewCount          Int               @default(0)
   badge              String?
   minPriceBDT        Float
   maxPriceBDT        Float
-  shortDesc          String      @db.Text
-  descriptionBangla  String      @db.Text
-  descriptionEnglish String      @db.Text
-  features           String      @db.Text // JSON string array
-  deliveryTime       String      @default("৫ থেকে ১৫ মিনিট")
-  deliveryType       String      @default("ইনস্ট্যান্ট ডেলিভারি")
-  warranty           String      @default("সম্পূর্ণ মেয়াদের রিপ্লেসমেন্ট ওয়ারেন্টি")
-  validity           String      @default("১ মাস / ১ বছর")
-  deviceSupport      String      @default("সকল ডিভাইস")
-  requirements       String?     @db.Text
-  isFeatured         Boolean     @default(false)
-  isBestProduct      Boolean     @default(false)
-  isBestSelling      Boolean     @default(false)
-  inStock            Boolean     @default(true)
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  regularPriceBDT    Float?
+  salePriceBDT       Float?
+  shortDesc          String            @db.Text
+  descriptionBangla  String            @db.Text
+  descriptionEnglish String            @db.Text
+  features           String            @db.Text // JSON string array
+  gallery            String?           @db.Text // JSON string array of gallery image URLs
+  specifications     String?           @db.Text // JSON string array of { label, value }
+  deliveryTime       String            @default("৫ থেকে ১৫ মিনিট")
+  deliveryType       String            @default("ইনস্ট্যান্ট ডেলিভারি")
+  deliverySla        String?           @default("Instant")
+  warranty           String            @default("সম্পূর্ণ মেয়াদের রিপ্লেসমেন্ট ওয়ারেন্টি")
+  validity           String            @default("১ মাস / ১ বছর")
+  deviceSupport      String            @default("সকল ডিভাইস")
+  requirements       String?           @db.Text
+  productType        ProductType       @default(SUBSCRIPTION)
+  fulfillmentType    FulfillmentType   @default(AUTO_STOCK)
+  status             ProductStatus     @default(ACTIVE)
+  visibility         ProductVisibility @default(PUBLIC)
+  warrantyDays       Int               @default(30)
+  replacementAllowed Boolean           @default(true)
+  refundAllowed      Boolean           @default(true)
+  lowStockThreshold  Int               @default(3)
+  costPriceBDT       Float?
+  allowBackorder     Boolean           @default(true)
+  isFeatured         Boolean           @default(false)
+  isBestProduct      Boolean           @default(false)
+  isBestSelling      Boolean           @default(false)
+  inStock            Boolean           @default(true)
+  sortOrder          Int               @default(0)
+  seoTitle           String?
+  seoDescription     String?           @db.Text
+  seoKeywords        String?
+  archivedAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   variations         Variation[]
   reviews            Review[]
+  digitalStocks      DigitalStock[]
+  batches            InventoryBatch[]
+  productSuppliers   ProductSupplier[]
+  supportTickets     SupportTicket[]
 
+  @@index([category])
+  @@index([status, visibility])
+  @@index([inStock, isFeatured])
   @@map("products")
 }
 
 model Variation {
-  id          String   @id @default(cuid())
-  productId   String
-  name        String
-  priceBDT    Float
-  description String?
-  inStock     Boolean  @default(true)
+  id                 String           @id @default(cuid())
+  productId          String
+  name               String
+  sku                String?
+  priceBDT           Float
+  regularPriceBDT    Float?
+  salePriceBDT       Float?
+  costPriceBDT       Float?
+  lowStockThreshold  Int?
+  description        String?
+  duration           String?
+  deliverySla        String?
+  replacementAllowed Boolean?
+  refundAllowed      Boolean?
+  inStock            Boolean          @default(true)
+  fulfillmentType    FulfillmentType?
+  warrantyDays       Int?
+  sortOrder          Int              @default(0)
+  isDefault          Boolean          @default(false)
 
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product       Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  digitalStocks DigitalStock[]
+  batches       InventoryBatch[]
+  productSuppliers ProductSupplier[]
 
   @@map("variations")
 }
@@ -165,45 +416,99 @@ model Order {
   trxId          String?
   paymentStatus  PaymentStatus  @default(PENDING)
   deliveryStatus DeliveryStatus @default(ORDER_PLACED)
+  refundedBDT    Float          @default(0.0)
+  refundStatus   String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  // Marketing Attribution
+  utmSource    String?   @db.VarChar(200)
+  utmMedium    String?   @db.VarChar(200)
+  utmCampaign  String?   @db.VarChar(200)
+  utmContent   String?   @db.VarChar(200)
+  utmTerm      String?   @db.VarChar(200)
+  landingPage  String?   @db.VarChar(500)
+  referrer     String?   @db.VarChar(500)
+  // Analytics deduplication
+  analyticsPurchaseSentAt DateTime?
 
-  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user           User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
   items          OrderItem[]
   deliveredKeys  DeliveredKey[]
+  digitalStocks  DigitalStock[]
+  replacements   ReplacementRequest[]
+  refunds        Refund[]
+  supportTickets SupportTicket[]
+  timelineEvents OrderTimelineEvent[]
+  affiliateCommissions AffiliateCommission[]
+  referralClicks ReferralClick[]
 
+  @@index([userId])
+  @@index([createdAt])
+  @@index([paymentStatus, deliveryStatus])
+  @@index([trxId])
   @@map("orders")
 }
 
 model OrderItem {
-  id            String  @id @default(cuid())
-  orderId       String
-  productId     String?
-  variationId   String?
-  productName   String
-  variationName String
-  priceBDT      Float
-  quantity      Int     @default(1)
-  image         String?
+  id                            String          @id @default(cuid())
+  orderId                       String
+  productId                     String?
+  variationId                   String?
+  productName                   String
+  variationName                 String
+  priceBDT                      Float
+  quantity                      Int             @default(1)
+  image                         String?
+  deliveryStatus                DeliveryStatus  @default(ORDER_PLACED)
+  fulfillmentType               FulfillmentType @default(AUTO_STOCK)
+  refundedBDT                   Float           @default(0.0)
+  isRefunded                    Boolean         @default(false)
+  warrantyDaysAtPurchase        Int             @default(30)
+  refundWindowDaysAtPurchase    Int             @default(7)
+  replacementAllowedAtPurchase  Boolean         @default(true)
+  refundAllowedAtPurchase       Boolean         @default(true)
 
-  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order          Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deliveredKeys  DeliveredKey[]
+  digitalStocks  DigitalStock[]
+  replacements   ReplacementRequest[]
+  refunds        Refund[]
+  supportTickets SupportTicket[]
+  affiliateCommissions AffiliateCommission[]
+  fulfillmentCosts OrderItemCost[]
 
+  @@index([orderId])
+  @@index([productId])
+  @@index([variationId])
   @@map("order_items")
 }
 
 model DeliveredKey {
-  id           String   @id @default(cuid())
-  orderId      String
-  userId       String?
-  productName  String
-  accountType  String   // e.g. "Shared Profile", "Personal Invite", "License Key"
-  credentials  String   @db.Text // Login info, license key, or invitation link
-  instructions String?  @db.Text
-  deliveredAt  DateTime @default(now())
+  id                   String    @id @default(cuid())
+  orderId              String
+  orderItemId          String?
+  stockId              String?
+  userId               String?
+  productName          String
+  accountType          String    // e.g. "Shared Profile", "Personal Invite", "License Key"
+  credentials          String    @db.Text // Plaintext or legacy credentials
+  credentialsEncrypted String?   @db.Text // AES-256-GCM encrypted credentials
+  instructions         String?   @db.Text
+  warrantyExpiresAt    DateTime?
+  isReplacement        Boolean   @default(false)
+  replacedDeliveryId   String?
+  deliveredAt          DateTime  @default(now())
 
-  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  order                    Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem                OrderItem?           @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  stock                    DigitalStock?        @relation(fields: [stockId], references: [id], onDelete: SetNull)
+  user                     User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  replacementsAsOriginal   ReplacementRequest[] @relation("OriginalDelivery")
+  replacementsAsNew        ReplacementRequest[] @relation("ReplacementDelivery")
 
+  @@index([orderId])
+  @@index([userId])
+  @@index([orderItemId])
   @@map("delivered_keys")
 }
 
@@ -214,7 +519,7 @@ model WalletTransaction {
   type         TransactionType
   method       String            // bkash, nagad, rocket, system
   senderNumber String?
-  trxId        String?
+  trxId        String?           @unique
   status       TransactionStatus @default(PENDING)
   note         String?
   createdAt    DateTime          @default(now())
@@ -222,6 +527,8 @@ model WalletTransaction {
 
   user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, createdAt])
+  @@index([status])
   @@map("wallet_transactions")
 }
 
@@ -232,12 +539,68 @@ model Notification {
   message   String           @db.Text
   type      NotificationType @default(SYSTEM)
   isRead    Boolean          @default(false)
+  readAt    DateTime?
   link      String?
+  dedupeKey String?
   createdAt DateTime         @default(now())
 
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, dedupeKey])
+  @@index([userId, createdAt])
+  @@index([userId, isRead])
   @@map("notifications")
+}
+
+model NotificationEvent {
+  id             String                 @id @default(cuid())
+  eventType      String
+  entityType     String?                // ORDER | WALLET | REFUND | REPLACEMENT | SUPPORT | INVENTORY | USER
+  entityId       String?
+  userId         String?
+  recipientEmail String?
+  recipientPhone String?
+  dedupeKey      String?                @unique
+  payload        String                 @db.Text // JSON snapshot (strictly sanitized safe data)
+  channels       String                 @default("IN_APP,EMAIL") // Comma-separated list of target channels
+  status         String                 @default("PENDING") // PENDING | PROCESSING | SENT | FAILED
+  attempts       Int                    @default(0)
+  maxAttempts    Int                    @default(4)
+  nextAttemptAt  DateTime?              @default(now())
+  lastAttemptAt  DateTime?
+  processedAt    DateTime?
+  lastError      String?                @db.Text
+  errorCategory  String?                // TRANSIENT | PERMANENT | CONFIGURATION
+  priority       String                 @default("NORMAL") // HIGH | NORMAL | LOW
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  deliveries     NotificationDelivery[]
+
+  @@index([status, nextAttemptAt])
+  @@index([eventType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("notification_events")
+}
+
+model NotificationDelivery {
+  id                String            @id @default(cuid())
+  eventId           String
+  channel           String            // IN_APP | EMAIL | TELEGRAM
+  recipient         String
+  status            String            // SENT | FAILED | SKIPPED
+  providerMessageId String?
+  attempt           Int               @default(1)
+  error             String?           @db.Text
+  sentAt            DateTime?
+  createdAt         DateTime          @default(now())
+
+  event             NotificationEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([channel, status])
+  @@map("notification_deliveries")
 }
 
 model Blog {
@@ -266,6 +629,7 @@ model Proof {
   customerNote String   @db.Text
   createdAt    DateTime @default(now())
 
+  @@index([orderId])
   @@map("proofs")
 }
 
@@ -281,6 +645,7 @@ model Review {
 
   product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([productId, status])
   @@map("reviews")
 }
 
@@ -291,4 +656,804 @@ model SiteSetting {
   updatedAt DateTime @updatedAt
 
   @@map("site_settings")
+}
+
+model Coupon {
+  id             String       @id @default(cuid())
+  code           String       @unique
+  discountType   DiscountType @default(PERCENTAGE)
+  discountValue  Float
+  appliesTo      String       @default("ALL") // ALL or SPECIFIC_PRODUCTS
+  productIds     String       @default("[]") // JSON string array of slugs
+  minOrderBDT    Float        @default(0.0)
+  maxDiscountBDT Float?
+  usageLimit     Int          @default(100)
+  usedCount      Int          @default(0)
+  validUntil     DateTime
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([isActive, validUntil])
+  @@map("coupons")
+}
+
+model DigitalStock {
+  id                     String      @id @default(cuid())
+  productId              String
+  variationId            String?
+  supplierId             String?
+  batchId                String?
+  type                   StockType   @default(LICENSE_KEY)
+  payloadEncrypted       String      @db.Text // AES-256-GCM encrypted credential
+  fingerprint            String?     @db.VarChar(128) // SHA-256 hash of credential for duplicate detection
+  batchRef               String?
+  costPriceBDT           Float?
+  status                 StockStatus @default(AVAILABLE)
+  assignedOrderId        String?
+  assignedOrderItemId    String?
+  reservedAt             DateTime?
+  reservationExpiresAt   DateTime?
+  deliveredAt            DateTime?
+  replacedAt             DateTime?
+  expiryDate             DateTime?
+  isExpiringSoon         Boolean     @default(false)
+  notes                  String?     @db.Text
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  product             Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variation           Variation?           @relation(fields: [variationId], references: [id], onDelete: SetNull)
+  supplier            Supplier?            @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  batch               InventoryBatch?      @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  order               Order?               @relation(fields: [assignedOrderId], references: [id], onDelete: SetNull)
+  orderItem           OrderItem?           @relation(fields: [assignedOrderItemId], references: [id], onDelete: SetNull)
+  deliveredKeys       DeliveredKey[]
+  replacementRequests ReplacementRequest[]
+
+  @@index([productId, variationId, status])
+  @@index([assignedOrderId])
+  @@index([fingerprint])
+  @@index([supplierId])
+  @@index([batchId])
+  @@map("digital_stocks")
+}
+
+model Supplier {
+  id            String               @id @default(cuid())
+  name          String
+  code          String               @unique // e.g. "SUP-01", "DIGITAL_DIRECT"
+  contactName   String?
+  contactEmail  String?
+  contactPhone  String?
+  telegram      String?
+  website       String?
+  apiKey        String               @unique @default(cuid())
+  apiSecret     String               @default(cuid())
+  isActive      Boolean              @default(true)
+  status        String               @default("ACTIVE") // ACTIVE, INACTIVE, BLOCKED
+  notes         String?              @db.Text
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  batches          InventoryBatch[]
+  digitalStocks    DigitalStock[]
+  webhookLogs      SupplierWebhookLog[]
+  productSuppliers ProductSupplier[]
+  orderItemCosts   OrderItemCost[]
+
+  @@map("suppliers")
+}
+
+model ProductSupplier {
+  id           String     @id @default(cuid())
+  supplierId   String
+  productId    String
+  variationId  String?
+  supplierSku  String?
+  defaultCost  Float?     // In original supplier currency
+  currency     String     @default("BDT")
+  leadTime     String?    // e.g. "Instant", "1 hour", "24 hours"
+  isPreferred  Boolean    @default(false)
+  isActive     Boolean    @default(true)
+  notes        String?    @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  supplier     Supplier   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variation    Variation? @relation(fields: [variationId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, productId, variationId])
+  @@index([productId, variationId])
+  @@index([supplierId])
+  @@map("product_suppliers")
+}
+
+model InventoryBatch {
+  id                 String         @id @default(cuid())
+  batchRef           String         @unique // e.g. "BATCH-20260828-01"
+  supplierId         String?
+  supplierName       String?
+  productId          String
+  variationId        String?
+  quantityPurchased  Int            @default(0)
+  totalCount         Int            @default(0)
+  availableCount     Int            @default(0)
+  deliveredCount     Int            @default(0)
+  replacedCount      Int            @default(0)
+  refundedCount      Int            @default(0)
+  expiredCount       Int            @default(0)
+  unitCost           Float?         // In original currency
+  totalCost          Float?         // In original currency
+  currency           String         @default("BDT")
+  exchangeRateToBDT  Float?         @default(1.0)
+  unitCostBDT        Float?
+  totalCostBDT       Float?
+  purchaseDate       DateTime       @default(now())
+  status             String         @default("RECEIVED") // DRAFT, RECEIVED, DEPLETED, CANCELLED
+  createdBy          String?
+  isLocked           Boolean        @default(false)
+  expiryDate         DateTime?
+  notes              String?        @db.Text
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  supplier       Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variation      Variation?     @relation(fields: [variationId], references: [id], onDelete: SetNull)
+  digitalStocks  DigitalStock[]
+
+  @@index([productId, variationId])
+  @@index([createdAt])
+  @@map("inventory_batches")
+}
+
+model OrderItemCost {
+  id                String    @id @default(cuid())
+  orderItemId       String
+  supplierId        String?
+  costAmount        Float
+  currency          String    @default("BDT")
+  exchangeRateToBDT Float?    @default(1.0)
+  costBDT           Float
+  reference         String?
+  notes             String?   @db.Text
+  recordedBy        String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  orderItem         OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  supplier          Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  @@index([orderItemId])
+  @@index([supplierId])
+  @@map("order_item_costs")
+}
+
+model SupplierWebhookLog {
+  id           String   @id @default(cuid())
+  supplierId   String
+  batchRef     String?
+  ipAddress    String?
+  status       String   // "SUCCESS", "PARTIAL", "FAILED"
+  itemsTotal   Int      @default(0)
+  itemsAdded   Int      @default(0)
+  itemsSkipped Int      @default(0)
+  errorMessage String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  supplier     Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId, createdAt])
+  @@map("supplier_webhook_logs")
+}
+
+model ReplacementRequest {
+  id                    String            @id @default(cuid())
+  userId                String
+  orderId               String
+  orderItemId           String?
+  originalDeliveryId    String
+  reason                String            // "LOGIN_FAILED", "ACCOUNT_LOCKED", "LICENSE_INVALID", "SUBSCRIPTION_STOPPED", "WRONG_CREDENTIALS", "OTHER"
+  description           String            @db.Text
+  status                ReplacementStatus @default(REQUESTED)
+  adminNotes            String?           @db.Text
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  replacementDeliveryId String?
+  assignedStockId       String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order               Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem           OrderItem?    @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  originalDelivery    DeliveredKey  @relation("OriginalDelivery", fields: [originalDeliveryId], references: [id], onDelete: Cascade)
+  replacementDelivery DeliveredKey? @relation("ReplacementDelivery", fields: [replacementDeliveryId], references: [id], onDelete: SetNull)
+  assignedStock       DigitalStock? @relation(fields: [assignedStockId], references: [id], onDelete: SetNull)
+  supportTickets      SupportTicket[]
+
+  @@index([userId, status])
+  @@index([orderId])
+  @@map("replacement_requests")
+}
+
+model Refund {
+  id                  String        @id @default(cuid())
+  orderId             String
+  orderItemId         String?
+  userId              String
+  refundMethod        RefundMethod  @default(WALLET)
+  status              RefundStatus  @default(REQUESTED)
+  requestedAmountBDT  Float
+  approvedAmountBDT   Float?
+  reason              String        // "LOGIN_FAILED", "PRODUCT_DEFECT", "OUT_OF_STOCK", "DELIVERY_DELAY", "WRONG_PURCHASE", "OTHER"
+  description         String        @db.Text
+  payoutPhone         String?       // For bKash/Nagad/Rocket manual payouts
+  payoutTrxId         String?       // Transaction ID for manual MFS payout
+  gatewayRef          String?
+  adminNotes          String?       @db.Text
+  customerMessage     String?       @db.Text
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  processedAt         DateTime?
+  walletTransactionId String?       @unique
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  order               Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem           OrderItem?    @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  supportTickets      SupportTicket[]
+
+  @@index([userId, status])
+  @@index([orderId])
+  @@index([status])
+  @@map("refunds")
+}
+
+model SupportTicket {
+  id                   String             @id @default(cuid())
+  ticketNumber         String             @unique // e.g. "TKT-2026-1001"
+  userId               String
+  customerEmail        String
+  customerName         String?
+  customerPhone        String?
+  orderId              String?
+  orderItemId          String?
+  productId            String?
+  replacementRequestId String?
+  refundId             String?
+  category             TicketCategory     @default(OTHER)
+  priority             TicketPriority     @default(NORMAL)
+  status               TicketStatus       @default(OPEN)
+  subject              String
+  assignedAdminId      String?
+  lastActivityAt       DateTime           @default(now())
+  resolvedAt           DateTime?
+  closedAt             DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order                Order?             @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  orderItem            OrderItem?         @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  product              Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  replacementRequest   ReplacementRequest? @relation(fields: [replacementRequestId], references: [id], onDelete: SetNull)
+  refund               Refund?            @relation(fields: [refundId], references: [id], onDelete: SetNull)
+  messages             SupportMessage[]
+
+  @@index([userId, status])
+  @@index([status, priority])
+  @@index([orderId])
+  @@index([orderItemId])
+  @@index([lastActivityAt])
+  @@map("support_tickets")
+}
+
+model SupportMessage {
+  id             String            @id @default(cuid())
+  ticketId       String
+  senderId       String
+  senderType     MessageSenderType @default(CUSTOMER)
+  senderName     String
+  message        String            @db.Text
+  isInternal     Boolean           @default(false) // If true, visible ONLY to admins
+  attachmentUrl  String?
+  createdAt      DateTime          @default(now())
+
+  ticket         SupportTicket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@index([ticketId, isInternal])
+  @@map("support_messages")
+}
+
+model AffiliateProfile {
+  id                    String                   @id @default(cuid())
+  userId                String                   @unique
+  referralCode          String                   @unique // e.g. "AH-9821" or "REF-AHSAN"
+  customSlug            String?                  @unique
+  tier                  AffiliateTier            @default(BRONZE)
+  customRatePercent     Float?
+  status                AffiliateStatus          @default(ACTIVE)
+  earningsBalanceBDT    Float                    @default(0.0)
+  totalEarnedBDT        Float                    @default(0.0)
+  totalPaidBDT          Float                    @default(0.0)
+  totalClicks           Int                      @default(0)
+  totalOrdersCount      Int                      @default(0)
+  totalReferredGMVBDT   Float                    @default(0.0)
+  preferredPayoutMethod PayoutMethod             @default(WALLET)
+  payoutPhone           String?
+  payoutBankDetails     String?                  @db.Text
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  user                  User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referralClicks        ReferralClick[]
+  commissions           AffiliateCommission[]
+  payoutRequests        AffiliatePayoutRequest[]
+
+  @@index([userId])
+  @@index([referralCode])
+  @@index([tier, status])
+  @@map("affiliate_profiles")
+}
+
+model ReferralClick {
+  id                 String            @id @default(cuid())
+  affiliateProfileId String
+  referralCode       String
+  ipAddress          String?
+  userAgent          String?
+  landingPage        String?           @db.VarChar(500)
+  utmSource          String?           @db.VarChar(200)
+  utmMedium          String?           @db.VarChar(200)
+  utmCampaign        String?           @db.VarChar(200)
+  convertedOrderId   String?
+  createdAt          DateTime          @default(now())
+
+  affiliateProfile   AffiliateProfile  @relation(fields: [affiliateProfileId], references: [id], onDelete: Cascade)
+  convertedOrder     Order?            @relation(fields: [convertedOrderId], references: [id], onDelete: SetNull)
+
+  @@index([affiliateProfileId, createdAt])
+  @@index([referralCode])
+  @@map("referral_clicks")
+}
+
+model AffiliateCommission {
+  id                    String            @id @default(cuid())
+  affiliateProfileId    String
+  orderId               String
+  orderItemId           String?
+  orderTotalBDT         Float
+  commissionRatePercent Float             // e.g. 5.0 for 5%, 8.0 for 8%, 12.0 for 12%
+  commissionAmountBDT   Float
+  status                CommissionStatus  @default(PENDING)
+  approvedAt            DateTime?
+  paidAt                DateTime?
+  rejectionReason       String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  affiliateProfile      AffiliateProfile  @relation(fields: [affiliateProfileId], references: [id], onDelete: Cascade)
+  order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem             OrderItem?        @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+
+  @@index([affiliateProfileId, status])
+  @@index([orderId])
+  @@map("affiliate_commissions")
+}
+
+model AffiliatePayoutRequest {
+  id                 String            @id @default(cuid())
+  affiliateProfileId String
+  userId             String
+  amountBDT          Float
+  payoutMethod       PayoutMethod      @default(WALLET)
+  payoutPhone        String?           // For bKash/Nagad/Rocket
+  payoutBankDetails  String?           @db.Text
+  status             PayoutStatus      @default(REQUESTED)
+  payoutTrxId        String?           // External MFS/Bank transaction ID
+  adminNotes         String?           @db.Text
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  processedAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  affiliateProfile   AffiliateProfile  @relation(fields: [affiliateProfileId], references: [id], onDelete: Cascade)
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([affiliateProfileId])
+  @@index([status])
+  @@map("affiliate_payout_requests")
+}
+
+model ProductRequest {
+  id           String        @id @default(cuid())
+  productName  String
+  targetBudget String?
+  contact      String
+  details      String?       @db.Text
+  status       RequestStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("product_requests")
+}
+
+// ─── MFA SECURITY MODELS ─────────────────────────────────
+
+model UserSecurity {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  totpEnabled           Boolean   @default(false)
+  totpSecretEncrypted   String?   @db.Text
+  totpEnabledAt         DateTime?
+  lastTotpStep          Int?      // Replay prevention: last accepted TOTP counter
+  pendingTotpSecret     String?   @db.Text // Encrypted pending secret during enrollment
+  pendingTotpExpiresAt  DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_security")
+}
+
+model OtpChallenge {
+  id           String     @id @default(cuid())
+  userId       String
+  purpose      OtpPurpose
+  codeDigest   String
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  attemptCount Int        @default(0)
+  maxAttempts  Int        @default(5)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, expiresAt])
+  @@map("otp_challenges")
+}
+
+model RecoveryCode {
+  id       String    @id @default(cuid())
+  userId   String
+  codeHash String
+  usedAt   DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("recovery_codes")
+}
+
+model MfaSession {
+  id            String    @id @default(cuid())
+  userId        String
+  tokenHash     String    @unique
+  mfaLevel      MfaLevel  @default(NONE)
+  verifiedAt    DateTime
+  lastStepUpAt  DateTime?
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("mfa_sessions")
+}
+
+model TrustedDevice {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  label      String
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("trusted_devices")
+}
+
+model SecurityAuditLog {
+  id        String        @id @default(cuid())
+  userId    String?
+  event     SecurityEvent
+  success   Boolean
+  metadata  String?       @db.Text // Sanitized JSON, never contains secrets
+  ipAddress String?
+  createdAt DateTime      @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("security_audit_logs")
+}
+
+model OrderTimelineEvent {
+  id         String   @id @default(cuid())
+  orderId    String
+  status     String
+  actor      String   @default("SYSTEM") // ADMIN, SYSTEM, CUSTOMER
+  actorEmail String?
+  note       String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+  @@map("order_timeline_events")
+}
+
+model Category {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String?  @db.Text
+  image        String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorEmail String?
+  action     String   // PRODUCT_CREATE, PRODUCT_UPDATE, ORDER_STATUS_UPDATE, WALLET_APPROVE, etc.
+  targetType String   // ORDER, PRODUCT, USER, WALLET, COUPON, SETTINGS, INVENTORY
+  targetId   String?
+  details    String?  @db.Text // Sanitized JSON, never secrets
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+  @@map("admin_audit_logs")
+}
+
+// ─── EMAIL MARKETING MODELS ─────────────────────────────────
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  PROCESSING
+  SENDING
+  SENT
+  PARTIALLY_FAILED
+  FAILED
+  CANCELLED
+}
+
+enum RecipientStatus {
+  QUEUED
+  PROCESSING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+  SUPPRESSED
+  UNSUBSCRIBED
+}
+
+enum TemplateCategory {
+  PROMOTIONAL
+  NEW_PRODUCT
+  FLASH_SALE
+  COUPON
+  PRODUCT_UPDATE
+  NEWSLETTER
+  ANNOUNCEMENT
+  RE_ENGAGEMENT
+  SEASONAL
+  CUSTOM
+}
+
+enum SuppressionReason {
+  UNSUBSCRIBED
+  HARD_BOUNCE
+  COMPLAINT
+  MANUAL
+  INVALID_ADDRESS
+}
+
+model EmailCampaign {
+  id                String         @id @default(cuid())
+  name              String         // Internal campaign name
+  subject           String
+  preheader         String?
+  senderName        String         @default("AI Haat Offers")
+  fromEmail         String         @default("offers@aihaat.shop")
+  replyToEmail      String?
+  templateId        String?
+  contentHtml       String         @db.LongText
+  contentText       String?        @db.Text
+  audienceType      String         // ALL_SUBSCRIBED, ALL_CUSTOMERS, PURCHASED, NEVER_PURCHASED, SPECIFIC_PRODUCTS, SPECIFIC_CATEGORIES, SPENT_RANGE, REGISTERED_RANGE, CUSTOM_SEGMENT, MANUAL
+  audienceFilter    String?        @db.Text // JSON configuration of segmentation rules
+  segmentId         String?
+  status            CampaignStatus @default(DRAFT)
+  scheduledAt       DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  totalRecipients   Int            @default(0)
+  sentCount         Int            @default(0)
+  deliveredCount    Int            @default(0)
+  openedCount       Int            @default(0)
+  clickedCount      Int            @default(0)
+  bouncedCount      Int            @default(0)
+  failedCount       Int            @default(0)
+  unsubscribedCount Int            @default(0)
+  createdBy         String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  template   EmailTemplate?           @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  segment    EmailSegment?            @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+  recipients EmailCampaignRecipient[]
+  eventLogs  EmailEventLog[]
+
+  @@index([status, scheduledAt])
+  @@index([createdAt])
+  @@map("email_campaigns")
+}
+
+model EmailCampaignRecipient {
+  id            String          @id @default(cuid())
+  campaignId    String
+  email         String
+  name          String?
+  userId        String?
+  status        RecipientStatus @default(QUEUED)
+  messageId     String?
+  trackingToken String          @unique @default(cuid())
+  queuedAt      DateTime        @default(now())
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  openedAt      DateTime?
+  clickedAt     DateTime?
+  failedAt      DateTime?
+  bounceType    String?
+  errorMessage  String?         @db.Text
+  retryCount    Int             @default(0)
+  metadata      String?         @db.Text // JSON snapshot of customer data
+
+  campaign  EmailCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventLogs EmailEventLog[]
+
+  @@index([campaignId, status])
+  @@index([email])
+  @@index([trackingToken])
+  @@map("email_campaign_recipients")
+}
+
+model EmailTemplate {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  category    TemplateCategory @default(PROMOTIONAL)
+  subject     String?
+  contentHtml String           @db.LongText
+  thumbnail   String?
+  isDefault   Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  campaigns EmailCampaign[]
+
+  @@map("email_templates")
+}
+
+model EmailSegment {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  conditions  String   @db.Text // JSON array of filter conditions with AND/OR logic
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  campaigns EmailCampaign[]
+
+  @@map("email_segments")
+}
+
+model EmailContact {
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  name                 String?
+  phone                String?
+  userId               String?   @unique
+  isSubscribed         Boolean   @default(true)
+  promotionalConsent   Boolean   @default(true)
+  productUpdateConsent Boolean   @default(true)
+  newsletterConsent    Boolean   @default(true)
+  unsubscribeToken     String    @unique @default(cuid())
+  source               String    @default("REGISTRATION") // REGISTRATION, CHECKOUT, IMPORT, MANUAL
+  tags                 String    @default("[]") // JSON string array
+  lastEmailedAt        DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([isSubscribed, promotionalConsent])
+  @@map("email_contacts")
+}
+
+model EmailSuppression {
+  id        String            @id @default(cuid())
+  email     String            @unique
+  reason    SuppressionReason @default(UNSUBSCRIBED)
+  source    String            @default("USER_CLICK") // USER_CLICK, BOUNCE_WEBHOOK, ADMIN_MANUAL, SPAM_COMPLAINT
+  details   String?           @db.Text
+  createdAt DateTime          @default(now())
+
+  @@index([email, reason])
+  @@map("email_suppressions")
+}
+
+model EmailEventLog {
+  id          String   @id @default(cuid())
+  campaignId  String?
+  recipientId String?
+  email       String
+  event       String   // QUEUED, SENT, DELIVERED, OPENED, CLICKED, BOUNCED, FAILED, UNSUBSCRIBED, SPAM
+  url         String?  @db.Text // Clicked URL if applicable
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  data        String?  @db.Text // Raw provider/webhook payload
+  createdAt   DateTime @default(now())
+
+  campaign  EmailCampaign?          @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  recipient EmailCampaignRecipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  @@index([campaignId, event])
+  @@index([email, createdAt])
+  @@map("email_event_logs")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  eventName String   @db.VarChar(100)
+  orderId   String?  @db.VarChar(100)
+  provider  String   @db.VarChar(50)
+  eventId   String   @unique @db.VarChar(200)
+  payload   String   @db.Text
+  status    String   @default("PENDING") @db.VarChar(20)
+  attempts  Int      @default(0)
+  lastError String?  @db.Text
+  createdAt DateTime @default(now())
+  sentAt    DateTime?
+
+  @@index([status, attempts])
+  @@index([orderId])
+  @@map("analytics_events")
+}
+
+model RateLimitBucket {
+  key         String   @id @db.VarChar(191)
+  count       Int      @default(1)
+  windowStart DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+  @@map("rate_limit_buckets")
 }

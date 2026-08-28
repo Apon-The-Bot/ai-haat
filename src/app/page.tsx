@@ -1,43 +1,69 @@
-"use client";
-
 import React from "react";
-import { Hero } from "@/components/home/Hero";
-import { ProductSection } from "@/components/home/ProductSection";
-import { HowToOrder } from "@/components/home/HowToOrder";
-import { Partners } from "@/components/home/Partners";
-import { HOMEPAGE_SECTIONS } from "@/data/products";
-import { useProducts } from "@/context/ProductsContext";
+import type { Metadata } from "next";
+import { HomePageClient } from "@/components/home/HomePageClient";
+import {
+  SITE_URL,
+  safeJsonLd,
+  ORGANIZATION_SCHEMA,
+  WEBSITE_SCHEMA,
+} from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: "AI Haat — Bangladesh's #1 Digital Products & Software Marketplace",
+  description:
+    "Buy genuine AI subscriptions (ChatGPT Plus, Claude Pro, Midjourney), VPNs, Windows 11 retail keys, Office 365 & developer subscriptions with instant bKash, Nagad delivery in BDT.",
+  alternates: {
+    canonical: SITE_URL,
+  },
+  openGraph: {
+    title: "AI Haat — Premium Digital Products & Software Marketplace in Bangladesh",
+    description:
+      "Instant delivery of verified AI subscriptions, Windows license keys, VPNs, and OTT accounts in BDT with local payment.",
+    url: SITE_URL,
+    siteName: "AI Haat",
+    images: [
+      {
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AI Haat Marketplace Bangladesh",
+      },
+    ],
+    locale: "bn_BD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Haat — Premium Digital Products & Software Marketplace",
+    description:
+      "Buy ChatGPT Plus, Claude, Midjourney, Windows keys & developer tools in Bangladesh with instant delivery in BDT.",
+    images: ["/images/og-image.png"],
+    creator: "@aihaat_bd",
+  },
+};
 
 export default function HomePage() {
-  const { getProductsByCategory } = useProducts();
-
   return (
-    <div className="w-full bg-white">
-      {/* 1. HOMEPAGE HERO */}
-      <Hero />
+    <>
+      {/* Schema.org Organization Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: safeJsonLd(ORGANIZATION_SCHEMA),
+        }}
+      />
 
-      {/* 2. HOMEPAGE PRODUCT SECTIONS */}
-      <div className="max-w-[1500px] w-[calc(100%-24px)] md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)] mx-auto py-8 sm:py-10 space-y-6 sm:space-y-8">
-        {HOMEPAGE_SECTIONS.map((section) => {
-          const sectionProducts = getProductsByCategory(section.categoryKey);
-          if (!sectionProducts || sectionProducts.length === 0) return null;
-          return (
-            <ProductSection
-              key={section.id}
-              id={section.id}
-              title={section.title}
-              categoryKey={section.categoryKey}
-              products={sectionProducts}
-            />
-          );
-        })}
-      </div>
+      {/* Schema.org WebSite Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: safeJsonLd(WEBSITE_SCHEMA),
+        }}
+      />
 
-      {/* 3. HOMEPAGE HOW TO ORDER SECTION */}
-      <HowToOrder />
-
-      {/* 4. PARTNERS SECTION */}
-      <Partners />
-    </div>
+      {/* Main Interactive Homepage */}
+      <HomePageClient />
+    </>
   );
 }
+

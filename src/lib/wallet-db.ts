@@ -75,8 +75,11 @@ export function upsertLocalUser(user: Partial<LocalUser> & { email: string }): L
   const clean = user.email.toLowerCase().trim();
   const idx = users.findIndex((u) => u.email.toLowerCase().trim() === clean);
 
-  const isAdmin =
-    clean === "mdamanullahsheikhapon@gmail.com" || clean === "admin@aihaat.com";
+  const adminEmails = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isAdmin = adminEmails.includes(clean);
 
   const now = new Date().toISOString();
 

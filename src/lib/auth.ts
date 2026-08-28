@@ -1,19 +1,28 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
 import { sendWelcomeEmail } from "@/utils/email";
+import { prisma } from "@/lib/prisma";
 
-const adminEmails = (process.env.ADMIN_EMAILS || "mdamanullahsheikhapon@gmail.com,admin@aihaat.com")
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET must be set");
+}
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set");
+}
+
+const adminEmails = (process.env.ADMIN_EMAILS || "")
   .split(",")
-  .map((e) => e.trim().toLowerCase());
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "google_dummy_client_id",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "google_dummy_client_secret",
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       profile(profile) {
-        const isAdmin = adminEmails.includes(profile.email?.toLowerCase() || "");
+        const email = profile.email?.toLowerCase() || "";
+        const isAdmin = adminEmails.includes(email);
         return {
           id: profile.sub,
           name: profile.name,
@@ -24,46 +33,86 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email / Phone", type: "text" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email) return null;
-        const email = credentials.email.toLowerCase().trim();
-        const isAdmin = adminEmails.includes(email) || email.includes("admin");
-
-        return {
-          id: `usr-${Date.now()}`,
-          name: isAdmin ? "Admin" : (credentials?.email?.split("@")[0] || "User"),
-          email: email.includes("@") ? email : `${email}@aihaat.com`,
-          image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-          role: isAdmin ? "ADMIN" : "USER",
-          walletBalanceBDT: 0,
-        };
-      },
-    }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      // 1. Initial Sign-in: Resolve or create Canonical Prisma User
       if (user) {
-        token.id = user.id;
-        token.role = (user as any).role || "USER";
-        token.walletBalanceBDT = (user as any).walletBalanceBDT || 0;
+        const googleSub = user.id;
+        const email = (user.email || "").toLowerCase().trim();
+        const isAdmin = adminEmails.includes(email);
 
-        if (user.email && user.name) {
-          sendWelcomeEmail({ name: user.name, email: user.email }).catch(() => {});
+        if (email) {
+          try {
+            let dbUser = await prisma.user.findUnique({
+              where: { email },
+              include: { security: true },
+            });
+
+            let isNewUser = false;
+            if (!dbUser) {
+              dbUser = await prisma.user.create({
+                data: {
+                  email,
+                  name: user.name || null,
+                  image: user.image || null,
+                  role: isAdmin ? "ADMIN" : "USER",
+                  walletBalanceBDT: 0,
+                },
+                include: { security: true },
+              });
+              isNewUser = true;
+            }
+
+            const effectiveRole = dbUser.role || (isAdmin ? "ADMIN" : "USER");
+            token.appUserId = dbUser.id; // Canonical Prisma User ID
+            token.id = dbUser.id; // Canonical Prisma User ID
+            token.role = effectiveRole;
+            token.walletBalanceBDT = dbUser.walletBalanceBDT || 0;
+            token.mfaRequired = effectiveRole === "ADMIN" || (dbUser.security?.totpEnabled ?? false);
+            token.googleSub = googleSub;
+
+            // Only send welcome onboarding email once for newly created accounts
+            if (isNewUser && user.name) {
+              sendWelcomeEmail({ name: user.name, email }).catch(() => {});
+            }
+          } catch (err) {
+            console.error("[NextAuth JWT Sign-in Error]:", err);
+          }
+        }
+      } else if (!token.appUserId && token.email) {
+        // 2. Backward-Compatible Self-Healing for Legacy JWTs containing Google sub
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: (token.email as string).toLowerCase().trim() },
+            include: { security: true },
+          });
+          if (dbUser) {
+            token.appUserId = dbUser.id;
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+            token.walletBalanceBDT = dbUser.walletBalanceBDT || 0;
+            token.mfaRequired = dbUser.role === "ADMIN" || (dbUser.security?.totpEnabled ?? false);
+          }
+        } catch (err) {
+          console.warn("[NextAuth Legacy Token Self-Healing Warning]:", err);
         }
       }
+
+      // Guarantee canonical token.id maps to appUserId if available
+      if (token.appUserId) {
+        token.id = token.appUserId;
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id as string;
+        const canonicalId = (token.appUserId || token.id) as string;
+        (session.user as any).id = canonicalId;
         (session.user as any).role = (token.role as string) || "USER";
         (session.user as any).walletBalanceBDT = (token.walletBalanceBDT as number) || 0;
+        (session.user as any).mfaRequired = token.mfaRequired as boolean;
       }
       return session;
     },
@@ -74,5 +123,5 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET || "aihaat_super_secure_nextauth_jwt_secret_key_2026_xyz",
+  secret: process.env.NEXTAUTH_SECRET,
 };

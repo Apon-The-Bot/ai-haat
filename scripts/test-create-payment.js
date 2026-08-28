@@ -1,8 +1,9 @@
 const fetch = require('node-fetch');
 
 async function testCreate() {
-  const baseUrl = "https://pay.aihaat.shop";
-  const apiKey = "6efac52b56d3a19e2b7f39d54df43a8653e5dd21fe93249f84";
+  const baseUrl = process.env.PIPRAPAY_BASE_URL || "https://pay.aihaat.shop";
+  const apiKey = process.env.PIPRAPAY_API_KEY;
+  if (!apiKey) throw new Error("PIPRAPAY_API_KEY environment variable is required");
 
   const payload = {
     full_name: "Md.Amanullah Sheikh Apon",

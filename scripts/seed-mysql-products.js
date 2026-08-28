@@ -5,7 +5,7 @@ const path = require('path');
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: "mysql://u298980084_ai_haat_db:Rhythm%23Aihaatdb01@srv1497.hstgr.io:3306/u298980084_ai_haat"
+      url: process.env.DATABASE_URL || ""
     }
   }
 });

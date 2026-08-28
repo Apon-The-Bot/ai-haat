@@ -4,7 +4,7 @@ async function testFlow() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'MHS-PIPRAPAY-API-KEY': '6efac52b56d3a19e2b7f39d54df43a8653e5dd21fe93249f84',
+      'MHS-PIPRAPAY-API-KEY': process.env.PIPRAPAY_API_KEY,
     },
     body: JSON.stringify({
       amount: '150',

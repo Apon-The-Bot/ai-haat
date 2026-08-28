@@ -1,71 +1,44 @@
-import nodemailer from "nodemailer";
-import { generateDeliveryHtml } from "./emailTemplate";
+/**
+ * Compatibility bridge for @/utils/email
+ * Directs all email dispatching to @/lib/email-service
+ */
 
-export function getTransporter() {
-  const host = "smtp.hostinger.com";
-  const port = 465;
-  const user = "delivery@aihaat.shop";
-  const pass = "Rk#delivery@aihaat.sh0p";
+import {
+  sendOrderDeliveryEmail as dispatchDeliveryEmail,
+  sendSecurityOtpEmail as dispatchOtpEmail,
+  sendWelcomeEmail as dispatchWelcomeEmail,
+  sendWalletTopupEmail as dispatchWalletTopupEmail,
+  sendReplacementStatusEmail as dispatchReplacementStatusEmail,
+  getEmailTransporter,
+  isSmtpConfigured,
+  type OrderDeliveryEmailParams,
+  type WalletTopupEmailParams,
+  type ReplacementUpdateEmailParams,
+  type SecurityOtpEmailParams,
+} from "@/lib/email-service";
+import { generateDeliveryHtml } from "@/lib/email-templates";
 
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: true,
-    auth: {
-      user,
-      pass,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  } as any);
-}
-
-export { generateDeliveryHtml };
+export {
+  getEmailTransporter as getTransporter,
+  isSmtpConfigured,
+  generateDeliveryHtml,
+  dispatchDeliveryEmail,
+  dispatchOtpEmail,
+  dispatchWelcomeEmail,
+  dispatchWalletTopupEmail,
+  dispatchReplacementStatusEmail,
+};
 
 /**
  * Send Welcome Email to newly registered user
  */
-export async function sendWelcomeEmail(user: { name: string; email: string }) {
-  const transporter = getTransporter();
-
-  const html = `
-  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: auto; padding: 32px 24px; border: 1px solid #E2E8F0; border-radius: 20px; background-color: #ffffff;">
-    <div style="text-align: center; margin-bottom: 24px;">
-      <h1 style="color: #0F172A; margin: 0; font-size: 26px; font-weight: 900;">AI <span style="color: #FC5C03;">Haat</span></h1>
-      <p style="color: #64748B; font-size: 11px; text-transform: uppercase; margin: 4px 0 0 0; letter-spacing: 1px; font-weight: 700;">Official Marketplace</p>
-    </div>
-    
-    <div style="background-color: #FFF9F5; border: 1px solid #FFE4D6; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
-      <h2 style="color: #0F172A; font-size: 18px; margin: 0 0 8px 0; font-weight: 800;">Welcome, ${user.name}! 👋</h2>
-      <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0;">
-        Your AI Haat account is ready. You can now purchase premium AI tools, software subscriptions, and developer licenses with instant delivery and full replacement warranty.
-      </p>
-    </div>
-
-    <div style="text-align: center; margin-top: 32px; padding-top: 20px; border-top: 1px solid #E2E8F0;">
-      <p style="color: #94A3B8; font-size: 12px; margin: 0;">Need help? Reply to this email or contact us at <a href="mailto:delivery@aihaat.shop" style="color: #FC5C03; font-weight: 700;">delivery@aihaat.shop</a></p>
-    </div>
-  </div>
-  `;
-
-  try {
-    const info = await transporter.sendMail({
-      from: '"AI Haat Delivery" <delivery@aihaat.shop>',
-      to: user.email,
-      subject: "Welcome to AI Haat - Account Ready!",
-      html,
-    });
-    console.log(`[Welcome Email Sent] ID: ${info.messageId} to ${user.email}`);
-    return true;
-  } catch (error) {
-    console.error("[Welcome Email Error]:", error);
-    return false;
-  }
+export async function sendWelcomeEmail(user: { name: string; email: string }): Promise<boolean> {
+  const result = await dispatchWelcomeEmail(user);
+  return result.success;
 }
 
 /**
- * Send Delivery HTML Email via Hostinger SMTP
+ * Send Delivery HTML Email via Hostinger SMTP / Resilient Fallback
  */
 export async function sendOrderDeliveryEmail(data: {
   customerName: string;
@@ -77,22 +50,26 @@ export async function sendOrderDeliveryEmail(data: {
   downloadUrl?: string | null;
   instructions?: string | null;
   subject?: string;
+  items?: Array<{
+    productName: string;
+    variationName?: string;
+    quantity?: number;
+    priceBDT?: number;
+  }>;
+  totalAmountBDT?: number;
 }) {
-  const transporter = getTransporter();
-  const html = generateDeliveryHtml(data);
-  const subject = data.subject || `Your AI Haat Delivery: ${data.productName} (Order #${data.orderId})`;
+  return dispatchDeliveryEmail(data);
+}
 
-  try {
-    const info = await transporter.sendMail({
-      from: '"AI Haat Delivery" <delivery@aihaat.shop>',
-      to: data.customerEmail,
-      subject,
-      html,
-    });
-    console.log(`[Hostinger Email Sent] ID: ${info.messageId} to ${data.customerEmail}`);
-    return { success: true, messageId: info.messageId };
-  } catch (error: any) {
-    console.error("[Hostinger SMTP Error]:", error);
-    return { success: false, error: error.message };
-  }
+/**
+ * Send OTP Email for MFA/Security Actions
+ */
+export async function sendOtpEmail(to: string, otp: string, purpose: string): Promise<boolean> {
+  const result = await dispatchOtpEmail({
+    customerEmail: to,
+    otp,
+    purpose,
+    expiresInMinutes: 10,
+  });
+  return result.success;
 }

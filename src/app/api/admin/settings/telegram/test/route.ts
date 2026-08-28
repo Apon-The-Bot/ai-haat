@@ -1,9 +1,12 @@
+import { requireAdminMfa } from '@/lib/auth-guard';
 import { NextRequest, NextResponse } from "next/server";
 import { sendTelegramMessage } from "@/utils/telegram";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdminMfa();
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await req.json();
     const { botToken, chatId } = body;

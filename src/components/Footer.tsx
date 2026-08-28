@@ -55,12 +55,12 @@ export function Footer() {
             <div className="space-y-2 text-xs text-gray-300">
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[#FC5C03] shrink-0" />
-                <span>+880 1800-000000 / +880 1712-345678</span>
+                <span>+880 1712-345678 (WhatsApp Support)</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-[#FC5C03] shrink-0" />
-                <a href="mailto:support@aihaat.com" className="hover:text-white transition-colors">
-                  support@aihaat.com
+                <a href="mailto:support@aihaat.shop" className="hover:text-white transition-colors">
+                  support@aihaat.shop
                 </a>
               </div>
               <div className="flex items-center gap-2">
@@ -106,12 +106,12 @@ export function Footer() {
             </h3>
             <ul className="space-y-2 text-xs text-gray-400">
               <li>
-                <Link href="/about" className="hover:text-[#FC5C03] transition-colors">
+                <Link href="/privacy" className="hover:text-[#FC5C03] transition-colors">
                   প্রাইভেসি পলিসি
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-[#FC5C03] transition-colors">
+                <Link href="/terms" className="hover:text-[#FC5C03] transition-colors">
                   শর্তাবলী (Terms &amp; Conditions)
                 </Link>
               </li>
@@ -204,9 +204,9 @@ export function Footer() {
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500 text-center sm:text-left">
           <p>© 2026 AI Haat. All Rights Reserved.</p>
           <div className="flex items-center justify-center gap-3 text-gray-400">
-            <Link href="/about" className="hover:text-white transition-colors">প্রাইভেসি</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">প্রাইভেসি পলিসি</Link>
             <span>•</span>
-            <Link href="/about" className="hover:text-white transition-colors">শর্তাবলী</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">শর্তাবলী</Link>
             <span>•</span>
             <Link href="/order-tracking" className="hover:text-white transition-colors">অর্ডার ট্র্যাকিং</Link>
           </div>

@@ -1,8 +1,11 @@
 import { Currency } from "@/types";
 
-export const BDT_PER_USD = 125;
+export const BDT_PER_USD: number | null = process.env.NEXT_PUBLIC_BDT_PER_USD
+  ? Number(process.env.NEXT_PUBLIC_BDT_PER_USD)
+  : null;
 
-export function convertBDTtoUSD(bdt: number): number {
+export function convertBDTtoUSD(bdt: number): number | null {
+  if (!BDT_PER_USD || BDT_PER_USD <= 0) return null;
   return Number((bdt / BDT_PER_USD).toFixed(2));
 }
 
@@ -10,7 +13,9 @@ export function formatPrice(amountBDT: number | undefined | null, currency: Curr
   const val = Number(amountBDT) || 0;
   if (currency === "USD") {
     const usd = convertBDTtoUSD(val);
-    return `$${usd.toFixed(2)}`;
+    if (usd !== null) {
+      return `$${usd.toFixed(2)}`;
+    }
   }
   return `৳${val.toLocaleString("en-US")}`;
 }

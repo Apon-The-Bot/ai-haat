@@ -4,22 +4,29 @@ export interface Variation {
   id: string;
   name: string;
   priceBDT: number;
+  regularPriceBDT?: number | null;
+  salePriceBDT?: number | null;
   originalPriceBDT?: number;
-  description?: string;
+  description?: string | null;
   inStock: boolean;
   type?: "DURATION" | "CREDITS" | "TIER" | "CUSTOM";
-  duration?: string;
+  duration?: string | null;
   credits?: string | number;
 }
 
 export interface Review {
   id: string;
   author: string;
+  userName?: string;
   rating: number;
   date: string;
   comment: string;
   isVerifiedPurchase: boolean;
-  status?: "approved" | "pending";
+  status?: "approved" | "pending" | "rejected" | "APPROVED" | "PENDING" | "REJECTED";
+  productId?: string;
+  productName?: string;
+  userId?: string;
+  createdAt?: string;
 }
 
 export interface Product {
@@ -35,6 +42,8 @@ export interface Product {
   badge?: "Best Product" | "Best Selling" | "New" | "Offer" | string;
   minPriceBDT: number;
   maxPriceBDT: number;
+  regularPriceBDT?: number | null;
+  salePriceBDT?: number | null;
   variations: Variation[];
   shortDesc: string;
   descriptionBangla: string;
@@ -54,6 +63,11 @@ export interface Product {
   isBestProduct?: boolean;
   isBestSelling?: boolean;
   inStock?: boolean;
+  status?: "ACTIVE" | "DRAFT" | "INACTIVE" | "ARCHIVED";
+  visibility?: "PUBLIC" | "HIDDEN" | "DIRECT_LINK_ONLY";
+  fulfillmentMode?: "AUTO" | "MANUAL";
+  sku?: string;
+  digitalStock?: number;
 }
 
 export interface CartItem {
@@ -120,9 +134,11 @@ export interface ProofItem {
   productName: string;
   amountBDT: number;
   date: string;
-  type: "Subscription" | "License Key" | "Top-Up" | "Gift Card";
+  type: "Subscription" | "License Key" | "Top-Up" | "Gift Card" | string;
+  category?: "AI Tools" | "Subscriptions" | "Windows & Office" | "VPNs" | string;
   image: string;
   customerNote: string;
+  createdAt?: string;
 }
 
 export interface BlogItem {
@@ -135,4 +151,24 @@ export interface BlogItem {
   image: string;
   excerpt: string;
   content: string;
+}
+
+export interface ProductRequestItem {
+  id: string;
+  productName: string;
+  category?: string;
+  budgetBDT?: number | string | null;
+  targetBudget?: string | null;
+  duration?: string | null;
+  urgency?: "LOW" | "NORMAL" | "HIGH" | "URGENT" | string;
+  notes?: string | null;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
+  contact?: string | null;
+  details?: string | null;
+  status: "PENDING" | "IN_PROGRESS" | "FULFILLED" | "REJECTED";
+  userId?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

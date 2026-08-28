@@ -1,9 +1,13 @@
+import { requireAdminMfa } from '@/lib/auth-guard';
 import { NextResponse } from "next/server";
 import { sendOrderDeliveryEmail } from "@/utils/email";
 import { prisma } from "@/lib/prisma";
 import { updateOrderStatus } from "@/lib/orders-db";
+import { encryptCredential } from "@/lib/mfa/crypto";
 
 export async function POST(req: Request) {
+  const auth = await requireAdminMfa();
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await req.json();
     const {
@@ -56,13 +60,22 @@ export async function POST(req: Request) {
         });
 
         if (credentials || downloadUrl) {
+          const rawCreds = credentials || (downloadUrl ? `Download Link: ${downloadUrl}` : "Delivered");
+          let encCreds: string | null = null;
+          try {
+            encCreds = encryptCredential(rawCreds);
+          } catch (e) {
+            console.warn("[Delivery API] Encryption warning:", e);
+          }
+
           await prisma.deliveredKey.create({
             data: {
               orderId: orderRecord.id,
               userId: orderRecord.userId,
               productName: productName || "Delivered Subscription",
               accountType: variationName || "Digital Credentials",
-              credentials: credentials || (downloadUrl ? `Download Link: ${downloadUrl}` : "Delivered"),
+              credentials: "Encrypted at rest (Use Vault to view)", // Masked in legacy field
+              credentialsEncrypted: encCreds || rawCreds,
               instructions: instructions || null,
             },
           });
@@ -88,7 +101,7 @@ export async function POST(req: Request) {
     updateOrderStatus(orderId, {
       deliveryStatus: "Delivered",
       paymentStatus: "Completed",
-      credentialsDelivered: credentials || (downloadUrl ? `Download: ${downloadUrl}` : ""),
+      credentialsDelivered: "[DELIVERED - credentials encrypted in vault]",
       deliveryInstructions: instructions || "",
     });
 

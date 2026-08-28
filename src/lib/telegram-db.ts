@@ -8,6 +8,7 @@ export interface TelegramSettings {
   isEnabled: boolean;
   notifyOnOrder: boolean;
   notifyOnWallet: boolean;
+  notifyOnProductRequest?: boolean;
 }
 
 const defaultSettings: TelegramSettings = {
@@ -16,6 +17,7 @@ const defaultSettings: TelegramSettings = {
   isEnabled: true,
   notifyOnOrder: true,
   notifyOnWallet: true,
+  notifyOnProductRequest: true,
 };
 
 const dataDir = path.join(process.cwd(), "data");

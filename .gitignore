@@ -24,6 +24,10 @@
 !package.json
 !package-lock.json
 !tsconfig.json
+*Client ID Secret*.json
+client_secret*.json
+credentials*.json
+*.secret.json
 
 # debug
 npm-debug.log*
@@ -41,3 +45,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 scratch/
+
+# backups & logs
+/backups/
+/logs/
+*.enc
+*.dump.sql
+*.backup.sql
+*.meta.json
+!prisma/migrations/**/*.sql

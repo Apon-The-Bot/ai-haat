@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { CheckCircle2, Play, MousePointerClick, CreditCard, Send, X } from "lucide-react";
-import { SafeImage } from "@/components/SafeImage";
+import React from "react";
+import { CheckCircle2, MousePointerClick, CreditCard, Send } from "lucide-react";
 
 export function HowToOrder() {
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   const steps = [
     {
@@ -76,67 +74,40 @@ export function HowToOrder() {
           })}
         </div>
 
-        {/* Tutorial-Video Preview (~850px max width, 16:9) */}
-        <div className="max-w-[850px] mx-auto">
-          <div
-            onClick={() => setIsVideoModalOpen(true)}
-            className="relative aspect-video w-full rounded-2xl overflow-hidden border border-[#E8E8EE] cursor-pointer group bg-gray-900 shadow-md"
-          >
-            <SafeImage
-              src="/images/brand/banner.jpg"
-              alt="How to order video tutorial"
-              aspectRatio="16/9"
-              objectFit="cover"
-              className="opacity-75 group-hover:opacity-85 group-hover:scale-102 transition-all duration-300"
-              sizes="(max-width: 850px) 100vw, 850px"
-            />
-
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-14 h-14 rounded-full bg-[#FC5C03] text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-                <Play className="w-6 h-6 fill-current ml-1" />
-              </div>
+        {/* Instant Digital Delivery & Support Info Card */}
+        <div className="max-w-[1000px] mx-auto bg-gradient-to-r from-[#1A1D26] via-[#242936] to-[#1A1D26] rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-gray-800">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            <div className="md:col-span-8 space-y-2.5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FC5C03]/20 text-[#FC5C03] text-xs font-bold rounded-full border border-[#FC5C03]/30">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>১০০% নিরাপদ ও নির্ভরযোগ্য</span>
+              </span>
+              <h3 className="text-lg sm:text-xl font-black text-white">
+                অর্ডার পরবর্তী ইনস্ট্যান্ট ডেলিভারি যেভাবে পাবেন:
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                পেমেন্ট সম্পন্ন হওয়ার সাথে সাথেই আপনার অর্ডারটি স্বয়ংক্রিয়ভাবে ভেরিফাই হবে এবং ৫ থেকে ১৫ মিনিটের মধ্যে আপনার ড্যাশবোর্ডের <strong className="text-white font-bold">ডিজিটাল ভল্ট</strong> ও ইমেইলে সমস্ত ক্রেডেনশিয়াল পৌঁছে যাবে। কোনো সমস্যা হলে আমাদের হেল্পলাইন রয়েছে সার্বক্ষণিক সহায়তায়।
+              </p>
             </div>
 
-            <div className="absolute bottom-4 left-4 text-white">
-              <span className="text-[11px] font-semibold text-amber-300 block mb-0.5">ভিডিও টিউটোরিয়াল</span>
-              <h4 className="text-xs sm:text-sm font-bold">
-                ভিডিও দেখুন: কীভাবে অর্ডার করবেন
-              </h4>
+            <div className="md:col-span-4 flex flex-col sm:flex-row md:flex-col gap-2.5">
+              <a
+                href="/shop"
+                className="w-full py-3 px-4 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs sm:text-sm font-bold rounded-xl text-center shadow-md transition-all flex items-center justify-center gap-1.5"
+              >
+                <span>প্রোডাক্ট অর্ডার করুন</span>
+              </a>
+              <a
+                href="/order-tracking"
+                className="w-full py-3 px-4 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-bold rounded-xl text-center border border-white/20 transition-all flex items-center justify-center gap-1.5"
+              >
+                <span>অর্ডার স্ট্যাটাস দেখুন</span>
+              </a>
             </div>
           </div>
         </div>
 
       </div>
-
-      {/* Video Modal */}
-      {isVideoModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-3xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
-            <div className="p-3.5 flex items-center justify-between bg-gray-900 text-white">
-              <h3 className="text-xs sm:text-sm font-bold">
-                কীভাবে অর্ডার করবেন - এআই হাট টিউটোরিয়াল
-              </h3>
-              <button
-                onClick={() => setIsVideoModalOpen(false)}
-                className="p-1 rounded-full text-gray-400 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="relative aspect-video w-full bg-black">
-              <iframe
-                className="w-full h-full"
-                src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1"
-                title="AI Haat Tutorial"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

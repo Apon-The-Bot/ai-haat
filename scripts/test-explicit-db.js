@@ -1,7 +1,10 @@
 const { PrismaClient } = require('@prisma/client');
 
 function getDatabaseUrl() {
-  let url = process.env.DATABASE_URL || "mysql://u298980084_ai_haat_db:Rhythm%23Aihaatdb01@srv1497.hstgr.io:3306/u298980084_ai_haat";
+  let url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL environment variable is required");
+  }
   if (url.includes("Rhythm#Aihaatdb01")) {
     url = url.replace("Rhythm#Aihaatdb01", "Rhythm%23Aihaatdb01");
   }

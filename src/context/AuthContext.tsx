@@ -20,6 +20,9 @@ interface AuthContextType {
   logout: () => void;
   rechargeWallet: (amountBDT: number) => void;
   refreshUser: () => Promise<void>;
+  mfaRequired: boolean;
+  mfaVerified: boolean;
+  isMfaPending: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,7 +33,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [redirectCallbackUrl, setRedirectCallbackUrl] = useState<string | null>(null);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaVerified, setMfaVerified] = useState(false);
   const { showToast } = useToast();
+
+  const isMfaPending = mfaRequired && !mfaVerified;
 
   const refreshUser = useCallback(async () => {
     try {
@@ -54,6 +61,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return next;
           });
         }
+        if (data.mfaRequired !== undefined) {
+          setMfaRequired(!!data.mfaRequired);
+        } else if (data.totpEnabled !== undefined) {
+          setMfaRequired(!!data.totpEnabled);
+        }
+        if (data.mfaVerified !== undefined) {
+          setMfaVerified(!!data.mfaVerified);
+        }
       }
     } catch (e) {
       console.debug("Refresh user error:", e);
@@ -63,20 +78,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sync NextAuth Google session with AuthContext
   useEffect(() => {
     if (session?.user) {
-      const email = session.user.email?.toLowerCase() || "";
-      const isAdmin =
-        (session.user as any).role === "ADMIN" ||
-        email === "mdamanullahsheikhapon@gmail.com" ||
-        email === "admin@aihaat.com";
-
       const sessionUser = session.user;
       setUser((prev) => ({
-        id: (sessionUser as any).id || prev?.id || `google-${email}`,
+        id: (sessionUser as any).id || prev?.id || `google-${sessionUser.email}`,
         name: sessionUser.name || prev?.name || "AI Haat Member",
         email: sessionUser.email || prev?.email || "",
         phone: prev?.phone || "",
         avatar: sessionUser.image || prev?.avatar || undefined,
-        role: isAdmin ? "ADMIN" : "USER",
+        role: (sessionUser as any).role || "USER",
         walletBalanceBDT: prev?.walletBalanceBDT ?? (sessionUser as any).walletBalanceBDT ?? 0,
       }));
       refreshUser();
@@ -105,53 +114,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = (phoneOrEmail: string, redirectUrl?: string) => {
-    const email = phoneOrEmail.toLowerCase();
-    const isAdmin =
-      email === "mdamanullahsheikhapon@gmail.com" ||
-      email === "admin@aihaat.com";
-
-    const loggedUser: User = {
-      id: `usr_${Date.now().toString().slice(-5)}`,
-      name: email.includes("@") ? email.split("@")[0] : "AI Haat Member",
-      email: email.includes("@") ? email : `${email}@user.aihaat.com`,
-      phone: email.includes("@") ? "" : email,
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-      role: isAdmin ? "ADMIN" : "USER",
-      walletBalanceBDT: 0,
-    };
-    setUser(loggedUser);
-    localStorage.setItem("aihaat_user", JSON.stringify(loggedUser));
-    setIsAuthModalOpen(false);
-    showToast(`স্বাগতম, ${loggedUser.name}!`, "success");
-
-    const target = redirectUrl || redirectCallbackUrl;
-    if (target && typeof window !== "undefined") {
-      window.location.href = target;
-    }
+    openLoginModal(redirectUrl);
   };
 
   const register = (name: string, email: string, phone: string, redirectUrl?: string) => {
-    const isAdmin = email.toLowerCase() === "mdamanullahsheikhapon@gmail.com";
-    const newUser: User = {
-      id: `usr_${Date.now().toString().slice(-5)}`,
-      name,
-      email,
-      phone,
-      role: isAdmin ? "ADMIN" : "USER",
-      walletBalanceBDT: 0,
-    };
-    setUser(newUser);
-    localStorage.setItem("aihaat_user", JSON.stringify(newUser));
-    setIsAuthModalOpen(false);
-    showToast(`অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!`, "success");
-
-    const target = redirectUrl || redirectCallbackUrl;
-    if (target && typeof window !== "undefined") {
-      window.location.href = target;
-    }
+    openRegisterModal(redirectUrl);
   };
 
   const logout = async () => {
+    try {
+      await fetch('/api/security/sessions/revoke', { method: 'POST' });
+    } catch (e) {
+      console.debug("Logout session revoke error:", e);
+    }
     setUser(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem("aihaat_user");
@@ -194,6 +169,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         rechargeWallet,
         refreshUser,
+        mfaRequired,
+        mfaVerified,
+        isMfaPending,
       }}
     >
       {children}

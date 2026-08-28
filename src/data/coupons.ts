@@ -55,6 +55,20 @@ export const COUPONS: Coupon[] = [
     validUntil: "2026-09-30",
     isActive: true,
   },
+  {
+    id: "cp-5",
+    code: "SAVE5",
+    discountType: "PERCENTAGE",
+    discountValue: 5,
+    appliesTo: "ALL",
+    productIds: [],
+    minOrderBDT: 100,
+    maxDiscountBDT: 500,
+    usageLimit: 5000,
+    usedCount: 0,
+    validUntil: "2026-12-31",
+    isActive: true,
+  },
 ];
 
 export function validateCoupon(

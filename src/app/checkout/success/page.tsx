@@ -16,12 +16,13 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useToast } from "@/context/ToastContext";
+import PurchaseTracker from "@/components/analytics/PurchaseTracker";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId") || "AH-XXXXX";
-  const status = (searchParams.get("status") || "completed").toLowerCase();
-  const trxId = searchParams.get("trxId") || "";
+  const orderId = searchParams?.get("orderId") || "AH-XXXXX";
+  const status = (searchParams?.get("status") || "completed").toLowerCase();
+  const trxId = searchParams?.get("trxId") || "";
   const { language } = useLanguage();
   const { showToast } = useToast();
   const isBn = language === "bn";
@@ -143,18 +144,29 @@ function SuccessContent() {
           </Link>
         </div>
 
-        {/* Back to store */}
-        <div className="pt-2 border-t border-gray-100">
+        {/* WhatsApp Fast Support & Back to store */}
+        <div className="pt-2 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <a
+            href={`https://wa.me/8801712345678?text=${encodeURIComponent(
+              `Hello AI Haat Support! I have a question regarding my Order ID: ${orderId}`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-800 font-bold"
+          >
+            <span>💬 সহায়তার জন্য হোয়াটসঅ্যাপ</span>
+          </a>
+
           <Link
             href="/shop"
-            className="text-xs text-[#7A8190] hover:text-[#FC5C03] font-semibold inline-flex items-center gap-1 transition-colors"
+            className="text-[#7A8190] hover:text-[#FC5C03] font-semibold inline-flex items-center gap-1 transition-colors"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>{isBn ? "আরো কেনাকাটা করুন" : "Continue Shopping"}</span>
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
-
+        <PurchaseTracker orderId={orderId} status={status} />
       </div>
     </div>
   );

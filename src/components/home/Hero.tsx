@@ -71,11 +71,11 @@ export function Hero() {
               </div>
               <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-[#E8E8EE] shadow-2xs">
                 <Shield className="w-3.5 h-3.5 text-[#FC5C03]" />
-                <span>১০০% রিপ্লেসমেন্ট গ্যারান্টি</span>
+                <span>১০০% রিপ্লেসমেন্ট ওয়ারেন্টি</span>
               </div>
               <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-[#E8E8EE] shadow-2xs">
                 <Headphones className="w-3.5 h-3.5 text-[#FC5C03]" />
-                <span>২৪/৭ লাইভ সাপোর্ট</span>
+                <span>ডেডিকেটেড কাস্টমার সাপোর্ট</span>
               </div>
             </div>
 

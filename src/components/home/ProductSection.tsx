@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/ProductCard";
 import { ChevronRight } from "lucide-react";
+import { trackViewItemList } from "@/lib/analytics/client";
+import { sanitizeItem } from "@/lib/analytics/sanitize";
 
 interface ProductSectionProps {
   id?: string;
@@ -21,10 +23,37 @@ export function ProductSection({
   products,
   viewAllLink,
 }: ProductSectionProps) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const trackedRef = useRef(false);
+
+  useEffect(() => {
+    if (!products || products.length === 0) return;
+    if (trackedRef.current || !sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !trackedRef.current) {
+          trackedRef.current = true;
+          try {
+            const analyticsItems = products.slice(0, 12).map((p, i) => sanitizeItem({
+              id: p.id, name: p.name, category: p.category,
+              price: p.minPriceBDT, quantity: 1, index: i,
+              listId: `home_${categoryKey}`, listName: title,
+            }));
+            trackViewItemList(`home_${categoryKey}`, title, analyticsItems);
+          } catch {}
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, [products, categoryKey, title]);
+
   if (!products || products.length === 0) return null;
 
   return (
-    <section id={id} className="py-3.5 sm:py-5">
+    <section ref={sectionRef} id={id} className="py-3.5 sm:py-5">
       {/* SECTION HEADING STYLE */}
       <div className="flex items-center gap-2.5 mb-3.5 sm:mb-4">
         {/* Thin vertical orange accent line */}

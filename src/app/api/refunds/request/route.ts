@@ -2,6 +2,8 @@ import { requireAuth } from "@/lib/auth-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createRefundRequest } from "@/lib/commerce/refunds";
+import { isSameOriginMutation } from "@/lib/security/csrf";
+import { getClientIp, checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -33,9 +35,19 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isSameOriginMutation(req)) {
+    return NextResponse.json({ error: "Cross-site request forgery blocked" }, { status: 403 });
+  }
+
   const auth = await requireAuth();
   if (auth instanceof NextResponse) return auth;
   const { user } = auth;
+
+  const clientIp = getClientIp(req);
+  const limiter = checkRateLimit(`refund_req:${user.id || clientIp}`, 5, 10 * 60 * 1000);
+  if (!limiter.allowed) {
+    return rateLimitResponse(limiter.retryAfterMs, "Too many refund requests. Please wait.");
+  }
 
   try {
     const body = await req.json();

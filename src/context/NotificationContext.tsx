@@ -38,10 +38,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const knownDeliveredIdsRef = useRef<Set<string>>(new Set());
   const isFirstPollRef = useRef(true);
 
-  const isAdmin =
-    user?.role === "ADMIN" ||
-    user?.email === "mdamanullahsheikhapon@gmail.com" ||
-    user?.email === "admin@aihaat.com";
+  const isAdmin = user?.role === "ADMIN";
 
   // Check browser Notification API permission on mount
   useEffect(() => {
@@ -196,8 +193,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       }
     };
 
-    // Run poll every 4.5 seconds
-    intervalId = setInterval(pollOrders, 4500);
+    // Run poll every 30 seconds to optimize server resources
+    intervalId = setInterval(pollOrders, 30000);
     pollOrders();
 
     return () => clearInterval(intervalId);

@@ -1,9 +1,12 @@
+import { requireAdminMfa } from '@/lib/auth-guard';
 import { NextRequest, NextResponse } from "next/server";
 import { getTelegramSettings, saveTelegramSettings } from "@/lib/telegram-db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const auth = await requireAdminMfa();
+  if (auth instanceof NextResponse) return auth;
   try {
     const settings = getTelegramSettings();
     return NextResponse.json({
@@ -17,6 +20,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdminMfa();
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await req.json();
     const { botToken, chatId, isEnabled, notifyOnOrder, notifyOnWallet } = body;

@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient({
-  datasources: { db: { url: 'mysql://u298980084_pakna_user:Rk%23PaknaPay%402026%21Db@srv1497.hstgr.io:3306/u298980084_paknapay' } }
+  datasources: { db: { url: process.env.DATABASE_URL || "" } }
 });
 
 async function run() {

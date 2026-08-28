@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Product, Variation, CartItem } from "@/types";
 import { useToast } from "@/context/ToastContext";
+import { trackAddToCart, trackRemoveFromCart } from "@/lib/analytics/client";
+import { sanitizeItem } from "@/lib/analytics/sanitize";
 
 interface CartContextType {
   items: CartItem[];
@@ -10,6 +12,7 @@ interface CartContextType {
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
+  restoreCart: (items: CartItem[]) => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   toggleCart: () => void;
@@ -66,9 +69,36 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
 
     showToast(`Added "${product.name} (${variation.name})" to cart!`, "success");
+
+    try {
+      const analyticsItem = sanitizeItem({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        variant: variation.name,
+        price: variation.priceBDT,
+        quantity: quantity,
+      });
+      trackAddToCart(analyticsItem, variation.priceBDT * quantity);
+    } catch {}
   };
 
   const removeFromCart = (itemId: string) => {
+    try {
+      const removedItem = items.find(i => i.id === itemId);
+      if (removedItem) {
+        const analyticsItem = sanitizeItem({
+          id: removedItem.product.id,
+          name: removedItem.product.name,
+          category: removedItem.product.category,
+          variant: removedItem.selectedVariation.name,
+          price: removedItem.selectedVariation.priceBDT,
+          quantity: removedItem.quantity,
+        });
+        trackRemoveFromCart(analyticsItem, removedItem.selectedVariation.priceBDT * removedItem.quantity);
+      }
+    } catch {}
+
     setItems((prev) => prev.filter((item) => item.id !== itemId));
     showToast("Item removed from cart", "info");
   };
@@ -87,6 +117,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([]);
   };
 
+  const restoreCart = (newItems: CartItem[]) => {
+    if (Array.isArray(newItems) && newItems.length > 0) {
+      setItems(newItems);
+    }
+  };
+
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -103,6 +139,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         removeFromCart,
         updateQuantity,
         clearCart,
+        restoreCart,
         isCartOpen,
         setIsCartOpen,
         toggleCart,

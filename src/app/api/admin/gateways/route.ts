@@ -1,71 +1,116 @@
+import { requireAdmin, requireAdminMfa, requireRecentMfa } from '@/lib/auth-guard';
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { logAdminAudit } from "@/lib/audit-logger";
 
-// Prisma client pointing to PipraPay database
-const pipraPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: "mysql://u298980084_pakna_user:Rk%23PaknaPay%402026%21Db@srv1497.hstgr.io:3306/u298980084_paknapay",
+export const dynamic = "force-dynamic";
+
+let pipraPrisma: PrismaClient | null = null;
+if (process.env.PIPRAPAY_DATABASE_URL) {
+  pipraPrisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.PIPRAPAY_DATABASE_URL,
+      },
     },
+  });
+}
+
+const DEFAULT_METHODS = [
+  {
+    slug: "bkash-personal",
+    name: "bKash Personal",
+    display: "bKash",
+    logo: "/images/payments/bkash.png",
+    isActive: true,
+    mobileNumber: "01712345678",
   },
-});
+  {
+    slug: "nagad-personal",
+    name: "Nagad Personal",
+    display: "Nagad",
+    logo: "/images/payments/nagad.png",
+    isActive: true,
+    mobileNumber: "01712345678",
+  },
+  {
+    slug: "rocket-personal",
+    name: "Rocket Personal",
+    display: "Rocket",
+    logo: "/images/payments/rocket.png",
+    isActive: true,
+    mobileNumber: "01712345678",
+  },
+  {
+    slug: "upay-personal",
+    name: "Upay Personal",
+    display: "Upay",
+    logo: "/images/payments/upay.png",
+    isActive: false,
+    mobileNumber: "01712345678",
+  },
+];
 
 export async function GET() {
-  try {
-    const gateways: any[] = await pipraPrisma.$queryRawUnsafe(`
-      SELECT g.gateway_id, g.slug, g.name, g.display, g.logo, g.status, g.brand_id, p.value as mobile_number
-      FROM pp_gateways g
-      LEFT JOIN pp_gateways_parameter p 
-        ON g.gateway_id = p.gateway_id 
-        AND p.option_name = 'mobile_number'
-      WHERE g.tab = 'mfs'
-      GROUP BY g.slug, g.gateway_id
-    `);
+  const auth = await requireAdminMfa();
+  if (auth instanceof NextResponse) return auth;
 
-    // Standardize gateway items
-    const methods = [
-      {
-        slug: "bkash-personal",
-        name: "bKash Personal",
-        display: "bKash",
-        logo: "https://aihaat.shop/images/payments/bkash.png",
-        isActive: gateways.some((g) => g.slug.includes("bkash") && g.status === "active"),
-        mobileNumber: gateways.find((g) => g.slug.includes("bkash"))?.mobile_number || "01712345678",
-      },
-      {
-        slug: "nagad-personal",
-        name: "Nagad Personal",
-        display: "Nagad",
-        logo: "https://aihaat.shop/images/payments/nagad.png",
-        isActive: gateways.some((g) => g.slug.includes("nagad") && g.status === "active"),
-        mobileNumber: gateways.find((g) => g.slug.includes("nagad"))?.mobile_number || "01712345678",
-      },
-      {
-        slug: "rocket-personal",
-        name: "Rocket Personal",
-        display: "Rocket",
-        logo: "https://aihaat.shop/images/payments/rocket.png",
-        isActive: gateways.some((g) => g.slug.includes("rocket") && g.status === "active"),
-        mobileNumber: gateways.find((g) => g.slug.includes("rocket"))?.mobile_number || "01712345678",
-      },
-      {
-        slug: "upay-personal",
-        name: "Upay Personal",
-        display: "Upay",
-        logo: "https://aihaat.shop/images/payments/upay.png",
-        isActive: gateways.some((g) => g.slug.includes("upay") && g.status === "active"),
-        mobileNumber: gateways.find((g) => g.slug.includes("upay"))?.mobile_number || "01712345678",
-      },
-    ];
+  // 1. If PipraPay DB is configured, query live gateways
+  if (pipraPrisma) {
+    try {
+      const gateways: any[] = await pipraPrisma.$queryRaw(
+        Prisma.sql`
+        SELECT g.gateway_id, g.slug, g.name, g.display, g.logo, g.status, g.brand_id, p.value as mobile_number
+        FROM pp_gateways g
+        LEFT JOIN pp_gateways_parameter p 
+          ON g.gateway_id = p.gateway_id 
+          AND p.option_name = 'mobile_number'
+        WHERE g.tab = 'mfs'
+        GROUP BY g.slug, g.gateway_id
+      `
+      );
 
-    return NextResponse.json({ success: true, methods });
-  } catch (error: any) {
-    console.error("[Gateways GET Error]:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      const methods = DEFAULT_METHODS.map((dm) => {
+        const found = gateways.find((g) => g.slug.includes(dm.slug.split("-")[0]));
+        return {
+          ...dm,
+          isActive: found ? found.status === "active" : dm.isActive,
+          mobileNumber: found?.mobile_number || dm.mobileNumber,
+        };
+      });
+
+      return NextResponse.json({ success: true, methods, source: "piprapay_db" });
+    } catch (err) {
+      console.warn("[PipraPay DB Query failed, falling back to SiteSetting]:", err);
+    }
   }
+
+  // 2. Fallback to siteSetting table
+  try {
+    const setting = await prisma.siteSetting.findUnique({
+      where: { key: "PAYMENT_GATEWAYS" },
+    });
+
+    if (setting && setting.value) {
+      const parsed = JSON.parse(setting.value);
+      return NextResponse.json({ success: true, methods: parsed, source: "site_settings" });
+    }
+  } catch (err) {
+    console.warn("[SiteSetting Gateways fallback error]:", err);
+  }
+
+  // 3. Fallback to defaults
+  return NextResponse.json({ success: true, methods: DEFAULT_METHODS, source: "defaults" });
 }
 
 export async function POST(req: NextRequest) {
+  const adminAuth = await requireAdmin();
+  if (adminAuth instanceof NextResponse) return adminAuth;
+  const mfaAuth = await requireRecentMfa(10);
+  if (mfaAuth instanceof NextResponse) return mfaAuth;
+  const { user } = adminAuth;
+
   try {
     const body = await req.json();
     const { methods } = body;
@@ -74,29 +119,62 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid methods array" }, { status: 400 });
     }
 
-    const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+    // 1. Try update PipraPay DB if configured
+    if (pipraPrisma) {
+      try {
+        const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+        for (const m of methods) {
+          const status = m.isActive ? "active" : "inactive";
+          const mobile = m.mobileNumber || "01712345678";
+          const slugPattern = `%${m.slug.split("-")[0]}%`;
 
-    for (const m of methods) {
-      const status = m.isActive ? "active" : "inactive";
-      const mobile = m.mobileNumber || "01712345678";
+          await pipraPrisma.$queryRaw(Prisma.sql`
+            UPDATE pp_gateways
+            SET status = ${status}, updated_date = ${now}
+            WHERE slug LIKE ${slugPattern}
+          `);
 
-      // Update status in pp_gateways
-      await pipraPrisma.$queryRawUnsafe(`
-        UPDATE pp_gateways
-        SET status = '${status}', updated_date = '${now}'
-        WHERE slug LIKE '%${m.slug.split("-")[0]}%'
-      `);
-
-      // Update mobile_number in pp_gateways_parameter
-      await pipraPrisma.$queryRawUnsafe(`
-        UPDATE pp_gateways_parameter p
-        INNER JOIN pp_gateways g ON p.gateway_id = g.gateway_id
-        SET p.value = '${mobile}', p.updated_date = '${now}'
-        WHERE g.slug LIKE '%${m.slug.split("-")[0]}%' AND p.option_name = 'mobile_number'
-      `);
+          await pipraPrisma.$queryRaw(Prisma.sql`
+            UPDATE pp_gateways_parameter p
+            INNER JOIN pp_gateways g ON p.gateway_id = g.gateway_id
+            SET p.value = ${mobile}, p.updated_date = ${now}
+            WHERE g.slug LIKE ${slugPattern} AND p.option_name = 'mobile_number'
+          `);
+        }
+      } catch (pipraErr) {
+        console.warn("[PipraPay direct DB update failed, continuing with SiteSetting]:", pipraErr);
+      }
     }
 
-    return NextResponse.json({ success: true, message: "Gateways updated successfully" });
+    // 2. Persist in Prisma SiteSetting table
+    await prisma.siteSetting.upsert({
+      where: { key: "PAYMENT_GATEWAYS" },
+      create: {
+        key: "PAYMENT_GATEWAYS",
+        value: JSON.stringify(methods),
+      },
+      update: {
+        value: JSON.stringify(methods),
+      },
+    });
+
+    // 3. Log admin audit
+    await logAdminAudit({
+      actorId: user.id,
+      actorEmail: user.email,
+      action: "SETTINGS_GATEWAYS_UPDATE",
+      targetType: "SETTINGS",
+      targetId: "PAYMENT_GATEWAYS",
+      details: {
+        updatedMethods: methods.map((m: any) => ({
+          slug: m.slug,
+          isActive: m.isActive,
+          mobileNumber: m.mobileNumber,
+        })),
+      },
+    });
+
+    return NextResponse.json({ success: true, message: "Gateways updated and persisted successfully." });
   } catch (error: any) {
     console.error("[Gateways POST Error]:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

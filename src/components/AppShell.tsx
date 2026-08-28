@@ -6,6 +6,10 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
 import { AuthModal } from "@/components/AuthModal";
+import {
+  FloatingOfferBar,
+  FloatingWhatsAppWidget,
+} from "@/components/cro";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -22,11 +26,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <FloatingOfferBar />
       <Header />
       <main className="flex-1 w-full bg-white">{children}</main>
       <Footer />
       <CartDrawer />
       <AuthModal />
+      <FloatingWhatsAppWidget />
     </>
   );
 }
+

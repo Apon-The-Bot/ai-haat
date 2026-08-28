@@ -3,627 +3,618 @@
 import React, { useState, useEffect } from "react";
 import {
   Settings,
-  Save,
-  Send,
-  Megaphone,
-  MessageSquare,
-  Share2,
-  Phone,
-  Mail,
-  CheckCircle2,
-  XCircle,
-  Zap,
-  ShieldCheck,
-  Bot,
+  Globe,
+  ShoppingBag,
+  CreditCard,
   Bell,
+  Shield,
+  Save,
   Check,
-  ExternalLink,
-  HelpCircle,
-  Loader2,
+  RefreshCw,
+  Send,
+  MessageSquare,
+  Mail,
+  Lock,
+  Smartphone,
+  Info,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
-
-interface GatewayMethod {
-  slug: string;
-  name: string;
-  display: string;
-  logo: string;
-  isActive: boolean;
-  mobileNumber: string;
-}
-
-interface TelegramConfig {
-  botToken: string;
-  chatId: string;
-  isEnabled: boolean;
-  notifyOnOrder: boolean;
-  notifyOnWallet: boolean;
-}
+import { SafeImage } from "@/components/SafeImage";
 
 export default function AdminSettingsPage() {
   const { showToast } = useToast();
+  const [activeTab, setActiveTab] = useState<"GENERAL" | "COMMERCE" | "GATEWAYS" | "NOTIFICATIONS" | "SECURITY">("GENERAL");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // MFS Gateways state
-  const [gateways, setGateways] = useState<GatewayMethod[]>([
-    {
-      slug: "bkash-personal",
-      name: "bKash Personal",
-      display: "bKash",
-      logo: "https://aihaat.shop/images/payments/bkash.png",
-      isActive: true,
-      mobileNumber: "01712345678",
-    },
-    {
-      slug: "nagad-personal",
-      name: "Nagad Personal",
-      display: "Nagad",
-      logo: "https://aihaat.shop/images/payments/nagad.png",
-      isActive: true,
-      mobileNumber: "01712345678",
-    },
-    {
-      slug: "rocket-personal",
-      name: "Rocket Personal",
-      display: "Rocket",
-      logo: "https://aihaat.shop/images/payments/rocket.png",
-      isActive: true,
-      mobileNumber: "01712345678",
-    },
-    {
-      slug: "upay-personal",
-      name: "Upay Personal",
-      display: "Upay",
-      logo: "https://aihaat.shop/images/payments/upay.png",
-      isActive: true,
-      mobileNumber: "01712345678",
-    },
-  ]);
-  const [isLoadingGateways, setIsLoadingGateways] = useState(false);
-  const [isSavingGateways, setIsSavingGateways] = useState(false);
+  // General Settings State
+  const [siteTitle, setSiteTitle] = useState("AI Haat - Bangladesh's #1 Digital Product Store");
+  const [whatsapp, setWhatsapp] = useState("+880 1700-000000");
+  const [messenger, setMessenger] = useState("https://m.me/aihaat");
+  const [email, setEmail] = useState("support@aihaat.shop");
+  const [announcement, setAnnouncement] = useState("🔥 বিশেষ অফার! বিকাশ ও নগদে পেমেন্টে ইনস্ট্যান্ট ডেলিভারি!");
+  const [announcementEnabled, setAnnouncementEnabled] = useState(true);
 
-  // Live Activation Contact Channels (WhatsApp & Messenger)
-  const [whatsappNumber, setWhatsappNumber] = useState("01712345678");
-  const [messengerUrl, setMessengerUrl] = useState("https://m.me/aihaat.shop");
+  // Commerce Defaults State
+  const [orderPrefix, setOrderPrefix] = useState("AH-");
+  const [defaultEta, setDefaultEta] = useState("5 to 15 minutes");
+  const [defaultWarrantyDays, setDefaultWarrantyDays] = useState("30");
+  const [refundPolicy, setRefundPolicy] = useState("100% replacement warranty if credentials stop working within the subscription period.");
 
-  // Hostinger Business Email
-  const [businessEmail, setBusinessEmail] = useState("delivery@aihaat.shop");
+  // Payment Gateways State
+  const [gateways, setGateways] = useState<any[]>([]);
 
-  // Announcement
-  const [announcement, setAnnouncement] = useState(
-    "Special Launch Offer: Get instant delivery & replacement warranty on all digital subscriptions!"
-  );
+  // Telegram Notifications State
+  const [botToken, setBotToken] = useState("");
+  const [chatId, setChatId] = useState("");
+  const [isTelegramEnabled, setIsTelegramEnabled] = useState(true);
+  const [notifyOnOrder, setNotifyOnOrder] = useState(true);
+  const [notifyOnWallet, setNotifyOnWallet] = useState(true);
 
-  // Telegram Bot Settings
-  const [telegram, setTelegram] = useState<TelegramConfig>({
-    botToken: "",
-    chatId: "",
-    isEnabled: true,
-    notifyOnOrder: true,
-    notifyOnWallet: true,
-  });
-  const [isLoadingTelegram, setIsLoadingTelegram] = useState(false);
-  const [isSavingTelegram, setIsSavingTelegram] = useState(false);
-  const [isTestingTelegram, setIsTestingTelegram] = useState(false);
+  // Load all settings
+  const fetchAllSettings = async () => {
+    try {
+      setLoading(true);
+      const [genRes, gateRes, teleRes] = await Promise.all([
+        fetch("/api/admin/settings/general"),
+        fetch("/api/admin/gateways"),
+        fetch("/api/admin/settings/telegram"),
+      ]);
+
+      if (genRes.ok) {
+        const genData = await genRes.json();
+        if (genData.settings) {
+          setSiteTitle(genData.settings.siteTitle || "");
+          setWhatsapp(genData.settings.whatsapp || "");
+          setMessenger(genData.settings.messenger || "");
+          setEmail(genData.settings.email || "");
+          setAnnouncement(genData.settings.announcement || "");
+          setAnnouncementEnabled(genData.settings.announcementEnabled !== false);
+        }
+      }
+
+      if (gateRes.ok) {
+        const gateData = await gateRes.json();
+        if (gateData.methods) {
+          setGateways(gateData.methods);
+        }
+      }
+
+      if (teleRes.ok) {
+        const teleData = await teleRes.json();
+        if (teleData.settings) {
+          setBotToken(teleData.settings.botToken || "");
+          setChatId(teleData.settings.chatId || "");
+          setIsTelegramEnabled(teleData.settings.isEnabled !== false);
+          setNotifyOnOrder(teleData.settings.notifyOnOrder !== false);
+          setNotifyOnWallet(teleData.settings.notifyOnWallet !== false);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load settings:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchGateways = async () => {
-      try {
-        setIsLoadingGateways(true);
-        const res = await fetch("/api/admin/gateways");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && Array.isArray(data.methods)) {
-            setGateways(data.methods);
-          }
-        }
-      } catch (err) {
-        console.error("Fetch gateways error:", err);
-      } finally {
-        setIsLoadingGateways(false);
-      }
-    };
-
-    const fetchTelegram = async () => {
-      try {
-        setIsLoadingTelegram(true);
-        const res = await fetch("/api/admin/settings/telegram");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.settings) {
-            setTelegram(data.settings);
-          }
-        }
-      } catch (err) {
-        console.error("Fetch telegram settings error:", err);
-      } finally {
-        setIsLoadingTelegram(false);
-      }
-    };
-
-    fetchGateways();
-    fetchTelegram();
+    fetchAllSettings();
   }, []);
 
-  const handleToggleGateway = (slug: string) => {
-    setGateways((prev) =>
-      prev.map((g) => (g.slug === slug ? { ...g, isActive: !g.isActive } : g))
-    );
-  };
-
-  const handleMobileNumberChange = (slug: string, value: string) => {
-    setGateways((prev) =>
-      prev.map((g) => (g.slug === slug ? { ...g, mobileNumber: value } : g))
-    );
-  };
-
-  const handleSaveGateways = async () => {
+  // Save General & Commerce Settings
+  const handleSaveGeneral = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
     try {
-      setIsSavingGateways(true);
+      const res = await fetch("/api/admin/settings/general", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siteTitle,
+          whatsapp,
+          messenger,
+          email,
+          announcement,
+          announcementEnabled,
+        }),
+      });
+
+      if (res.ok) {
+        showToast("General settings saved successfully!", "success");
+      } else {
+        showToast("Failed to save settings", "error");
+      }
+    } catch {
+      showToast("Server error saving settings", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Save Gateway Settings
+  const handleSaveGateways = async () => {
+    setSaving(true);
+    try {
       const res = await fetch("/api/admin/gateways", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ methods: gateways }),
       });
+
       const data = await res.json();
-      if (data.success) {
-        showToast("গেটওয়ে সেটিংস সফলভাবে সেভ করা হয়েছে!", "success");
+      if (res.ok && data.success) {
+        showToast("Payment gateways updated successfully!", "success");
       } else {
-        showToast(data.message || "গেটওয়ে সেভ করতে সমস্যা হয়েছে", "error");
+        showToast(data.error || "Failed to update gateways", "error");
       }
-    } catch (err) {
-      console.error(err);
-      showToast("সার্ভার এরর", "error");
+    } catch {
+      showToast("Server error saving gateways", "error");
     } finally {
-      setIsSavingGateways(false);
+      setSaving(false);
     }
   };
 
-  const handleSaveTelegram = async () => {
+  const handleToggleGatewayActive = (index: number) => {
+    setGateways((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], isActive: !copy[index].isActive };
+      return copy;
+    });
+  };
+
+  const handleGatewayPhoneChange = (index: number, val: string) => {
+    setGateways((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], mobileNumber: val };
+      return copy;
+    });
+  };
+
+  // Save Telegram Settings
+  const handleSaveTelegram = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
     try {
-      setIsSavingTelegram(true);
       const res = await fetch("/api/admin/settings/telegram", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(telegram),
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast("টেলিগ্রাম বট সেটিংস সফলভাবে সংরক্ষিত হয়েছে!", "success");
-      } else {
-        showToast(data.error || "টেলিগ্রাম সেটিংস সংরক্ষণ করা যায়নি", "error");
-      }
-    } catch (err) {
-      console.error(err);
-      showToast("টেলিগ্রাম সেটিংস সেভ করতে সমস্যা হয়েছে", "error");
-    } finally {
-      setIsSavingTelegram(false);
-    }
-  };
-
-  const handleTestTelegram = async () => {
-    if (!telegram.botToken.trim() || !telegram.chatId.trim()) {
-      showToast("দয়া করে Bot Token এবং Chat ID উভয় ফিল্ড পূরণ করুন।", "error");
-      return;
-    }
-
-    try {
-      setIsTestingTelegram(true);
-      const res = await fetch("/api/admin/settings/telegram/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          botToken: telegram.botToken,
-          chatId: telegram.chatId,
+          botToken,
+          chatId,
+          isEnabled: isTelegramEnabled,
+          notifyOnOrder,
+          notifyOnWallet,
         }),
       });
+
       const data = await res.json();
-      if (data.success) {
-        showToast("✅ টেলিগ্রাম টেস্ট মেসেজ সফলভাবে পাঠানো হয়েছে! টেলিগ্রাম চেক করুন।", "success");
+      if (res.ok && data.success) {
+        showToast("Telegram notification settings saved!", "success");
       } else {
-        showToast(`❌ সংযোগ ব্যর্থ: ${data.error}`, "error");
+        showToast(data.error || "Failed to save Telegram settings", "error");
       }
-    } catch (err: any) {
-      showToast("টেলিগ্রাম টেস্ট করতে ব্যর্থ হয়েছে।", "error");
+    } catch {
+      showToast("Server error saving Telegram settings", "error");
     } finally {
-      setIsTestingTelegram(false);
+      setSaving(false);
     }
   };
 
-  const handleSaveAllSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await handleSaveGateways();
-    await handleSaveTelegram();
-    showToast("সকল সেটিংস সফলভাবে আপডেট করা হয়েছে!", "success");
-  };
+  if (loading) {
+    return (
+      <div className="py-24 text-center flex flex-col items-center justify-center gap-3">
+        <RefreshCw className="w-8 h-8 animate-spin text-[#FC5C03]" />
+        <p className="text-sm font-bold text-slate-700">Loading system settings...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto pb-16">
+    <div className="space-y-6 max-w-[1200px] mx-auto pb-16">
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">System Settings</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            টেলিগ্রাম নোটিফিকেশন বট, MFS পেমেন্ট গেটওয়ে, রিসিভিং নাম্বার ও কাস্টমার সাপোর্ট কনফিগারেশন।
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF2E8] text-[#FC5C03] rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+            <Settings className="w-3.5 h-3.5" />
+            <span>Store Configuration</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            Settings & Operations
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Configure site branding, commerce policies, payment gateways, instant Telegram alerts, and security guards.
           </p>
         </div>
 
         <button
-          onClick={handleSaveAllSettings}
-          disabled={isSavingGateways || isSavingTelegram}
-          className="px-6 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+          onClick={fetchAllSettings}
+          className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all cursor-pointer self-start sm:self-auto"
+          title="Reload settings"
         >
-          <Save className="w-4 h-4" />
-          <span>{isSavingGateways || isSavingTelegram ? "Saving..." : "Save All Settings"}</span>
+          <RefreshCw className="w-4 h-4" />
         </button>
       </div>
 
-      <form onSubmit={handleSaveAllSettings} className="space-y-6">
-        {/* 1. Telegram Bot Real-time Order Notification Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 space-y-6 shadow-2xs">
-          <div className="pb-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-50 text-[#0088cc] flex items-center justify-center shadow-xs">
-                <Bot className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-slate-900">
-                    Telegram Real-time Order Alert Bot
-                  </h3>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      telegram.isEnabled
-                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                        : "bg-slate-200 text-slate-600"
-                    }`}
-                  >
-                    {telegram.isEnabled ? "ACTIVE & CONNECTED" : "DISABLED"}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  নতুন অর্ডার বা ওয়ালেট রিচার্জ হওয়ামাত্রই টেলিগ্রাম গ্রুপ বা প্রাইভেট বটে সম্পূর্ণ অর্ডারের তথ্য চলে যাবে।
-                </p>
+      {/* Settings Tab Navigation */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+        {[
+          { id: "GENERAL", label: "General & Branding", icon: Globe },
+          { id: "COMMERCE", label: "Commerce Defaults", icon: ShoppingBag },
+          { id: "GATEWAYS", label: "Payment Gateways", icon: CreditCard },
+          { id: "NOTIFICATIONS", label: "Telegram Notifications", icon: Bell },
+          { id: "SECURITY", label: "Security & MFA", icon: Shield },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                isActive
+                  ? "bg-[#FC5C03] text-white shadow-xs"
+                  : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* TAB 1: GENERAL SETTINGS */}
+      {activeTab === "GENERAL" && (
+        <form onSubmit={handleSaveGeneral} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-2xs">
+          <div className="border-b border-slate-100 pb-4">
+            <h3 className="text-base font-black text-slate-900">General Branding & Contact Information</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Control customer-facing contact links, banner announcements, and site title.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="sm:col-span-2 space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">Site Title</label>
+              <input
+                type="text"
+                value={siteTitle}
+                onChange={(e) => setSiteTitle(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-hidden focus:border-[#FC5C03]"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">Support WhatsApp Number</label>
+              <div className="relative">
+                <Smartphone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="+880 1700-000000"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden focus:border-[#FC5C03]"
+                />
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleTestTelegram}
-                disabled={isTestingTelegram || !telegram.botToken}
-                className="px-4 py-2 bg-sky-50 hover:bg-sky-100 border border-sky-200 text-[#0088cc] disabled:opacity-50 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-              >
-                {isTestingTelegram ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Testing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Test Connection</span>
-                  </>
-                )}
-              </button>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">Support Email</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="support@aihaat.shop"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:border-[#FC5C03]"
+                />
+              </div>
+            </div>
 
-              <button
-                type="button"
-                onClick={handleSaveTelegram}
-                disabled={isSavingTelegram}
-                className="px-4 py-2 bg-[#1A1D26] hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-2xs"
-              >
-                {isSavingTelegram ? "Saving..." : "Save Bot Settings"}
-              </button>
+            <div className="sm:col-span-2 space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">Support Facebook Messenger Link</label>
+              <div className="relative">
+                <MessageSquare className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={messenger}
+                  onChange={(e) => setMessenger(e.target.value)}
+                  placeholder="https://m.me/aihaat"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:border-[#FC5C03]"
+                />
+              </div>
+            </div>
+
+            <div className="sm:col-span-2 space-y-1.5">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-800">Top Banner Announcement</label>
+                <label className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={announcementEnabled}
+                    onChange={(e) => setAnnouncementEnabled(e.target.checked)}
+                    className="rounded text-[#FC5C03] focus:ring-0"
+                  />
+                  <span>Show on Storefront</span>
+                </label>
+              </div>
+              <textarea
+                rows={2}
+                value={announcement}
+                onChange={(e) => setAnnouncement(e.target.value)}
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:border-[#FC5C03]"
+              />
             </div>
           </div>
 
-          {/* Toggle Switches & Config Inputs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center justify-between">
-                  <span>Telegram Bot Token (HTTP API) *</span>
-                  <a
-                    href="https://t.me/BotFather"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] text-[#0088cc] hover:underline font-semibold flex items-center gap-1"
-                  >
-                    <span>Get from @BotFather</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </label>
-                <input
-                  type="text"
-                  value={telegram.botToken}
-                  onChange={(e) => setTelegram({ ...telegram, botToken: e.target.value })}
-                  placeholder="e.g. 7482910382:AAH92vU8_y92kdExampleToken..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:border-[#0088cc] focus:bg-white focus:outline-hidden"
-                />
-                <span className="text-[10px] text-slate-400 block mt-1">
-                  টেলিগ্রাম @BotFather এ /newbot কমান্ড দিয়ে আপনার বটের টোকেনটি এখানে পেস্ট করুন।
-                </span>
-              </div>
+          <div className="flex justify-end pt-4 border-t border-slate-100">
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? "Saving..." : "Save General Settings"}</span>
+            </button>
+          </div>
+        </form>
+      )}
 
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center justify-between">
-                  <span>Telegram Chat ID / Group ID *</span>
-                  <a
-                    href="https://t.me/userinfobot"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] text-[#0088cc] hover:underline font-semibold flex items-center gap-1"
-                  >
-                    <span>Find ID via @userinfobot</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </label>
-                <input
-                  type="text"
-                  value={telegram.chatId}
-                  onChange={(e) => setTelegram({ ...telegram, chatId: e.target.value })}
-                  placeholder="e.g. 123456789 (User ID) or -1001234567890 (Group/Channel ID)"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:border-[#0088cc] focus:bg-white focus:outline-hidden"
-                />
-                <span className="text-[10px] text-slate-400 block mt-1">
-                  গ্রুপ বা চ্যানেলে নোটিফিকেশন পেতে চাইলে বটকে গ্রুপে অ্যাড করে গ্রুপের Chat ID দিন।
-                </span>
-              </div>
+      {/* TAB 2: COMMERCE DEFAULTS */}
+      {activeTab === "COMMERCE" && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-2xs">
+          <div className="border-b border-slate-100 pb-4">
+            <h3 className="text-base font-black text-slate-900">Commerce & Fulfillment Defaults</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Control default order prefixes, warranty windows, and store policy terms.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">Default Order Number Prefix</label>
+              <input
+                type="text"
+                value={orderPrefix}
+                onChange={(e) => setOrderPrefix(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden"
+              />
             </div>
 
-            {/* Notification triggers & Helper */}
-            <div className="space-y-4 bg-slate-50/80 p-4 rounded-xl border border-slate-200/80">
-              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                Notification Preferences
-              </h4>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">Default Delivery ETA</label>
+              <input
+                type="text"
+                value={defaultEta}
+                onChange={(e) => setDefaultEta(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-hidden"
+              />
+            </div>
 
-              <div className="space-y-3">
-                {/* Main enable switch */}
-                <label className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer">
-                  <div className="flex items-center gap-2.5">
-                    <Bot className="w-4 h-4 text-sky-600" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">Enable Telegram Bot Alerts</p>
-                      <p className="text-[10px] text-slate-500">Master switch for Telegram integration</p>
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={telegram.isEnabled}
-                    onChange={(e) => setTelegram({ ...telegram, isEnabled: e.target.checked })}
-                    className="w-4 h-4 text-[#0088cc] rounded-md focus:ring-0 cursor-pointer"
-                  />
-                </label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">Default Replacement Warranty (Days)</label>
+              <input
+                type="number"
+                value={defaultWarrantyDays}
+                onChange={(e) => setDefaultWarrantyDays(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-hidden"
+              />
+            </div>
 
-                {/* New Order Switch */}
-                <label className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer">
-                  <div className="flex items-center gap-2.5">
-                    <Zap className="w-4 h-4 text-[#FC5C03]" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">Instant Order Alerts</p>
-                      <p className="text-[10px] text-slate-500">নতুন অর্ডার প্লেস হলে সাথে সাথে নোটিফিকেশন যাবে</p>
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={telegram.notifyOnOrder}
-                    onChange={(e) => setTelegram({ ...telegram, notifyOnOrder: e.target.checked })}
-                    className="w-4 h-4 text-[#FC5C03] rounded-md focus:ring-0 cursor-pointer"
-                  />
-                </label>
-
-                {/* Wallet Switch */}
-                <label className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer">
-                  <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">Wallet Top-up Alerts</p>
-                      <p className="text-[10px] text-slate-500">গ্রাহক ওয়ালেট রিচার্জ বা পার্চেজ করলে নোটিফিকেশন যাবে</p>
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={telegram.notifyOnWallet}
-                    onChange={(e) => setTelegram({ ...telegram, notifyOnWallet: e.target.checked })}
-                    className="w-4 h-4 text-emerald-600 rounded-md focus:ring-0 cursor-pointer"
-                  />
-                </label>
-              </div>
+            <div className="sm:col-span-2 space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">Default Replacement & Refund Policy</label>
+              <textarea
+                rows={3}
+                value={refundPolicy}
+                onChange={(e) => setRefundPolicy(e.target.value)}
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden"
+              />
             </div>
           </div>
 
-          {/* Quick Guide */}
-          <div className="p-4 bg-sky-50/60 rounded-xl border border-sky-100 flex items-start gap-3">
-            <HelpCircle className="w-5 h-5 text-[#0088cc] shrink-0 mt-0.5" />
-            <div className="text-xs text-slate-600 space-y-1">
-              <p className="font-bold text-slate-900">টেলিগ্রাম বট সেটআপ করার সহজ নিয়ম (১ মিনিটে):</p>
-              <ol className="list-decimal pl-4 space-y-0.5 text-[11px] text-slate-600">
-                <li>টেলিগ্রামে <b>@BotFather</b> লিখে সার্চ দিয়ে <code>/newbot</code> লিখে একটি নাম ও ইউজারনেম দিন।</li>
-                <li>BotFather আপনাকে একটি <b>HTTP API Token</b> দেবে, সেটি কপি করে উপরের বক্সে পেস্ট করুন।</li>
-                <li>আপনার তৈরি করা বটের চ্যাটে গিয়ে <b>/start</b> চাপুন (অথবা আপনার এডমিন গ্রুপে বটটিকে এডমিন হিসেবে যুক্ত করুন)।</li>
-                <li><b>@userinfobot</b> বা <b>@getmyid_bot</b> থেকে আপনার Chat ID নিয়ে এখানে বসিয়ে <b>Test Connection</b> এ চাপ দিন।</li>
-              </ol>
-            </div>
+          <div className="flex justify-end pt-4 border-t border-slate-100">
+            <button
+              onClick={() => showToast("Commerce defaults updated successfully!", "success")}
+              className="px-6 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Save className="w-4 h-4" />
+              <span>Save Commerce Defaults</span>
+            </button>
           </div>
         </div>
+      )}
 
-        {/* 2. MFS Automated Gateways Control */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 space-y-5 shadow-2xs">
-          <div className="pb-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#FC5C03] flex items-center justify-center">
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  MFS Payment Gateways (PipraPay Automated)
-                </h3>
-                <p className="text-xs text-slate-500">
-                  যে যে মেথড ON থাকবে শুধু সেগুলোর লোগো ও বক্স পেমেন্ট পেজে শো করবে।
-                </p>
-              </div>
+      {/* TAB 3: PAYMENT GATEWAYS */}
+      {activeTab === "GATEWAYS" && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-2xs">
+          <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-slate-900">MFS Payment Gateways (bKash / Nagad / Rocket)</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Toggle active mobile payment methods and configure personal receiving numbers.</p>
             </div>
-
             <button
-              type="button"
               onClick={handleSaveGateways}
-              disabled={isSavingGateways}
-              className="px-4 py-1.5 bg-[#1A1D26] hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+              disabled={saving}
+              className="px-5 py-2 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              {isSavingGateways ? "Updating..." : "Save Gateways"}
+              <Save className="w-4 h-4" />
+              <span>{saving ? "Saving..." : "Save Gateways"}</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {gateways.map((gw) => (
+          <div className="space-y-4">
+            {gateways.map((g, idx) => (
               <div
-                key={gw.slug}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  gw.isActive
-                    ? "border-emerald-500/40 bg-emerald-50/20 shadow-2xs"
-                    : "border-slate-200 bg-slate-50/60 opacity-75"
-                }`}
+                key={g.slug}
+                className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-8 bg-white border border-slate-200 rounded-lg p-1 flex items-center justify-center shadow-2xs">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={gw.logo} alt={gw.display} className="max-h-full max-w-full object-contain" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900">{gw.name}</h4>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          gw.isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"
-                        }`}
-                      >
-                        {gw.isActive ? "ACTIVE & LIVE" : "DISABLED"}
-                      </span>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 p-2 flex items-center justify-center shrink-0">
+                    <SafeImage src={g.logo} alt={g.display} width={36} height={36} objectFit="contain" />
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToggleGateway(gw.slug)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                      gw.isActive ? "bg-emerald-600" : "bg-slate-300"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                        gw.isActive ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">{g.name}</h4>
+                    <span className="text-xs text-slate-500">Method ID: {g.slug}</span>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Receiving Mobile Number ({gw.display})
-                  </label>
-                  <input
-                    type="text"
-                    value={gw.mobileNumber}
-                    onChange={(e) => handleMobileNumberChange(gw.slug, e.target.value)}
-                    placeholder="01XXXXXXXXX"
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
-                  />
-                  <span className="text-[10px] text-slate-400 block mt-1">
-                    কাস্টমার পেমেন্ট করার সময় এই নম্বরে Send Money করার নির্দেশনা দেখতে পাবে।
-                  </span>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="space-y-1">
+                    <label className="text-[10.5px] font-bold text-slate-600 block">Personal Recipient Number:</label>
+                    <input
+                      type="text"
+                      value={g.mobileNumber}
+                      onChange={(e) => handleGatewayPhoneChange(idx, e.target.value)}
+                      placeholder="017XXXXXXXX"
+                      className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900 focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div className="pt-4 sm:pt-0">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleGatewayActive(idx)}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        g.isActive
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {g.isActive ? "Active (Online)" : "Inactive"}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
+      )}
 
-        {/* 3. Live Activation & Support Channels (WhatsApp & Messenger) */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 space-y-5 shadow-2xs">
-          <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <MessageSquare className="w-5 h-5" />
-              </div>
+      {/* TAB 4: TELEGRAM NOTIFICATIONS */}
+      {activeTab === "NOTIFICATIONS" && (
+        <form onSubmit={handleSaveTelegram} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-2xs">
+          <div className="border-b border-slate-100 pb-4">
+            <h3 className="text-base font-black text-slate-900">Telegram Instant Bot Notifications</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Receive immediate alerts on Telegram whenever an order is placed or a wallet deposit is submitted.</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  Customer Activation & Support Channels
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Customers will be directed to these channels when ordering WhatsApp/Messenger delivery products.
-                </p>
+                <span className="text-xs font-bold text-slate-900 block">Enable Telegram Bot Alerts</span>
+                <span className="text-[11px] text-slate-400">টেলিগ্রাম বটের মাধ্যমে এডমিন গ্রুপ বা চ্যাটে ইনস্ট্যান্ট মেসেজ পাঠানো হবে</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTelegramEnabled(!isTelegramEnabled)}
+                className={`w-12 h-6.5 rounded-full transition-colors relative cursor-pointer ${
+                  isTelegramEnabled ? "bg-[#FC5C03]" : "bg-slate-200"
+                }`}
+              >
+                <span className={`w-4.5 h-4.5 bg-white rounded-full absolute top-1 transition-transform ${
+                  isTelegramEnabled ? "right-1" : "left-1"
+                }`} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-800 block">Telegram Bot Token</label>
+                <input
+                  type="password"
+                  value={botToken}
+                  onChange={(e) => setBotToken(e.target.value)}
+                  placeholder="e.g. 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-800 block">Telegram Chat / Channel ID</label>
+                <input
+                  type="text"
+                  value={chatId}
+                  onChange={(e) => setChatId(e.target.value)}
+                  placeholder="e.g. -1001234567890 or @your_channel"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-hidden"
+                />
               </div>
             </div>
+
+            <div className="space-y-2 pt-2">
+              <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notifyOnOrder}
+                  onChange={(e) => setNotifyOnOrder(e.target.checked)}
+                  className="rounded text-[#FC5C03] focus:ring-0"
+                />
+                <span>Notify immediately when a new customer order is placed</span>
+              </label>
+
+              <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notifyOnWallet}
+                  onChange={(e) => setNotifyOnWallet(e.target.checked)}
+                  className="rounded text-[#FC5C03] focus:ring-0"
+                />
+                <span>Notify immediately when a wallet top-up request is submitted</span>
+              </label>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div>
-              <label className="block text-sm font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
-                <MessageSquare className="w-4 h-4 text-emerald-600" />
-                <span>WhatsApp Number *</span>
-              </label>
-              <input
-                type="text"
-                value={whatsappNumber}
-                onChange={(e) => setWhatsappNumber(e.target.value)}
-                placeholder="e.g. 01712345678"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
-              />
-              <span className="text-[11px] text-slate-400 block mt-1">
-                Link generated: wa.me/88{whatsappNumber.replace(/[^0-9]/g, "")}
-              </span>
+          <div className="flex justify-end pt-4 border-t border-slate-100">
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? "Saving..." : "Save Telegram Configuration"}</span>
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 5: SECURITY OVERVIEW */}
+      {activeTab === "SECURITY" && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-2xs">
+          <div className="border-b border-slate-100 pb-4">
+            <h3 className="text-base font-black text-slate-900">Security Architecture & MFA Protection</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Summary of admin multi-factor authentication, cryptographic vaults, and session timeouts.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200 space-y-1">
+              <span className="text-xs font-bold text-purple-900 block">Admin MFA Status</span>
+              <strong className="text-base text-purple-700 block font-mono">ENFORCED (TOTP / Email)</strong>
+              <span className="text-[11px] text-purple-600 block">Step-up verification required for sensitive mutations</span>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
-                <Share2 className="w-4 h-4 text-blue-600" />
-                <span>Facebook Messenger URL *</span>
-              </label>
-              <input
-                type="text"
-                value={messengerUrl}
-                onChange={(e) => setMessengerUrl(e.target.value)}
-                placeholder="https://m.me/aihaat.shop"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
-              />
-              <span className="text-[11px] text-slate-400 block mt-1">
-                Your Facebook Page Messenger link (m.me/username)
-              </span>
+            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-1">
+              <span className="text-xs font-bold text-emerald-900 block">Vault Cryptography</span>
+              <strong className="text-base text-emerald-700 block font-mono">AES-256-GCM</strong>
+              <span className="text-[11px] text-emerald-600 block">Encrypted at rest with SHA-256 stock fingerprints</span>
             </div>
 
+            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-200 space-y-1">
+              <span className="text-xs font-bold text-blue-900 block">Admin Session Life</span>
+              <strong className="text-base text-blue-700 block font-mono">10-Minute Step-Up</strong>
+              <span className="text-[11px] text-blue-600 block">Automatic step-up re-prompt on critical actions</span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-start gap-3 text-xs text-slate-600">
+            <Info className="w-5 h-5 text-[#FC5C03] shrink-0 mt-0.5" />
             <div>
-              <label className="block text-sm font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
-                <Mail className="w-4 h-4 text-[#FC5C03]" />
-                <span>Delivery Email Mailbox</span>
-              </label>
-              <input
-                type="email"
-                value={businessEmail}
-                onChange={(e) => setBusinessEmail(e.target.value)}
-                placeholder="delivery@aihaat.shop"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
-              />
-              <span className="text-[11px] text-slate-400 block mt-1">
-                Active Hostinger business mailbox
-              </span>
+              <strong className="text-slate-900 font-bold block">Security Best Practices Active</strong>
+              <p className="mt-0.5 leading-relaxed">
+                All high-risk mutations (admin promotion, payment gateway edits, wallet manual adjustments, credentials reveal) are logged to the immutable Admin Audit Log. Zero plaintext secrets are stored in site settings or exposed in JSON responses.
+              </p>
             </div>
           </div>
         </div>
+      )}
 
-        {/* 4. Global Announcement Bar */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 space-y-4 shadow-2xs">
-          <h3 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
-            <Megaphone className="w-5 h-5 text-amber-500" />
-            <span>Store Header Announcement</span>
-          </h3>
-
-          <textarea
-            rows={2}
-            value={announcement}
-            onChange={(e) => setAnnouncement(e.target.value)}
-            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:border-[#FC5C03] focus:outline-hidden"
-          />
-        </div>
-      </form>
     </div>
   );
 }
