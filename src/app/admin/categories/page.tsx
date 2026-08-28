@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { SafeImage } from "@/components/SafeImage";
+import ImageUploadDropzone from "@/components/admin/ImageUploadDropzone";
 
 interface Category {
   id: string;
@@ -373,15 +374,12 @@ export default function AdminCategoriesPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                  Image URL
-                </label>
-                <input
-                  type="url"
+                <ImageUploadDropzone
                   value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:border-[#FC5C03] focus:ring-2 focus:ring-[#FC5C03]/20 transition-all outline-none"
-                  placeholder="https://..."
+                  onChange={(url) => setFormData({ ...formData, image: url })}
+                  label="ক্যাটাগরি ইমেজ / আইকন"
+                  hint="JPG, PNG, WebP আপলোড করুন — স্বয়ংক্রিয়ভাবে অপ্টিমাইজড হবে"
+                  options={{ maxWidth: 800, maxHeight: 800, quality: 0.85 }}
                 />
               </div>
 

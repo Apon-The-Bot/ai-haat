@@ -17,6 +17,8 @@ import {
   EyeOff,
   Search
 } from "lucide-react";
+import ImageUploadDropzone from "@/components/admin/ImageUploadDropzone";
+import GalleryImageUploader from "@/components/admin/GalleryImageUploader";
 
 export default function ProductEditorForm({
   initialData = null,
@@ -692,63 +694,26 @@ export default function ProductEditorForm({
 
           {/* MEDIA TAB */}
           {activeTab === "media" && (
-            <div className="space-y-8">
+            <div className="space-y-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Primary Thumbnail URL</label>
-                <div className="flex space-x-4 items-start">
-                  <div className="flex-grow">
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border rounded-md"
-                      value={formData.image}
-                      onChange={(e) => handleChange("image", e.target.value)}
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <div className="w-32 h-32 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {formData.image ? (
-                      <img src={formData.image} alt="Thumbnail Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <ImageIcon className="w-8 h-8 text-gray-400" />
-                    )}
-                  </div>
-                </div>
+                <ImageUploadDropzone
+                  value={formData.image}
+                  onChange={(url) => handleChange("image", url)}
+                  label="প্রাইমারি থাম্বনেইল ইমেজ (Primary Thumbnail)"
+                  hint="JPG, PNG, WebP ইত্যাদি ফাইল আপলোড করুন — স্বয়ংক্রিয়ভাবে সুপার-কম্প্যাক্ট WebP ফরম্যাটে সেভ হবে"
+                  options={{ maxWidth: 1200, maxHeight: 1200, quality: 0.82 }}
+                />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Gallery Images</label>
-                <div className="space-y-3">
-                  {formData.gallery.map((url: string, index: number) => (
-                    <div key={index} className="flex space-x-3 items-center">
-                      <input
-                        type="text"
-                        className="flex-grow px-3 py-2 border rounded-md text-sm"
-                        value={url}
-                        onChange={(e) => updateGalleryImage(index, e.target.value)}
-                        placeholder="https://..."
-                      />
-                      {url && (
-                        <div className="w-10 h-10 bg-gray-100 border rounded overflow-hidden flex-shrink-0">
-                          <img src={url} alt="" className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => removeGalleryImage(index)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-md"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addGalleryImage}
-                    className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> Add Image URL
-                  </button>
-                </div>
+              <div className="pt-6 border-t border-slate-100">
+                <GalleryImageUploader
+                  images={formData.gallery}
+                  onChange={(imgs) => {
+                    setFormData((prev) => ({ ...prev, gallery: imgs }));
+                    setHasUnsavedChanges(true);
+                  }}
+                  label="প্রোডাক্ট গ্যালারি ইমেজ (Gallery Images)"
+                />
               </div>
             </div>
           )}

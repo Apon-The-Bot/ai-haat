@@ -897,10 +897,10 @@ function AdminInventoryContent() {
       {/* Revealed Credential Modal */}
       {revealedCredential && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-4 relative">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-100 space-y-4 relative">
             <button
               onClick={() => setRevealedCredential(null)}
-              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 rounded-full bg-slate-50 hover:bg-slate-100"
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 rounded-full bg-slate-50 hover:bg-slate-100 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -912,7 +912,7 @@ function AdminInventoryContent() {
 
             <h3 className="text-base font-black text-slate-900">ডিজিটাল ক্রেডেনশিয়াল / কি</h3>
 
-            <div className="p-4 bg-[#0F172A] rounded-2xl text-emerald-400 font-mono text-sm whitespace-pre-wrap select-all leading-relaxed border border-slate-800 shadow-inner">
+            <div className="p-4 bg-[#0F172A] rounded-2xl text-emerald-400 font-mono text-xs sm:text-sm whitespace-pre-wrap select-all leading-relaxed border border-slate-800 shadow-inner break-all overflow-y-auto max-h-64">
               {revealedCredential.text}
             </div>
 

@@ -19,9 +19,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "File size exceeds 5MB limit." }, { status: 400 });
+      return NextResponse.json({ error: "File size exceeds 20MB limit." }, { status: 400 });
     }
 
     if (file.size === 0) {
@@ -43,8 +43,9 @@ export async function POST(req: NextRequest) {
       png: ".png",
       webp: ".webp",
       gif: ".gif",
+      svg: ".svg",
     };
-    const safeExt = extensionMap[magicCheck.detectedFormat || ""] || ".png";
+    const safeExt = extensionMap[magicCheck.detectedFormat || ""] || ".webp";
 
     // Create uploads directory if not exists
     const uploadsDir = path.join(process.cwd(), "public", "uploads");

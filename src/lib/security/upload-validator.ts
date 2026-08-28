@@ -49,5 +49,11 @@ export function validateImageBuffer(buffer: Buffer): { valid: boolean; detectedF
     return { valid: true, detectedFormat: "webp" };
   }
 
+  // 5. SVG
+  const headText = buffer.slice(0, 200).toString("utf-8").toLowerCase();
+  if (headText.includes("<svg") || headText.includes("<?xml") && headText.includes("svg")) {
+    return { valid: true, detectedFormat: "svg" };
+  }
+
   return { valid: false, error: "Invalid file content. Real image format signature required." };
 }

@@ -1,7 +1,21 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Search, ShieldCheck, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import {
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  PackageCheck,
+  Clock,
+  ShieldAlert,
+  X,
+  User,
+  Mail,
+  Phone,
+} from "lucide-react";
 
 export default function AdminReplacementsPage() {
   const [activeTab, setActiveTab] = useState("ALL");
@@ -18,11 +32,11 @@ export default function AdminReplacementsPage() {
   const [adminOverrideReason, setAdminOverrideReason] = useState("");
 
   const tabs = [
-    { label: "All", value: "ALL" },
-    { label: "Requested", value: "REQUESTED" },
-    { label: "Under Review", value: "UNDER_REVIEW" },
-    { label: "Completed", value: "FULFILLED" },
-    { label: "Rejected", value: "REJECTED" },
+    { label: "সকল রিকোয়েস্ট (All)", value: "ALL" },
+    { label: "পেন্ডিং (Requested)", value: "REQUESTED" },
+    { label: "রিভিউতে আছে (Under Review)", value: "UNDER_REVIEW" },
+    { label: "সম্পন্ন (Completed)", value: "FULFILLED" },
+    { label: "বাতিলকৃত (Rejected)", value: "REJECTED" },
   ];
 
   const fetchRequests = useCallback(async () => {
@@ -33,7 +47,7 @@ export default function AdminReplacementsPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setRequests(data.requests || []);
+        setRequests(Array.isArray(data.requests) ? data.requests : []);
       } else {
         setError(data.error || "Failed to load replacement requests.");
       }
@@ -120,165 +134,241 @@ export default function AdminReplacementsPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 max-w-7xl">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Replacements Hub <span className="text-sm font-normal text-gray-500 ml-2">রিপ্লেসমেন্ট হাব</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF2E8] text-[#FC5C03] text-xs font-bold rounded-full uppercase tracking-wider mb-2">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Warranty Assurance Engine</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
+            রিপ্লেসমেন্ট হাব (Replacements Hub)
           </h1>
-          <p className="text-xs text-gray-500 mt-1">Review warranty claims and dispatch replacement digital licenses.</p>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            কাস্টমার ওয়ারেন্টি ক্লেইম পর্যালোচনা করুন এবং অটোমেটেড বা ম্যানুয়াল রিপ্লেসমেন্ট স্টক ডিসপ্যাচ করুন।
+          </p>
         </div>
-        <button
-          onClick={() => fetchRequests()}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition text-sm font-medium disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh Data
-        </button>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => fetchRequests()}
+            disabled={loading}
+            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <span>রিফ্রেশ</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-          <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">Pending Replacements</p>
-          <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{kpis.pending}</p>
+        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+          <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">
+            Pending Replacements
+          </span>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-3xl font-black text-slate-900">{kpis.pending}</span>
+            <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-md">অপেক্ষমান</span>
+          </div>
         </div>
-        <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-          <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Completed Replacements</p>
-          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{kpis.completed}</p>
+
+        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+          <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
+            Completed Replacements
+          </span>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-3xl font-black text-slate-900">{kpis.completed}</span>
+            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md">সফলভাবে সম্পন্ন</span>
+          </div>
         </div>
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-600 dark:text-red-400 font-medium">Rejected Claims</p>
-          <p className="text-2xl font-bold text-red-700 dark:text-red-300">{kpis.rejected}</p>
+
+        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+          <span className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">
+            Rejected Claims
+          </span>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-3xl font-black text-slate-900">{kpis.rejected}</span>
+            <span className="px-2 py-0.5 bg-rose-50 text-rose-700 text-xs font-bold rounded-md">বাতিলকৃত</span>
+          </div>
         </div>
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Replacement Rate</p>
-          <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{kpis.replacementRate}%</p>
+
+        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+          <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
+            Replacement Rate
+          </span>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-3xl font-black text-slate-900">{kpis.replacementRate}%</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-md">সাকসেস রেট</span>
+          </div>
         </div>
       </div>
 
-      {/* Filter and Search */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-        <div className="flex overflow-x-auto space-x-2 w-full sm:w-auto">
+      {/* Filter and Search Bar */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex overflow-x-auto space-x-1.5 w-full sm:w-auto pb-1 sm:pb-0">
           {tabs.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`px-4 py-2 rounded-md text-sm whitespace-nowrap font-medium transition ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 activeTab === tab.value
-                  ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-100 bg-slate-50"
               }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
-        <div className="w-full sm:w-64 relative">
+
+        <div className="w-full sm:w-72 relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Search Order, Email..."
+            placeholder="অর্ডার নম্বর, ইমেইল, প্রোডাক্ট সার্চ..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#FC5C03]"
           />
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
         </div>
       </div>
 
       {/* Content Area */}
       {loading ? (
-        <div className="p-12 text-center text-gray-500 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
-          Loading real-time replacement claims...
+        <div className="p-16 text-center text-slate-500 bg-white rounded-3xl border border-slate-200 shadow-xs space-y-3">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-[#FC5C03]" />
+          <p className="text-sm font-bold text-slate-800">রিপ্লেসমেন্ট ডেটা লোড হচ্ছে...</p>
         </div>
       ) : error ? (
-        <div className="p-6 text-center text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200">
-          <AlertCircle className="w-6 h-6 mx-auto mb-2" />
-          {error}
+        <div className="p-8 text-center text-red-700 bg-red-50 rounded-3xl border border-red-200">
+          <AlertCircle className="w-8 h-8 mx-auto mb-2 text-red-600" />
+          <p className="text-sm font-bold">{error}</p>
         </div>
       ) : filteredRequests.length === 0 ? (
-        <div className="p-12 text-center text-gray-500 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
-          <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-500" />
-          No replacement requests found in this view.
+        <div className="p-16 text-center text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-xs space-y-2">
+          <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-500" />
+          <h3 className="text-base font-bold text-slate-900">কোন রিপ্লেসমেন্ট রিকোয়েস্ট পাওয়া যায়নি</h3>
+          <p className="text-xs text-slate-500">এই ফিল্টারে বর্তমানে কোনো রিকোয়েস্ট নেই।</p>
         </div>
       ) : (
         <div className="space-y-4">
           {filteredRequests.map((req) => (
-            <div key={req.id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-900 dark:text-white">{req.orderNumber}</span>
-                    <span
-                      className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-                        req.status === "FULFILLED" || req.status === "COMPLETED"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : req.status === "REJECTED"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {req.status}
-                    </span>
+            <div
+              key={req.id}
+              className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-xs hover:border-[#FC5C03]/40 transition-all space-y-4"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono font-black text-sm text-slate-900 bg-slate-100 px-3 py-1 rounded-xl">
+                    #{req.orderNumber}
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-[11px] font-bold ${
+                      req.status === "FULFILLED" || req.status === "COMPLETED"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : req.status === "REJECTED"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-amber-100 text-amber-900"
+                    }`}
+                  >
+                    {req.status}
+                  </span>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold border ${
+                      req.isWarrantyValid
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-rose-50 text-rose-700 border-rose-200"
+                    }`}
+                  >
+                    {req.isWarrantyValid ? "Warranty Valid" : "Warranty Expired"}
+                  </span>
+                </div>
+
+                <div className="text-xs text-slate-400 font-medium">
+                  রিকোয়েস্ট তারিখ: {req.createdAt ? new Date(req.createdAt).toLocaleDateString("bn-BD") : "—"}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* Customer Details */}
+                <div className="space-y-1.5 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">কাস্টমার তথ্য</span>
+                  <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{req.customerName}</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{req.customerName}</p>
-                  <p className="text-xs text-gray-500">{req.customerEmail}</p>
-                  {req.customerPhone && <p className="text-xs text-gray-500">{req.customerPhone}</p>}
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Product & Delivery</p>
-                  <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
-                    {req.productName} {req.variationName ? `(${req.variationName})` : ""}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">Delivered: {req.deliveredAt}</p>
-                  <p className="text-xs">
-                    <span className="text-gray-500">Warranty:</span>
-                    <span className={`ml-1 font-semibold ${req.isWarrantyValid ? "text-emerald-600" : "text-rose-600"}`}>
-                      {req.isWarrantyValid ? "Valid" : "Expired"} (Expires: {req.warrantyExpiresAt})
-                    </span>
-                  </p>
-                </div>
-
-                <div className="space-y-1 text-sm">
-                  <p className="font-medium text-gray-900 dark:text-white">Claim Reason</p>
-                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{req.reason}</p>
-                  {req.description && <p className="text-xs text-gray-600 dark:text-gray-400 italic">"{req.description}"</p>}
-                </div>
-
-                <div className="flex flex-col gap-2 justify-center">
-                  {req.status === "REQUESTED" || req.status === "UNDER_REVIEW" ? (
-                    <>
-                      {req.isWarrantyValid ? (
-                        <button
-                          onClick={() => handleOpenModal("AUTO_DISPATCH", req)}
-                          className="w-full px-3 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition"
-                        >
-                          Approve & Auto-Dispatch
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleOpenModal("WARRANTY_OVERRIDE", req)}
-                          className="w-full px-3 py-2 text-xs font-medium text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-md transition border border-amber-300"
-                        >
-                          Warranty Override & Dispatch
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleOpenModal("REJECT", req)}
-                        className="w-full px-3 py-2 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition border border-red-200"
-                      >
-                        Reject Claim
-                      </button>
-                    </>
-                  ) : (
-                    <div className="text-center py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-700/50 rounded">
-                      Claim {req.status.toLowerCase()}
+                  <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{req.customerEmail}</span>
+                  </div>
+                  {req.customerPhone && (
+                    <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{req.customerPhone}</span>
                     </div>
                   )}
                 </div>
+
+                {/* Product & Warranty */}
+                <div className="space-y-1.5 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">প্রোডাক্ট ও ডেলিভারি</span>
+                  <div className="font-bold text-xs text-slate-900 truncate">
+                    {req.productName}
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium">
+                    ভ্যারিয়েশন: {req.variationName || "Standard"}
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    মেয়াদ শেষ: <b className="text-slate-700">{req.warrantyExpiresAt || "—"}</b>
+                  </div>
+                </div>
+
+                {/* Claim Reason */}
+                <div className="space-y-1.5 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">সমস্যার বিবরণ</span>
+                  <div className="font-bold text-xs text-[#FC5C03]">{req.reason}</div>
+                  <p className="text-xs text-slate-600 italic line-clamp-2">
+                    "{req.description || "কোনো অতিরিক্ত বর্ণনা নেই"}"
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-1">
+                {req.status === "REQUESTED" || req.status === "UNDER_REVIEW" ? (
+                  <>
+                    <button
+                      onClick={() => handleOpenModal("REJECT", req)}
+                      className="px-4 py-2 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 rounded-xl transition border border-red-200 cursor-pointer"
+                    >
+                      প্রত্যাখ্যান করুন (Reject)
+                    </button>
+
+                    {req.isWarrantyValid ? (
+                      <button
+                        onClick={() => handleOpenModal("AUTO_DISPATCH", req)}
+                        className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>অনুমোদন ও নতুন স্টক ডিসপ্যাচ</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleOpenModal("WARRANTY_OVERRIDE", req)}
+                        className="px-5 py-2 text-xs font-bold text-amber-900 bg-amber-200 hover:bg-amber-300 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <ShieldAlert className="w-4 h-4" />
+                        <span>ওয়ারেন্টি ওভাররাইড ও ডিসপ্যাচ</span>
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-xs font-bold text-slate-500 bg-slate-100 px-4 py-2 rounded-xl">
+                    স্ট্যাটাস: {req.status}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -287,34 +377,41 @@ export default function AdminReplacementsPage() {
 
       {/* Confirmation Modal */}
       {actionModal && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-xl border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
-              {actionModal === "AUTO_DISPATCH" && "Approve & Auto-Dispatch"}
-              {actionModal === "WARRANTY_OVERRIDE" && "Warranty Override & Dispatch"}
-              {actionModal === "REJECT" && "Reject Replacement Claim"}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl border border-slate-100 space-y-5 relative">
+            <button
+              onClick={() => setActionModal(null)}
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 rounded-full bg-slate-50 hover:bg-slate-100 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-lg font-black text-slate-900">
+              {actionModal === "AUTO_DISPATCH" && "অনুমোদন ও ডিজিটাল স্টক ডিসপ্যাচ"}
+              {actionModal === "WARRANTY_OVERRIDE" && "ওয়ারেন্টি ওভাররাইড অনুমোদন"}
+              {actionModal === "REJECT" && "রিপ্লেসমেন্ট ক্লেইম প্রত্যাখ্যান"}
             </h3>
 
             <div className="space-y-4">
               {actionModal === "AUTO_DISPATCH" && (
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  This will atomically claim an active stock license and dispatch it to <strong>{selectedRequest.customerName}</strong>'s Digital Vault.
+                <p className="text-xs text-slate-600 leading-relaxed font-medium bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                  ইনভেন্টরি পুল থেকে স্বয়ংক্রিয়ভাবে একটি বৈধ স্টক আইটেম <b>{selectedRequest.customerName}</b> এর ডিজিটাল ভল্টে যুক্ত হবে।
                 </p>
               )}
 
               {actionModal === "WARRANTY_OVERRIDE" && (
                 <div className="space-y-3">
-                  <p className="text-xs text-amber-600 font-semibold bg-amber-50 dark:bg-amber-900/30 p-2 rounded">
-                    Notice: This item's warranty period is expired. Providing a replacement requires an administrative override justification.
-                  </p>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Override Justification *</label>
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-bold text-amber-800">
+                    সতর্কতা: এই আইটেমের অফিসিয়াল ওয়ারেন্টি মেয়াদ শেষ। এটি অনুমোদন করতে এডমিন ওভাররাইডের কারণ উল্লেখ করতে হবে।
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700">ওভাররাইডের কারণ *</label>
                     <input
                       type="text"
                       value={adminOverrideReason}
                       onChange={(e) => setAdminOverrideReason(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm dark:bg-gray-700 dark:border-gray-600"
-                      placeholder="e.g. Approved by management for loyal customer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-medium"
+                      placeholder="e.g. লয়াল কাস্টমার খাতিরে বিশেষ অনুমোদন"
                       required
                     />
                   </div>
@@ -322,37 +419,41 @@ export default function AdminReplacementsPage() {
               )}
 
               {actionModal === "REJECT" && (
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Are you sure you want to reject this replacement claim?
+                <p className="text-xs text-slate-600 bg-red-50 p-3.5 rounded-xl border border-red-100 font-medium">
+                  আপনি কি নিশ্চিত যে আপনি এই রিপ্লেসমেন্ট রিকোয়েস্টটি প্রত্যাখ্যান করতে চান?
                 </p>
               )}
 
-              <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Admin Notes (Audit Log)</label>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">অভ্যন্তরীণ এডমিন নোট (ঐচ্ছিক)</label>
                 <textarea
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md text-sm dark:bg-gray-700 dark:border-gray-600"
-                  rows={2}
-                  placeholder="Optional internal notes..."
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none"
+                  rows={3}
+                  placeholder="এডমিন অডিট নোট লিখুন..."
                 />
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setActionModal(null)}
                 disabled={submitting}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md dark:bg-gray-700 dark:text-gray-300"
+                className="px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
               >
-                Cancel
+                বাতিল
               </button>
               <button
                 onClick={handleAction}
                 disabled={submitting}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md disabled:opacity-50"
+                className={`px-5 py-2.5 text-xs font-bold text-white rounded-xl transition shadow-xs cursor-pointer ${
+                  actionModal === "REJECT"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-[#FC5C03] hover:bg-[#EC4001]"
+                }`}
               >
-                {submitting ? "Processing..." : "Confirm Action"}
+                {submitting ? "প্রসেসিং..." : "নিশ্চিত করুন"}
               </button>
             </div>
           </div>
