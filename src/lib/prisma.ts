@@ -1,9 +1,17 @@
 import { PrismaClient } from "@prisma/client";
 
 function getDatabaseUrl(): string {
-  let url =
-    process.env.DATABASE_URL ||
-    "mysql://u298980084_ai_haat_db:Rhythm%23Aihaatdb01@srv1497.hstgr.io:3306/u298980084_ai_haat";
+  let url = process.env.DATABASE_URL || "";
+
+  // If URL is empty, truncated at '#' comment, or missing host
+  if (
+    !url ||
+    url === "mysql://u298980084_ai_haat_db:Rhythm" ||
+    !url.includes("@") ||
+    (!url.includes("@srv1497.hstgr.io") && !url.includes("@localhost") && !url.includes("@127.0.0.1"))
+  ) {
+    return "mysql://u298980084_ai_haat_db:Rhythm%23Aihaatdb01@srv1497.hstgr.io:3306/u298980084_ai_haat?connection_limit=10&pool_timeout=20";
+  }
 
   // Sanitize username missing _db
   if (url.includes("u298980084_ai_haat:") && !url.includes("u298980084_ai_haat_db:")) {
