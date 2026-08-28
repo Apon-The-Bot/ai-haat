@@ -11,20 +11,20 @@ interface PaymentLogoProps {
 export function PaymentLogo({ method, className = "", width = 64, height = 24 }: PaymentLogoProps) {
   const norm = method.toLowerCase().trim();
 
-  let src = "/images/payments/bkash.png";
+  let src = "/images/payments/bkash.svg";
   let alt = "bKash";
 
   if (norm.includes("bkash")) {
-    src = "/images/payments/bkash.png";
+    src = "/images/payments/bkash.svg";
     alt = "bKash";
   } else if (norm.includes("nagad")) {
-    src = "/images/payments/nagad.png";
+    src = "/images/payments/nagad.svg";
     alt = "Nagad";
   } else if (norm.includes("rocket")) {
-    src = "/images/payments/rocket.png";
+    src = "/images/payments/rocket.svg";
     alt = "Rocket";
   } else if (norm.includes("upay")) {
-    src = "/images/payments/upay.png";
+    src = "/images/payments/upay.svg";
     alt = "Upay";
   } else if (norm.includes("visa")) {
     src = "/images/payments/visa.svg";
