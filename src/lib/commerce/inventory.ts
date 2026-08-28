@@ -811,3 +811,31 @@ export async function checkLowStockConditions(productId: string, variationId?: s
     }).catch(console.error);
   }
 }
+
+/**
+ * Get real-time available stock count for a product and/or specific variation
+ */
+export async function getRealtimeAvailableStock(
+  productId: string,
+  variationId?: string | null
+): Promise<number> {
+  try {
+    const where: any = {
+      productId,
+      status: "AVAILABLE",
+    };
+    if (variationId) {
+      where.OR = [
+        { variationId: variationId },
+        { variationId: null }, // Unassigned stock works for any variation
+      ];
+    }
+    const count = await prisma.digitalStock.count({
+      where,
+    });
+    return count;
+  } catch (err) {
+    console.error("[getRealtimeAvailableStock Error]:", err);
+    return 0;
+  }
+}

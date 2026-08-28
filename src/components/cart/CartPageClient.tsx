@@ -20,6 +20,7 @@ import {
   Clock,
   ExternalLink,
   MessageCircle,
+  AlertCircle,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -174,9 +175,17 @@ export function CartPageClient() {
   const discountAmount = appliedCoupon ? appliedCoupon.discountBDT : 0;
   const finalTotalBDT = Math.max(0, subtotalBDT - discountAmount);
 
+  const hasOutOfStockItems = items.some(
+    (it) => it.product.inStock === false || it.selectedVariation.inStock === false
+  );
+
   const handleProceedToCheckout = () => {
     if (items.length === 0) {
       showToast("আপনার কার্ট খালি!", "error");
+      return;
+    }
+    if (hasOutOfStockItems) {
+      showToast("কার্টে থাকা স্টক আউট পণ্যটি ডিলিট করে চেকআউটে এগিয়ে যান।", "error");
       return;
     }
     if (!user) {
@@ -279,13 +288,19 @@ export function CartPageClient() {
                           >
                             {item.product.name}
                           </Link>
-                          <div className="flex items-center gap-2 text-[11px] text-[#7A8190]">
+                          <div className="flex items-center gap-2 text-[11px] text-[#7A8190] flex-wrap">
                             <span className="font-semibold text-slate-700 bg-gray-100 px-2 py-0.5 rounded">
                               {item.selectedVariation.name}
                             </span>
                             <span>•</span>
                             <span>{formatPrice(item.selectedVariation.priceBDT)} / unit</span>
                           </div>
+                          {(item.product.inStock === false || item.selectedVariation.inStock === false) && (
+                            <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1 mt-1 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                              <span>বর্তমানে স্টক আউট (দয়া করে রিমুভ করুন)</span>
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -528,14 +543,33 @@ export function CartPageClient() {
                   </div>
                 </div>
 
+                {/* Out of stock alert banner */}
+                {hasOutOfStockItems && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-bold flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>কার্টে স্টক আউট পণ্য রয়েছে। অনুগ্রহ করে সেটি রিমুভ করুন।</span>
+                  </div>
+                )}
+
                 {/* Checkout CTA Button */}
                 <button
                   type="button"
                   onClick={handleProceedToCheckout}
-                  className="w-full py-4 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-sm sm:text-base font-bold rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer group"
+                  disabled={hasOutOfStockItems}
+                  className={`w-full py-4 text-white text-sm sm:text-base font-bold rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 group ${
+                    hasOutOfStockItems
+                      ? "bg-gray-300 cursor-not-allowed text-gray-500 shadow-none"
+                      : "bg-[#FC5C03] hover:bg-[#EC4001] hover:shadow-md cursor-pointer"
+                  }`}
                 >
-                  <span>চেকআউট করুন (Proceed to Checkout)</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <span>
+                    {hasOutOfStockItems
+                      ? "স্টক আউট পণ্য রিমুভ করুন"
+                      : "চেকআউট করুন (Proceed to Checkout)"}
+                  </span>
+                  {!hasOutOfStockItems && (
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  )}
                 </button>
 
                 {/* Guarantee & Trust Badges */}

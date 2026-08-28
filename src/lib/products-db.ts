@@ -38,8 +38,12 @@ export async function getAllProducts(includeHidden = false): Promise<Product[]> 
       where: whereClause as any,
       include: {
         variations: {
-          where: { inStock: true }
+          orderBy: { sortOrder: "asc" }
         },
+        digitalStocks: {
+          where: { status: "AVAILABLE" },
+          select: { id: true, variationId: true }
+        }
       },
       orderBy: {
         createdAt: "desc",
@@ -60,6 +64,43 @@ export async function getAllProducts(includeHidden = false): Promise<Product[]> 
         } catch {
           categories = [p.category];
         }
+
+        const availableStocks = p.digitalStocks || [];
+        const isAutoStock = p.fulfillmentType === "AUTO_STOCK";
+        const totalAvailableStock = availableStocks.length;
+
+        const variations = (p.variations || []).map((v) => {
+          const vStocks = availableStocks.filter(
+            (s) => s.variationId === v.id || !s.variationId
+          );
+          const vStockCount = vStocks.length;
+          // In AUTO_STOCK mode, stock is dynamic: inStock is true if stockCount > 0
+          const isVarInStock = isAutoStock
+            ? (vStockCount > 0)
+            : v.inStock;
+
+          return {
+            id: v.id,
+            name: v.name,
+            priceBDT: v.priceBDT,
+            regularPriceBDT: v.regularPriceBDT,
+            salePriceBDT: v.salePriceBDT,
+            inStock: isVarInStock,
+            stockCount: vStockCount,
+            fulfillmentType: v.fulfillmentType || p.fulfillmentType,
+            description: v.description || "",
+            duration: v.duration || "",
+          };
+        });
+
+        // Determine product inStock state
+        const isAnyVarInStock = variations.length > 0
+          ? variations.some((v) => v.inStock)
+          : (isAutoStock ? totalAvailableStock > 0 : p.inStock);
+
+        const isProdInStock = isAutoStock
+          ? totalAvailableStock > 0 && isAnyVarInStock
+          : p.inStock && isAnyVarInStock;
 
         return {
           id: p.id,
@@ -89,16 +130,11 @@ export async function getAllProducts(includeHidden = false): Promise<Product[]> 
             validity: p.validity,
             deviceSupport: p.deviceSupport,
           },
-          variations: p.variations.map((v) => ({
-            id: v.id,
-            name: v.name,
-            priceBDT: v.priceBDT,
-            regularPriceBDT: v.regularPriceBDT,
-            salePriceBDT: v.salePriceBDT,
-            inStock: v.inStock,
-            description: v.description || "",
-          })),
-          inStock: p.inStock,
+          variations,
+          inStock: isProdInStock,
+          digitalStock: totalAvailableStock,
+          stockCount: totalAvailableStock,
+          fulfillmentType: p.fulfillmentType,
           isFeatured: p.isFeatured,
           isBestProduct: p.isBestProduct,
           isBestSelling: p.isBestSelling,
@@ -130,7 +166,11 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       },
       include: {
         variations: {
-          where: { inStock: true }
+          orderBy: { sortOrder: "asc" }
+        },
+        digitalStocks: {
+          where: { status: "AVAILABLE" },
+          select: { id: true, variationId: true }
         },
         reviews: {
           where: { status: "APPROVED" },
@@ -152,6 +192,43 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       } catch {
         categories = [dbProduct.category];
       }
+
+      const availableStocks = dbProduct.digitalStocks || [];
+      const isAutoStock = dbProduct.fulfillmentType === "AUTO_STOCK";
+      const totalAvailableStock = availableStocks.length;
+
+      const variations = (dbProduct.variations || []).map((v) => {
+        const vStocks = availableStocks.filter(
+          (s) => s.variationId === v.id || !s.variationId
+        );
+        const vStockCount = vStocks.length;
+        // In AUTO_STOCK mode, stock is dynamic: inStock is true if stockCount > 0
+        const isVarInStock = isAutoStock
+          ? (vStockCount > 0)
+          : v.inStock;
+
+        return {
+          id: v.id,
+          name: v.name,
+          priceBDT: v.priceBDT,
+          regularPriceBDT: v.regularPriceBDT,
+          salePriceBDT: v.salePriceBDT,
+          inStock: isVarInStock,
+          stockCount: vStockCount,
+          fulfillmentType: v.fulfillmentType || dbProduct.fulfillmentType,
+          description: v.description || "",
+          duration: v.duration || "",
+        };
+      });
+
+      // Determine product inStock state
+      const isAnyVarInStock = variations.length > 0
+        ? variations.some((v) => v.inStock)
+        : (isAutoStock ? totalAvailableStock > 0 : dbProduct.inStock);
+
+      const isProdInStock = isAutoStock
+        ? totalAvailableStock > 0 && isAnyVarInStock
+        : dbProduct.inStock && isAnyVarInStock;
 
       return {
         id: dbProduct.id,
@@ -181,16 +258,11 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
           validity: dbProduct.validity,
           deviceSupport: dbProduct.deviceSupport,
         },
-        variations: dbProduct.variations.map((v) => ({
-          id: v.id,
-          name: v.name,
-          priceBDT: v.priceBDT,
-          regularPriceBDT: v.regularPriceBDT,
-          salePriceBDT: v.salePriceBDT,
-          inStock: v.inStock,
-          description: v.description || "",
-        })),
-        inStock: dbProduct.inStock,
+        variations,
+        inStock: isProdInStock,
+        digitalStock: totalAvailableStock,
+        stockCount: totalAvailableStock,
+        fulfillmentType: dbProduct.fulfillmentType,
         isFeatured: dbProduct.isFeatured,
         isBestProduct: dbProduct.isBestProduct,
         isBestSelling: dbProduct.isBestSelling,

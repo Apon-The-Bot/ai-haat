@@ -9,6 +9,8 @@ export interface Variation {
   originalPriceBDT?: number;
   description?: string | null;
   inStock: boolean;
+  stockCount?: number;
+  fulfillmentType?: string;
   type?: "DURATION" | "CREDITS" | "TIER" | "CUSTOM";
   duration?: string | null;
   credits?: string | number;
@@ -66,8 +68,11 @@ export interface Product {
   status?: "ACTIVE" | "DRAFT" | "INACTIVE" | "ARCHIVED";
   visibility?: "PUBLIC" | "HIDDEN" | "DIRECT_LINK_ONLY";
   fulfillmentMode?: "AUTO" | "MANUAL";
+  fulfillmentType?: "AUTO_STOCK" | "MANUAL" | string;
+  allowBackorder?: boolean;
   sku?: string;
   digitalStock?: number;
+  stockCount?: number;
 }
 
 export interface CartItem {

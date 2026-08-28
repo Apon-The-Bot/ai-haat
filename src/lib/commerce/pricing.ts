@@ -129,13 +129,42 @@ export async function calculateOrderQuote(
     if (chosenVariation && chosenVariation.inStock === false) {
       return {
         isValid: false,
-        error: `Variation "${chosenVariation.name}" of product "${product.name}" is currently out of stock.`,
+        error: `"${product.name} (${chosenVariation.name})" বর্তমানে স্টক আউট।`,
         quote: { items: [], subtotalBDT: 0, discountBDT: 0, totalBDT: 0, couponCode: null, couponId: null },
       };
     }
 
     // Use Central Configuration Resolver
     const resolved: ResolvedProductConfig = resolveProductConfiguration(product, chosenVariation);
+
+    // Validate real-time digital stock availability for AUTO_STOCK
+    const isAuto = resolved.fulfillmentType === "AUTO_STOCK" || product.fulfillmentType === "AUTO_STOCK";
+    if (isAuto) {
+      try {
+        const availableStock = await prisma.digitalStock.count({
+          where: {
+            productId: product.id,
+            OR: [
+              { variationId: chosenVariation?.id || null },
+              { variationId: null },
+            ],
+            status: "AVAILABLE",
+          },
+        });
+
+        if (availableStock < qty) {
+          return {
+            isValid: false,
+            error: availableStock === 0
+              ? `দুঃখিত, "${product.name} (${chosenVariation?.name || 'Standard'})" এই মুহূর্তে স্টক আউট।`
+              : `দুঃখিত, "${product.name} (${chosenVariation?.name || 'Standard'})" এর মাত্র ${availableStock} টি স্টকে আছে (আপনি চেয়েছেন ${qty} টি)।`,
+            quote: { items: [], subtotalBDT: 0, discountBDT: 0, totalBDT: 0, couponCode: null, couponId: null },
+          };
+        }
+      } catch (stockErr) {
+        console.warn("[Pricing Engine Stock Check Warning]:", stockErr);
+      }
+    }
 
     const itemTotal = safeMulBDT(resolved.priceBDT, qty);
     calculatedSubtotal = safeAddBDT(calculatedSubtotal, itemTotal);

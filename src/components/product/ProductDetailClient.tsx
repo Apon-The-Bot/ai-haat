@@ -28,6 +28,7 @@ import {
   CreditCard,
   BadgeCheck,
   Check,
+  AlertCircle,
 } from "lucide-react";
 import { Product, Variation, Review } from "@/types";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -373,21 +374,37 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               {product.shortDesc || product.descriptionBangla?.slice(0, 180) || product.name}
             </p>
 
-            {/* 3. AUTHENTIC AVAILABILITY & DELIVERY BADGE */}
-            <div className="p-3.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-emerald-50/90 rounded-2xl border border-emerald-200/80 flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 font-bold text-emerald-800">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
-                </span>
+            {/* 3. AUTHENTIC REAL-TIME AVAILABILITY & DELIVERY BADGE */}
+            <div className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 text-xs ${
+              isProductOutOfStock
+                ? "bg-rose-50 border-rose-200 text-rose-800"
+                : selectedVariation.stockCount !== undefined && selectedVariation.stockCount > 0 && selectedVariation.stockCount <= 5
+                ? "bg-amber-50 border-amber-200 text-amber-900"
+                : "bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-emerald-50/90 border-emerald-200/80 text-emerald-800"
+            }`}>
+              <div className="flex items-center gap-2 font-bold">
+                {isProductOutOfStock ? (
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-600"></span>
+                  </span>
+                ) : (
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
+                  </span>
+                )}
                 <span>
                   {isProductOutOfStock
-                    ? "বর্তমানে স্টক আউট"
+                    ? "বর্তমানে সম্পূর্ণ স্টক আউট"
+                    : selectedVariation.stockCount !== undefined && selectedVariation.stockCount > 0 && selectedVariation.stockCount <= 5
+                    ? `🔥 সীমিত স্টক (মাত্র ${selectedVariation.stockCount} টি অবশিষ্ট) • দ্রুত অর্ডার করুন`
+                    : selectedVariation.stockCount !== undefined && selectedVariation.stockCount > 5
+                    ? `স্টকে অ্যাভেইলেবল (${selectedVariation.stockCount} টি) • ইনস্ট্যান্ট অটো-ডেলিভারি`
                     : "স্টকে অ্যাভেইলেবল • ইনস্ট্যান্ট ডেলিভারি"}
                 </span>
               </div>
               
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-900 bg-white/90 px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-900 bg-white/95 px-2.5 py-1 rounded-lg border border-gray-200 shadow-2xs">
                 <Zap className="w-3.5 h-3.5 text-[#FC5C03]" />
                 <span>{product.info?.deliveryTime || "৫-১৫ মিনিটে ডেলিভারি"}</span>
               </div>
@@ -411,10 +428,21 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 </div>
               </div>
               <div className="text-right">
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100/90 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-200">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                  স্টক এভেইলেবল
-                </span>
+                {isProductOutOfStock ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-100 text-rose-800 text-[11px] font-bold rounded-lg border border-rose-200">
+                    <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                    স্টক আউট
+                  </span>
+                ) : selectedVariation.stockCount !== undefined && selectedVariation.stockCount > 0 && selectedVariation.stockCount <= 5 ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-900 text-[11px] font-bold rounded-lg border border-amber-300">
+                    🔥 মাত্র {selectedVariation.stockCount} টি বাকি
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100/90 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-200">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                    {selectedVariation.stockCount !== undefined ? `স্টক: ${selectedVariation.stockCount} টি` : "স্টক এভেইলেবল"}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -433,6 +461,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {(product.variations || []).map((v) => {
                   const isSelected = selectedVariation.id === v.id;
+                  const isVarOutOfStock = v.inStock === false;
                   return (
                     <button
                       key={v.id}
@@ -441,16 +470,28 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                       className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? "border-[#FC5C03] bg-gradient-to-br from-[#FFF9F5] to-[#FFF2E8] text-[#1A1D26] shadow-xs ring-2 ring-[#FC5C03]/80"
+                          : isVarOutOfStock
+                          ? "border-rose-200/80 bg-rose-50/30 text-gray-600 hover:border-rose-300"
                           : "border-[#E8E8EE] bg-white text-[#1A1D26] hover:border-orange-200 hover:bg-orange-50/20"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-1 mb-1.5">
-                        <span className={`text-xs font-bold leading-snug ${isSelected ? "text-[#FC5C03]" : "text-[#1A1D26]"}`}>
+                        <span className={`text-xs font-bold leading-snug ${
+                          isSelected ? "text-[#FC5C03]" : isVarOutOfStock ? "text-gray-500" : "text-[#1A1D26]"
+                        }`}>
                           {v.name}
                         </span>
                         {isSelected ? (
                           <span className="w-4 h-4 rounded-full bg-[#FC5C03] text-white flex items-center justify-center shrink-0 shadow-xs">
                             <Check className="w-2.5 h-2.5" />
+                          </span>
+                        ) : isVarOutOfStock ? (
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.5 bg-rose-100 text-rose-700 rounded border border-rose-200 shrink-0">
+                            স্টক আউট
+                          </span>
+                        ) : v.stockCount !== undefined && v.stockCount > 0 && v.stockCount <= 5 ? (
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded border border-amber-300 shrink-0">
+                            {v.stockCount} টি বাকি
                           </span>
                         ) : (
                           <span className="w-4 h-4 rounded-full border border-gray-300 shrink-0" />

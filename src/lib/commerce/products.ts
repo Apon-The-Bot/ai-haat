@@ -160,6 +160,10 @@ export async function getPublicProducts(filters: {
           variations: {
             orderBy: { sortOrder: "asc" },
           },
+          digitalStocks: {
+            where: { status: "AVAILABLE" },
+            select: { id: true, variationId: true },
+          },
         },
       }),
       prisma.product.count({ where }),
@@ -180,6 +184,36 @@ export async function getPublicProducts(filters: {
       categoriesList = [p.category];
     }
 
+    const availableStocks = p.digitalStocks || [];
+    const isAutoStock = p.fulfillmentType === "AUTO_STOCK";
+    const totalAvailable = availableStocks.length;
+
+    const variations = p.variations.map((v) => {
+      const vStocks = availableStocks.filter((s) => s.variationId === v.id || !s.variationId);
+      const vStockCount = vStocks.length;
+      const isVarInStock = isAutoStock ? vStockCount > 0 : v.inStock;
+
+      return {
+        id: v.id,
+        name: v.name,
+        priceBDT: v.priceBDT,
+        regularPriceBDT: v.regularPriceBDT || v.priceBDT,
+        salePriceBDT: v.salePriceBDT || undefined,
+        duration: v.duration,
+        inStock: isVarInStock,
+        availableStockCount: vStockCount,
+        description: v.description,
+      };
+    });
+
+    const isAnyVarInStock = variations.length > 0
+      ? variations.some((v) => v.inStock)
+      : (isAutoStock ? totalAvailable > 0 : p.inStock);
+
+    const isProdInStock = isAutoStock
+      ? totalAvailable > 0 && isAnyVarInStock
+      : p.inStock && isAnyVarInStock;
+
     return {
       id: p.id,
       name: p.name,
@@ -196,7 +230,8 @@ export async function getPublicProducts(filters: {
       rating: p.rating,
       ratingCount: p.ratingCount,
       viewCount: p.viewCount,
-      inStock: p.inStock,
+      inStock: isProdInStock,
+      availableStockCount: totalAvailable,
       isFeatured: p.isFeatured,
       isBestProduct: p.isBestProduct,
       isBestSelling: p.isBestSelling,
@@ -206,16 +241,7 @@ export async function getPublicProducts(filters: {
       deliveryType: p.deliveryType,
       deliverySla: p.deliverySla,
       features: featuresList,
-      variations: p.variations.map((v) => ({
-        id: v.id,
-        name: v.name,
-        priceBDT: v.priceBDT,
-        regularPriceBDT: v.regularPriceBDT || v.priceBDT,
-        salePriceBDT: v.salePriceBDT || undefined,
-        duration: v.duration,
-        inStock: v.inStock,
-        description: v.description,
-      })),
+      variations,
     };
   });
 
@@ -308,6 +334,36 @@ export async function getPublicProductBySlug(slug: string, previewToken?: boolea
     stockMap[key] = (stockMap[key] || 0) + 1;
   });
 
+  const isAutoStock = product.fulfillmentType === "AUTO_STOCK";
+  const totalAvailable = product.digitalStocks.length;
+
+  const formattedVariations = product.variations.map((v) => {
+    const vStockCount = stockMap[v.id] !== undefined ? stockMap[v.id] : (stockMap["product"] || totalAvailable);
+    const isVarInStock = isAutoStock ? vStockCount > 0 : v.inStock;
+    return {
+      id: v.id,
+      name: v.name,
+      priceBDT: v.priceBDT,
+      regularPriceBDT: v.regularPriceBDT || v.priceBDT,
+      salePriceBDT: v.salePriceBDT || undefined,
+      duration: v.duration,
+      inStock: isVarInStock,
+      stockCount: vStockCount,
+      availableStockCount: vStockCount,
+      description: v.description,
+      fulfillmentType: v.fulfillmentType || product.fulfillmentType,
+      warrantyDays: v.warrantyDays || product.warrantyDays,
+    };
+  });
+
+  const isAnyVarInStock = formattedVariations.length > 0
+    ? formattedVariations.some((v) => v.inStock)
+    : (isAutoStock ? totalAvailable > 0 : product.inStock);
+
+  const isProdInStock = isAutoStock
+    ? totalAvailable > 0 && isAnyVarInStock
+    : product.inStock && isAnyVarInStock;
+
   return {
     id: product.id,
     name: product.name,
@@ -342,27 +398,17 @@ export async function getPublicProductBySlug(slug: string, previewToken?: boolea
     warrantyDays: product.warrantyDays,
     replacementAllowed: product.replacementAllowed,
     refundAllowed: product.refundAllowed,
-    inStock: product.inStock,
+    inStock: isProdInStock,
+    availableStockCount: totalAvailable,
+    digitalStock: totalAvailable,
+    stockCount: totalAvailable,
     isFeatured: product.isFeatured,
     isBestProduct: product.isBestProduct,
     isBestSelling: product.isBestSelling,
     seoTitle: product.seoTitle,
     seoDescription: product.seoDescription,
     seoKeywords: product.seoKeywords,
-    variations: product.variations.map((v) => ({
-      id: v.id,
-      name: v.name,
-      priceBDT: v.priceBDT,
-      regularPriceBDT: v.regularPriceBDT || v.priceBDT,
-      salePriceBDT: v.salePriceBDT || undefined,
-      duration: v.duration,
-      inStock: v.inStock,
-      availableStockCount: stockMap[v.id] || 0,
-      description: v.description,
-      fulfillmentType: v.fulfillmentType || product.fulfillmentType,
-      warrantyDays: v.warrantyDays || product.warrantyDays,
-    })),
-    availableStockCount: stockMap["product"] || product.digitalStocks.length,
+    variations: formattedVariations,
     reviews: product.reviews.map((r) => ({
       id: r.id,
       author: r.author,

@@ -250,6 +250,10 @@ function CheckoutContent() {
   const discountBDT = appliedCoupon ? appliedCoupon.discountBDT : 0;
   const finalTotalBDT = Math.max(0, subtotalBDT - discountBDT);
 
+  const hasOutOfStockItems = items.some(
+    (it) => it.product.inStock === false || it.selectedVariation.inStock === false
+  );
+
   const walletBalance = user?.walletBalanceBDT || 0;
   const hasEnoughWalletBalance = user ? walletBalance >= finalTotalBDT : false;
   const walletShortage = Math.max(0, finalTotalBDT - walletBalance);
@@ -265,6 +269,14 @@ function CheckoutContent() {
 
     if (items.length === 0) {
       showToast("আপনার কার্ট খালি!", "error");
+      return;
+    }
+
+    const hasOutOfStockItems = items.some(
+      (it) => it.product.inStock === false || it.selectedVariation.inStock === false
+    );
+    if (hasOutOfStockItems) {
+      showToast("কার্টে থাকা কিছু পণ্য স্টক আউট। অনুগ্রহ করে কার্ট এডিট করে পুনরায় চেষ্টা করুন।", "error");
       return;
     }
 
@@ -1042,6 +1054,11 @@ function CheckoutContent() {
                             <span className="text-[10.5px] text-gray-500 block truncate">
                               {item.selectedVariation.name} × {item.quantity}
                             </span>
+                            {(item.product.inStock === false || item.selectedVariation.inStock === false) && (
+                              <span className="text-[10px] font-bold text-rose-600 block mt-0.5">
+                                ⚠️ পণ্যটি বর্তমানে স্টক আউট
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -1124,14 +1141,28 @@ function CheckoutContent() {
                     </div>
                   </div>
 
+                  {/* Out of stock alert */}
+                  {hasOutOfStockItems && (
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-bold flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>কার্টে থাকা কিছু পণ্য স্টক আউট। অনুগ্রহ করে কার্ট এডিট করুন।</span>
+                    </div>
+                  )}
+
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-4 bg-[#FC5C03] hover:bg-[#EC4001] disabled:bg-gray-400 text-white text-xs sm:text-sm font-bold rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    disabled={isSubmitting || hasOutOfStockItems}
+                    className={`w-full py-4 text-white text-xs sm:text-sm font-bold rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 ${
+                      hasOutOfStockItems
+                        ? "bg-gray-300 cursor-not-allowed text-gray-500 shadow-none"
+                        : "bg-[#FC5C03] hover:bg-[#EC4001] disabled:bg-gray-400 hover:shadow-md cursor-pointer disabled:opacity-60"
+                    }`}
                   >
                     {isSubmitting ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : hasOutOfStockItems ? (
+                      <span>স্টক আউট পণ্য কার্ট থেকে সরান</span>
                     ) : paymentMethod === "wallet" ? (
                       <span className="flex items-center gap-2">
                         <Wallet className="w-4 h-4" />
