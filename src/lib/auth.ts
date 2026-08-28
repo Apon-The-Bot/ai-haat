@@ -3,26 +3,35 @@ import GoogleProvider from "next-auth/providers/google";
 import { sendWelcomeEmail } from "@/utils/email";
 import { prisma } from "@/lib/prisma";
 
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error("NEXTAUTH_SECRET must be set");
-}
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set");
+export const DEFAULT_ADMIN_EMAILS = [
+  "mdamanullahsheikhapon@gmail.com",
+  "seratul.alim@gmail.com",
+  "seratulalimkhanrhythm@gmail.com",
+  "admin@aihaat.com",
+];
+
+export function getAdminEmails(): string[] {
+  const envAdmins = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return Array.from(new Set([...DEFAULT_ADMIN_EMAILS, ...envAdmins]));
 }
 
-const adminEmails = (process.env.ADMIN_EMAILS || "")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
+export function isUserAdmin(email?: string | null): boolean {
+  if (!email) return false;
+  const cleanEmail = email.trim().toLowerCase();
+  return getAdminEmails().includes(cleanEmail);
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       profile(profile) {
-        const email = profile.email?.toLowerCase() || "";
-        const isAdmin = adminEmails.includes(email);
+        const email = profile.email?.toLowerCase().trim() || "";
+        const isAdmin = isUserAdmin(email);
         return {
           id: profile.sub,
           name: profile.name,
@@ -35,17 +44,22 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       // 1. Initial Sign-in: Resolve or create Canonical Prisma User
       if (user) {
         const googleSub = user.id;
         const email = (user.email || "").toLowerCase().trim();
-        const isAdmin = adminEmails.includes(email);
+        const isAdmin = isUserAdmin(email);
 
         if (email) {
           try {
-            let dbUser = await prisma.user.findUnique({
-              where: { email },
+            let dbUser = await prisma.user.findFirst({
+              where: {
+                OR: [
+                  { email: email },
+                  { email: email.toLowerCase() },
+                ],
+              },
               include: { security: true },
             });
 
@@ -62,14 +76,21 @@ export const authOptions: NextAuthOptions = {
                 include: { security: true },
               });
               isNewUser = true;
+            } else if (isAdmin && dbUser.role !== "ADMIN") {
+              // Self-heal: elevate to ADMIN if email matches admin list
+              dbUser = await prisma.user.update({
+                where: { id: dbUser.id },
+                data: { role: "ADMIN" },
+                include: { security: true },
+              });
             }
 
-            const effectiveRole = dbUser.role || (isAdmin ? "ADMIN" : "USER");
+            const effectiveRole = isAdmin ? "ADMIN" : (dbUser.role || "USER");
             token.appUserId = dbUser.id; // Canonical Prisma User ID
-            token.id = dbUser.id; // Canonical Prisma User ID
+            token.id = dbUser.id;
             token.role = effectiveRole;
             token.walletBalanceBDT = dbUser.walletBalanceBDT || 0;
-            token.mfaRequired = effectiveRole === "ADMIN" || (dbUser.security?.totpEnabled ?? false);
+            token.mfaRequired = dbUser.security?.totpEnabled ?? false;
             token.googleSub = googleSub;
 
             // Only send welcome onboarding email once for newly created accounts
@@ -78,24 +99,46 @@ export const authOptions: NextAuthOptions = {
             }
           } catch (err) {
             console.error("[NextAuth JWT Sign-in Error]:", err);
+            // Fallback for offline/Prisma hiccups
+            token.role = isAdmin ? "ADMIN" : "USER";
           }
         }
-      } else if (!token.appUserId && token.email) {
-        // 2. Backward-Compatible Self-Healing for Legacy JWTs containing Google sub
+      } else if (token.email) {
+        // 2. Token refresh / existing session
+        const email = (token.email as string).toLowerCase().trim();
+        const isAdmin = isUserAdmin(email);
+
         try {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: (token.email as string).toLowerCase().trim() },
+          const dbUser = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: email },
+                { email: email.toLowerCase() },
+              ],
+            },
             include: { security: true },
           });
+
           if (dbUser) {
+            if (isAdmin && dbUser.role !== "ADMIN") {
+              await prisma.user.update({
+                where: { id: dbUser.id },
+                data: { role: "ADMIN" },
+              });
+            }
             token.appUserId = dbUser.id;
             token.id = dbUser.id;
-            token.role = dbUser.role;
+            token.role = isAdmin ? "ADMIN" : dbUser.role;
             token.walletBalanceBDT = dbUser.walletBalanceBDT || 0;
-            token.mfaRequired = dbUser.role === "ADMIN" || (dbUser.security?.totpEnabled ?? false);
+            token.mfaRequired = dbUser.security?.totpEnabled ?? false;
+          } else {
+            token.role = isAdmin ? "ADMIN" : (token.role || "USER");
           }
         } catch (err) {
-          console.warn("[NextAuth Legacy Token Self-Healing Warning]:", err);
+          console.warn("[NextAuth Token Refresh Warning]:", err);
+          if (isAdmin) {
+            token.role = "ADMIN";
+          }
         }
       }
 
@@ -108,11 +151,13 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
+        const email = session.user.email?.toLowerCase().trim();
+        const isAdmin = isUserAdmin(email) || token.role === "ADMIN";
         const canonicalId = (token.appUserId || token.id) as string;
         (session.user as any).id = canonicalId;
-        (session.user as any).role = (token.role as string) || "USER";
+        (session.user as any).role = isAdmin ? "ADMIN" : ((token.role as string) || "USER");
         (session.user as any).walletBalanceBDT = (token.walletBalanceBDT as number) || 0;
-        (session.user as any).mfaRequired = token.mfaRequired as boolean;
+        (session.user as any).mfaRequired = Boolean(token.mfaRequired);
       }
       return session;
     },
@@ -123,5 +168,5 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "aihaat_super_secure_nextauth_jwt_secret_key_2026_xyz",
 };

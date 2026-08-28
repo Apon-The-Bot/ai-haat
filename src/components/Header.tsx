@@ -278,14 +278,17 @@ export function Header() {
                   <User className="w-3.5 h-3.5 text-[#FC5C03]" />
                   <span>{isBn ? "ড্যাশবোর্ড" : "Dashboard"}</span>
                 </Link>
-                {user.role === "ADMIN" && (
+                {(user.role === "ADMIN" ||
+                  ["mdamanullahsheikhapon@gmail.com", "seratul.alim@gmail.com", "seratulalimkhanrhythm@gmail.com", "admin@aihaat.com"].includes(
+                    (user.email || "").toLowerCase().trim()
+                  )) && (
                   <Link
                     href="/admin"
-                    className="flex items-center gap-1.5 h-8 px-3 bg-slate-800 hover:bg-slate-900 text-slate-200 text-xs font-bold rounded-full transition-all border border-slate-700"
-                    title="Admin Panel"
+                    className="flex items-center gap-1.5 h-8 px-3.5 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-black hover:to-slate-900 text-white text-xs font-bold rounded-full transition-all border border-slate-700 shadow-xs"
+                    title="Admin Control Panel"
                   >
                     <ShieldCheck className="w-3.5 h-3.5 text-[#FC5C03]" />
-                    <span>Admin</span>
+                    <span>Admin Panel</span>
                   </Link>
                 )}
               </div>

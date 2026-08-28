@@ -100,7 +100,14 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
     },
   ];
 
-  const isAdmin = user?.role === "ADMIN";
+  const adminEmails = [
+    "mdamanullahsheikhapon@gmail.com",
+    "seratul.alim@gmail.com",
+    "seratulalimkhanrhythm@gmail.com",
+    "admin@aihaat.com",
+  ];
+  const userEmail = user?.email?.toLowerCase().trim() || "";
+  const isAdmin = user?.role === "ADMIN" || (userEmail !== "" && adminEmails.includes(userEmail));
 
   // Prevent flash of login screen while checking session
   if (!mounted) {
@@ -170,6 +177,15 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
         {/* Mobile / Tablet Horizontal Scroll Tab Bar */}
         <div className="lg:hidden bg-white p-1.5 rounded-2xl border border-[#E8E8EE] shadow-2xs overflow-x-auto no-scrollbar flex items-center justify-between gap-1">
           <div className="flex items-center gap-1">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 bg-slate-900 text-white shadow-xs"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-[#FC5C03]" />
+                <span>Admin Panel</span>
+              </Link>
+            )}
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -223,11 +239,30 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
                   <span className="text-[11px] text-[#7A8190] truncate block font-mono">
                     {user?.email || ""}
                   </span>
-                  <span className="inline-block mt-0.5 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[9.5px] font-bold rounded-md uppercase border border-emerald-200">
-                    Verified Customer
+                  <span className={`inline-block mt-0.5 px-2 py-0.5 text-[9.5px] font-bold rounded-md uppercase border ${
+                    isAdmin
+                      ? "bg-purple-50 text-purple-700 border-purple-200"
+                      : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  }`}>
+                    {isAdmin ? "Verified Administrator" : "Verified Customer"}
                   </span>
                 </div>
               </div>
+
+              {isAdmin && (
+                <div className="pt-2 border-t border-gray-100">
+                  <Link
+                    href="/admin"
+                    className="w-full py-2.5 px-3 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-black hover:to-slate-900 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-between shadow-xs group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-[#FC5C03]" />
+                      <span>Admin Control Panel</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              )}
 
               {/* Language Switcher */}
               <div className="pt-2 border-t border-gray-100 flex items-center justify-between">

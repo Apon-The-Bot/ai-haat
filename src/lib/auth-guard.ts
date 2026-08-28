@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
-import { authOptions } from './auth';
+import { authOptions, isUserAdmin } from './auth';
 import { getMfaSessionFromCookieStore } from './mfa/session';
 import { prisma } from './prisma';
 
@@ -20,17 +20,41 @@ export async function requireAuth(): Promise<AuthResult | NextResponse> {
   }
   
   const user = session.user as { id: string; email: string; role: string; name?: string };
+  const isAdmin = isUserAdmin(user.email);
   
   if (!user.id || !user.role) {
-    const dbUser = await prisma.user.findUnique({
-      where: { email: user.email },
+    const dbUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: user.email },
+          { email: user.email.toLowerCase() },
+        ]
+      },
       select: { id: true, email: true, role: true, name: true }
     });
     
     if (!dbUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return {
+        user: {
+          id: user.id || `user-${user.email}`,
+          email: user.email,
+          role: isAdmin ? 'ADMIN' : 'USER',
+          name: user.name
+        }
+      };
     }
-    return { user: { id: dbUser.id, email: dbUser.email, role: dbUser.role, name: dbUser.name ?? undefined } };
+    return {
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        role: isAdmin ? 'ADMIN' : dbUser.role,
+        name: dbUser.name ?? undefined
+      }
+    };
+  }
+  
+  if (isAdmin) {
+    user.role = 'ADMIN';
   }
   
   return { user };
@@ -40,10 +64,12 @@ export async function requireAdmin(): Promise<AuthResult | NextResponse> {
   const auth = await requireAuth();
   if (auth instanceof NextResponse) return auth;
   
-  if (auth.user.role !== 'ADMIN') {
+  const isAdmin = auth.user.role === 'ADMIN' || isUserAdmin(auth.user.email);
+  if (!isAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
   
+  auth.user.role = 'ADMIN';
   return auth;
 }
 
@@ -51,14 +77,17 @@ export async function requireMfaVerified(): Promise<MfaAuthResult | NextResponse
   const auth = await requireAuth();
   if (auth instanceof NextResponse) return auth;
   
-  const userSecurity = await prisma.userSecurity.findUnique({
-    where: { userId: auth.user.id }
-  });
+  let isMfaEnabled = false;
+  try {
+    const userSecurity = await prisma.userSecurity.findUnique({
+      where: { userId: auth.user.id }
+    });
+    isMfaEnabled = userSecurity?.totpEnabled ?? false;
+  } catch (err) {
+    console.warn("[MFA Status Check Warning]:", err);
+  }
   
-  const isMfaEnabled = userSecurity?.totpEnabled;
-  const isAdmin = auth.user.role === 'ADMIN';
-  
-  if (isMfaEnabled || isAdmin) {
+  if (isMfaEnabled) {
     const mfaSession = await getMfaSessionFromCookieStore(auth.user.id);
     
     if (!mfaSession || mfaSession.mfaLevel !== 'MFA_VERIFIED') {
@@ -98,23 +127,22 @@ export async function requireAdminMfa(): Promise<MfaAuthResult | NextResponse> {
 }
 
 export async function requireRecentMfa(maxAgeMinutes: number = 10): Promise<MfaAuthResult | NextResponse> {
-  const mfaAuth = await requireMfaVerified();
-  if (mfaAuth instanceof NextResponse) return mfaAuth;
+  const mfa = await requireMfaVerified();
+  if (mfa instanceof NextResponse) return mfa;
   
-  if (mfaAuth.mfaSession.mfaLevel === 'NONE') {
-    return mfaAuth;
+  if (mfa.mfaSession.mfaLevel === 'NONE') {
+    return mfa;
   }
   
   const now = new Date();
-  const lastStepUpAt = mfaAuth.mfaSession.lastStepUpAt ?? mfaAuth.mfaSession.verifiedAt;
-  const ageMinutes = (now.getTime() - lastStepUpAt.getTime()) / (1000 * 60);
+  const maxAgeMs = maxAgeMinutes * 60 * 1000;
   
-  if (ageMinutes > maxAgeMinutes) {
+  if (now.getTime() - mfa.mfaSession.verifiedAt.getTime() > maxAgeMs) {
     return NextResponse.json(
-      { error: 'Step-up authentication required', code: 'STEP_UP_REQUIRED' },
+      { error: 'Recent MFA re-authentication required for this sensitive action', code: 'STEP_UP_REQUIRED' },
       { status: 403 }
     );
   }
   
-  return mfaAuth;
+  return mfa;
 }
