@@ -51,6 +51,22 @@ function CheckoutContent() {
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Field-level Validation Errors
+  const [formErrors, setFormErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    deliveryHandle?: string;
+    wallet?: string;
+  }>({});
+
+  // Input Field References for Auto-focus & Scrolling
+  const fullNameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const deliveryHandleRef = useRef<HTMLInputElement>(null);
+  const walletSectionRef = useRef<HTMLDivElement>(null);
+
   // Success Modal State
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState("");
@@ -252,30 +268,66 @@ function CheckoutContent() {
       return;
     }
 
+    const errors: typeof formErrors = {};
     const cleanFullName = fullName.trim();
     const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone.replace(/[\s-]/g, "").trim();
 
-    if (!cleanFullName || !cleanEmail || !cleanPhone) {
-      showToast("দয়া করে আপনার নাম, ইমেইল ও মোবাইল নাম্বার দিন।", "error");
-      return;
+    if (!cleanFullName) {
+      errors.fullName = "দয়া করে আপনার পুরো নাম লিখুন।";
     }
 
-    // Bangladesh phone validation
-    if (!/^(\+?88)?01[3-9]\d{8}$/.test(cleanPhone)) {
-      showToast("অনুগ্রহ করে সঠিক বাংলাদেশি মোবাইল নম্বর দিন (যেমন: 01700000000)।", "error");
-      return;
+    if (!cleanEmail) {
+      errors.email = "দয়া করে আপনার ইমেইল অ্যাড্রেস লিখুন।";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      errors.email = "সঠিক ইমেইল ফরম্যাট দিন (যেমন: name@domain.com)।";
+    }
+
+    if (!cleanPhone) {
+      errors.phone = "দয়া করে মোবাইল বা WhatsApp নম্বর দিন।";
+    } else if (!/^(\+?88)?01[3-9]\d{8}$/.test(cleanPhone)) {
+      errors.phone = "সঠিক বাংলাদেশি মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)।";
     }
 
     if (deliveryMethod === "WHATSAPP" && !cleanPhone && !deliveryHandle.trim()) {
-      showToast("দয়া করে আপনার হোয়াটসঅ্যাপ নাম্বার প্রদান করুন।", "error");
-      return;
+      errors.deliveryHandle = "দয়া করে হোয়াটসঅ্যাপ ডেলিভারি নম্বর প্রদান করুন।";
     }
 
     if (deliveryMethod === "MESSENGER" && !deliveryHandle.trim()) {
-      showToast("দয়া করে আপনার ফেসবুক প্রোফাইল লিংক বা ইউজারনেম দিন।", "error");
+      errors.deliveryHandle = "দয়া করে আপনার ফেসবুক প্রোফাইল লিংক বা ইউজারনেম দিন।";
+    }
+
+    if (paymentMethod === "wallet" && !hasEnoughWalletBalance) {
+      errors.wallet = `ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই (বর্তমান: ৳${walletBalance}, প্রয়োজন: ৳${finalTotalBDT})। ওয়ালেট রিচার্জ করুন অথবা অনলাইন গেটওয়ে সিলেক্ট করুন।`;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      
+      // Auto-scroll and focus to the first invalid field
+      if (errors.fullName && fullNameRef.current) {
+        fullNameRef.current.focus();
+        fullNameRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (errors.email && emailRef.current) {
+        emailRef.current.focus();
+        emailRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (errors.phone && phoneRef.current) {
+        phoneRef.current.focus();
+        phoneRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (errors.deliveryHandle && deliveryHandleRef.current) {
+        deliveryHandleRef.current.focus();
+        deliveryHandleRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (errors.wallet && walletSectionRef.current) {
+        walletSectionRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      const firstErrorMsg = Object.values(errors)[0];
+      showToast(firstErrorMsg, "error");
       return;
     }
+
+    // Clear previous errors if validation passes
+    setFormErrors({});
 
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -502,50 +554,92 @@ function CheckoutContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-[#1A1D26] mb-1.5">
-                        পুরো নাম (Full Name) *
+                        পুরো নাম (Full Name) <span className="text-rose-500">*</span>
                       </label>
                       <input
+                        ref={fullNameRef}
                         type="text"
                         required
                         autoComplete="name"
                         value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        onChange={(e) => {
+                          setFullName(e.target.value);
+                          if (formErrors.fullName) setFormErrors((prev) => ({ ...prev, fullName: undefined }));
+                        }}
                         placeholder="আপনার পুরো নাম লিখুন"
-                        className="w-full text-xs sm:text-sm p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-[#FC5C03] focus:bg-white transition-all font-medium"
+                        className={`w-full text-xs sm:text-sm p-3 rounded-xl border transition-all font-medium focus:outline-none ${
+                          formErrors.fullName
+                            ? "border-rose-500 bg-rose-50/40 ring-2 ring-rose-500/20"
+                            : "bg-gray-50 border-gray-200 focus:border-[#FC5C03] focus:bg-white"
+                        }`}
                       />
+                      {formErrors.fullName && (
+                        <p className="text-[11.5px] font-bold text-rose-600 flex items-center gap-1.5 mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{formErrors.fullName}</span>
+                        </p>
+                      )}
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-[#1A1D26] mb-1.5">
-                        ইমেইল অ্যাড্রেস (Delivery Email) *
+                        ইমেইল অ্যাড্রেস (Delivery Email) <span className="text-rose-500">*</span>
                       </label>
                       <input
+                        ref={emailRef}
                         type="email"
                         required
                         autoComplete="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (formErrors.email) setFormErrors((prev) => ({ ...prev, email: undefined }));
+                        }}
                         placeholder="yourname@gmail.com"
-                        className="w-full text-xs sm:text-sm p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-[#FC5C03] focus:bg-white transition-all font-medium"
+                        className={`w-full text-xs sm:text-sm p-3 rounded-xl border transition-all font-medium focus:outline-none ${
+                          formErrors.email
+                            ? "border-rose-500 bg-rose-50/40 ring-2 ring-rose-500/20"
+                            : "bg-gray-50 border-gray-200 focus:border-[#FC5C03] focus:bg-white"
+                        }`}
                       />
+                      {formErrors.email && (
+                        <p className="text-[11.5px] font-bold text-rose-600 flex items-center gap-1.5 mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{formErrors.email}</span>
+                        </p>
+                      )}
                     </div>
 
                     <div className="sm:col-span-2">
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="block text-xs font-bold text-[#1A1D26]">
-                          মোবাইল / WhatsApp নাম্বার *
+                          মোবাইল / WhatsApp নাম্বার <span className="text-rose-500">*</span>
                         </label>
                         <span className="text-[10.5px] text-gray-400 font-medium">যেমন: 01700000000</span>
                       </div>
                       <input
+                        ref={phoneRef}
                         type="tel"
                         required
                         autoComplete="tel"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => {
+                          setPhone(e.target.value);
+                          if (formErrors.phone) setFormErrors((prev) => ({ ...prev, phone: undefined }));
+                        }}
                         placeholder="01XXXXXXXXX"
-                        className="w-full text-xs sm:text-sm p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-[#FC5C03] focus:bg-white transition-all font-medium"
+                        className={`w-full text-xs sm:text-sm p-3 rounded-xl border transition-all font-medium focus:outline-none ${
+                          formErrors.phone
+                            ? "border-rose-500 bg-rose-50/40 ring-2 ring-rose-500/20"
+                            : "bg-gray-50 border-gray-200 focus:border-[#FC5C03] focus:bg-white"
+                        }`}
                       />
+                      {formErrors.phone && (
+                        <p className="text-[11.5px] font-bold text-rose-600 flex items-center gap-1.5 mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{formErrors.phone}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -571,7 +665,10 @@ function CheckoutContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {/* Option A: Email */}
                     <div
-                      onClick={() => setDeliveryMethod("EMAIL")}
+                      onClick={() => {
+                        setDeliveryMethod("EMAIL");
+                        if (formErrors.deliveryHandle) setFormErrors((prev) => ({ ...prev, deliveryHandle: undefined }));
+                      }}
                       className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-2 text-left ${
                         deliveryMethod === "EMAIL"
                           ? "border-[#FC5C03] bg-[#FFF9F5] shadow-xs"
@@ -600,7 +697,10 @@ function CheckoutContent() {
 
                     {/* Option B: WhatsApp */}
                     <div
-                      onClick={() => setDeliveryMethod("WHATSAPP")}
+                      onClick={() => {
+                        setDeliveryMethod("WHATSAPP");
+                        if (formErrors.deliveryHandle) setFormErrors((prev) => ({ ...prev, deliveryHandle: undefined }));
+                      }}
                       className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-2 text-left ${
                         deliveryMethod === "WHATSAPP"
                           ? "border-[#FC5C03] bg-[#FFF9F5] shadow-xs"
@@ -629,7 +729,10 @@ function CheckoutContent() {
 
                     {/* Option C: Messenger */}
                     <div
-                      onClick={() => setDeliveryMethod("MESSENGER")}
+                      onClick={() => {
+                        setDeliveryMethod("MESSENGER");
+                        if (formErrors.deliveryHandle) setFormErrors((prev) => ({ ...prev, deliveryHandle: undefined }));
+                      }}
                       className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-2 text-left ${
                         deliveryMethod === "MESSENGER"
                           ? "border-[#FC5C03] bg-[#FFF9F5] shadow-xs"
@@ -664,27 +767,55 @@ function CheckoutContent() {
                         হোয়াটসঅ্যাপ ডেলিভারি নাম্বার (যদি মোবাইল নাম্বারের চেয়ে ভিন্ন হয়):
                       </label>
                       <input
+                        ref={deliveryHandleRef}
                         type="tel"
                         value={deliveryHandle}
-                        onChange={(e) => setDeliveryHandle(e.target.value)}
+                        onChange={(e) => {
+                          setDeliveryHandle(e.target.value);
+                          if (formErrors.deliveryHandle) setFormErrors((prev) => ({ ...prev, deliveryHandle: undefined }));
+                        }}
                         placeholder={phone || "+8801XXXXXXXXX"}
-                        className="w-full text-xs p-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-[#FC5C03]"
+                        className={`w-full text-xs p-2.5 rounded-xl border transition-all focus:outline-none ${
+                          formErrors.deliveryHandle
+                            ? "border-rose-500 bg-rose-50/40 ring-2 ring-rose-500/20"
+                            : "bg-gray-50 border-gray-200 focus:border-[#FC5C03] focus:bg-white"
+                        }`}
                       />
+                      {formErrors.deliveryHandle && (
+                        <p className="text-[11.5px] font-bold text-rose-600 flex items-center gap-1.5 mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{formErrors.deliveryHandle}</span>
+                        </p>
+                      )}
                     </div>
                   )}
 
                   {deliveryMethod === "MESSENGER" && (
                     <div className="pt-2">
                       <label className="block text-xs font-bold text-[#1A1D26] mb-1">
-                        ফেসবুক প্রোফাইল লিংক বা ইউজারনেম:
+                        ফেসবুক প্রোফাইল লিংক বা ইউজারনেম: <span className="text-rose-500">*</span>
                       </label>
                       <input
+                        ref={deliveryHandleRef}
                         type="text"
                         value={deliveryHandle}
-                        onChange={(e) => setDeliveryHandle(e.target.value)}
+                        onChange={(e) => {
+                          setDeliveryHandle(e.target.value);
+                          if (formErrors.deliveryHandle) setFormErrors((prev) => ({ ...prev, deliveryHandle: undefined }));
+                        }}
                         placeholder="facebook.com/username অথবা আপনার ইউজারনেম"
-                        className="w-full text-xs p-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-[#FC5C03]"
+                        className={`w-full text-xs p-2.5 rounded-xl border transition-all focus:outline-none ${
+                          formErrors.deliveryHandle
+                            ? "border-rose-500 bg-rose-50/40 ring-2 ring-rose-500/20"
+                            : "bg-gray-50 border-gray-200 focus:border-[#FC5C03] focus:bg-white"
+                        }`}
                       />
+                      {formErrors.deliveryHandle && (
+                        <p className="text-[11.5px] font-bold text-rose-600 flex items-center gap-1.5 mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{formErrors.deliveryHandle}</span>
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -697,13 +828,13 @@ function CheckoutContent() {
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="অর্ডারের সাথে কোনো বিশেষ নোট দিতে চাইলে লিখুন..."
-                      className="w-full text-xs p-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-[#FC5C03]"
+                      className="w-full text-xs p-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-[#FC5C03] focus:bg-white"
                     />
                   </div>
                 </div>
 
                 {/* 3. Payment Method: Express Wallet vs Automated Gateway */}
-                <div className="bg-white rounded-3xl border border-[#E8E8EE] p-5 sm:p-7 shadow-2xs space-y-4">
+                <div ref={walletSectionRef} className="bg-white rounded-3xl border border-[#E8E8EE] p-5 sm:p-7 shadow-2xs space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                     <h3 className="text-sm sm:text-base font-bold text-[#1A1D26] flex items-center gap-2">
                       <span className="w-6 h-6 rounded-full bg-[#FFF2E8] text-[#FC5C03] flex items-center justify-center text-xs font-black">
@@ -713,12 +844,23 @@ function CheckoutContent() {
                     </h3>
                   </div>
 
+                  {formErrors.wallet && (
+                    <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 text-xs text-rose-800 font-bold flex items-center gap-2 animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>{formErrors.wallet}</span>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
                     {/* OPTION 1: EXPRESS 1-CLICK WALLET CHECKOUT */}
                     <div
                       onClick={() => {
-                        if (user) setPaymentMethod("wallet");
-                        else openLoginModal("/checkout");
+                        if (user) {
+                          setPaymentMethod("wallet");
+                          if (formErrors.wallet) setFormErrors((prev) => ({ ...prev, wallet: undefined }));
+                        } else {
+                          openLoginModal("/checkout");
+                        }
                       }}
                       className={`p-4 sm:p-5 rounded-2xl border-2 cursor-pointer transition-all ${
                         paymentMethod === "wallet"
@@ -797,7 +939,10 @@ function CheckoutContent() {
 
                     {/* OPTION 2: AUTOMATED PIPRAPAY GATEWAY */}
                     <div
-                      onClick={() => setPaymentMethod("gateway")}
+                      onClick={() => {
+                        setPaymentMethod("gateway");
+                        if (formErrors.wallet) setFormErrors((prev) => ({ ...prev, wallet: undefined }));
+                      }}
                       className={`p-4 sm:p-5 rounded-2xl border-2 cursor-pointer transition-all ${
                         paymentMethod === "gateway"
                           ? "border-[#FC5C03] bg-[#FFF9F5] shadow-xs"

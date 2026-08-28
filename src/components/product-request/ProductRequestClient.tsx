@@ -28,6 +28,7 @@ import {
   Info,
   BadgeCheck,
   Check,
+  AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
@@ -147,6 +148,12 @@ export function ProductRequestClient() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
 
+  // Validation Errors
+  const [formErrors, setFormErrors] = useState<{
+    productName?: string;
+    customerPhone?: string;
+  }>({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedData, setSubmittedData] = useState<ProductRequestItem | null>(null);
 
@@ -202,16 +209,22 @@ export function ProductRequestClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const errors: typeof formErrors = {};
     if (!productName.trim()) {
-      showToast("দয়া করে প্রোডাক্ট বা টুলের নাম লিখুন", "error");
-      return;
+      errors.productName = "দয়া করে প্রোডাক্ট বা টুলের নাম লিখুন।";
     }
 
     if (!customerPhone.trim() && !customerEmail.trim()) {
-      showToast("যোগাযোগের জন্য হোয়াটসঅ্যাপ নাম্বার বা ইমেইল প্রদান করুন", "error");
+      errors.customerPhone = "যোগাযোগের জন্য হোয়াটসঅ্যাপ নাম্বার বা ইমেইল প্রদান করুন।";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      showToast(Object.values(errors)[0], "error");
       return;
     }
 
+    setFormErrors({});
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/product-request", {
@@ -645,10 +658,23 @@ export function ProductRequestClient() {
                       type="text"
                       required
                       value={productName}
-                      onChange={(e) => setProductName(e.target.value)}
+                      onChange={(e) => {
+                        setProductName(e.target.value);
+                        if (formErrors.productName) setFormErrors((prev) => ({ ...prev, productName: undefined }));
+                      }}
                       placeholder="e.g. Midjourney Pro, Cursor AI, GitHub Copilot..."
-                      className="w-full text-xs sm:text-sm p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#FC5C03] focus:bg-white font-medium text-gray-900 transition-all placeholder:text-gray-400"
+                      className={`w-full text-xs sm:text-sm p-3 rounded-xl border transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none ${
+                        formErrors.productName
+                          ? "border-rose-500 bg-rose-50/40 ring-2 ring-rose-500/20"
+                          : "bg-gray-50 border-gray-200 focus:border-[#FC5C03] focus:bg-white"
+                      }`}
                     />
+                    {formErrors.productName && (
+                      <p className="text-[11.5px] font-bold text-rose-600 flex items-center gap-1.5 mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{formErrors.productName}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -828,10 +854,23 @@ export function ProductRequestClient() {
                         type="text"
                         required
                         value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        onChange={(e) => {
+                          setCustomerPhone(e.target.value);
+                          if (formErrors.customerPhone) setFormErrors((prev) => ({ ...prev, customerPhone: undefined }));
+                        }}
                         placeholder="017XXXXXXXX"
-                        className="w-full text-xs p-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#FC5C03]"
+                        className={`w-full text-xs p-2.5 rounded-lg border transition-all focus:outline-none ${
+                          formErrors.customerPhone
+                            ? "border-rose-500 bg-rose-50/40 ring-2 ring-rose-500/20"
+                            : "bg-white border-gray-200 focus:border-[#FC5C03]"
+                        }`}
                       />
+                      {formErrors.customerPhone && (
+                        <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1 mt-1 animate-in fade-in">
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          <span>{formErrors.customerPhone}</span>
+                        </p>
+                      )}
                     </div>
 
                     <div>
