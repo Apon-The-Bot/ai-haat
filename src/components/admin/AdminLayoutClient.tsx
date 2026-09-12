@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
@@ -39,6 +39,8 @@ import {
   Undo2,
   Truck,
   Share2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
@@ -46,13 +48,16 @@ import { useNotification } from "@/context/NotificationContext";
 
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { user, openLoginModal, logout } = useAuth();
   const { unreadCount } = useNotification();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [mfaStatus, setMfaStatus] = useState<{ totpEnabled?: boolean; isMfaVerified?: boolean } | null>(null);
   const [mfaLoading, setMfaLoading] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    "DASHBOARD": true,
+    "COMMERCE": true,
+  });
 
   const adminEmails = [
     "mdamanullahsheikhapon@gmail.com",
@@ -327,56 +332,89 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
 
       {/* MOBILE DRAWER */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex animate-in fade-in duration-150">
-          <div className="w-72 bg-white h-full p-5 flex flex-col justify-between shadow-2xl overflow-y-auto animate-in slide-in-from-left duration-200">
+        <div 
+          className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex animate-in fade-in duration-150"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <div 
+            className="w-72 bg-white h-full p-5 flex flex-col justify-between shadow-2xl overflow-y-auto animate-in slide-in-from-left duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                 <Logo size="sm" showSubtitle={false} />
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-black cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-500 hover:text-black cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {navigation.map((group) => (
-                <div key={group.group} className="space-y-1">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
-                    {group.group}
+              {navigation.map((group) => {
+                const isExpanded = expandedGroups[group.group] || false;
+                
+                return (
+                  <div key={group.group} className="space-y-1">
+                    <button
+                      onClick={() => setExpandedGroups(prev => ({ ...prev, [group.group]: !prev[group.group] }))}
+                      className="w-full flex items-center justify-between px-3 py-2 cursor-pointer rounded-xl hover:bg-slate-50 transition-colors min-h-[44px]"
+                    >
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        {group.group}
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      )}
+                    </button>
+                    
+                    {isExpanded && (
+                      <div className="space-y-0.5 mt-1">
+                        {group.items.map((item) => {
+                          const Icon = item.icon;
+                          const isActive = pathname === item.href;
+                          const showBadge = (item.name === "Orders" || item.name === "Support Queue") && unreadCount > 0;
+                          
+                          return (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className={`flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all ${
+                                isActive
+                                  ? "bg-[#FFF2E8] text-[#FC5C03]"
+                                  : "text-slate-600 hover:text-black hover:bg-slate-50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
+                                <span>{item.name}</span>
+                              </div>
+                              
+                              {showBadge && (
+                                <span className="w-5 h-5 bg-[#FC5C03] text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                                  {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                          isActive
-                            ? "bg-[#FFF2E8] text-[#FC5C03]"
-                            : "text-slate-600 hover:text-black hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
-                          <span>{item.name}</span>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            <div className="pt-4 border-t border-slate-200">
+            <div className="pt-4 border-t border-slate-200 mt-6">
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   logout();
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
+                className="w-full flex items-center gap-2 px-3 py-2 min-h-[44px] text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>

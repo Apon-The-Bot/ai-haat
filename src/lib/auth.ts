@@ -168,5 +168,14 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET || "aihaat_super_secure_nextauth_jwt_secret_key_2026_xyz",
+  secret: (() => {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      throw new Error(
+        "[FATAL] NEXTAUTH_SECRET environment variable is not set. " +
+        "Generate one with: openssl rand -base64 32"
+      );
+    }
+    return secret;
+  })(),
 };

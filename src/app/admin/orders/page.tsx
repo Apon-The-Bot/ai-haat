@@ -578,7 +578,7 @@ export default function AdminOrdersPage() {
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 w-full md:w-auto">
             {/* Payment Status Filter */}
             <select
               value={paymentFilter}
@@ -586,7 +586,7 @@ export default function AdminOrdersPage() {
                 setPaymentFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden"
+              className="w-full md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden min-h-[44px]"
             >
               <option value="ALL">Payment: All</option>
               <option value="VERIFIED">Verified (Paid)</option>
@@ -601,7 +601,7 @@ export default function AdminOrdersPage() {
                 setPaymentMethodFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden"
+              className="w-full md:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden min-h-[44px]"
             >
               <option value="ALL">Gateway: All</option>
               <option value="bkash">bKash</option>
@@ -621,127 +621,74 @@ export default function AdminOrdersPage() {
       {/* Orders Table & Priority View */}
       <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-2xs">
         
-        {/* Mobile View: Responsive Stacked Cards (< md) */}
-        <div className="block md:hidden divide-y divide-slate-100">
+        {/* Mobile View: Responsive Stacked Cards */}
+        <div className="mobile-cards-only p-4 space-y-4 bg-slate-50/50">
           {orders.length > 0 ? (
             orders.map((order) => {
-              const itemsCount = order.items.reduce((acc, it) => acc + (it.quantity || 1), 0);
-              const firstItem = order.items[0];
-              const additionalCount = order.items.length - 1;
-
               return (
-                <div
-                  key={order.id}
-                  className="p-4 space-y-3 hover:bg-slate-50 transition-colors cursor-pointer"
-                  onClick={() => openOrderDetail(order.orderNumber || order.id)}
-                >
-                  {/* Top Bar: Order ID + Status */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => openOrderDetail(order.orderNumber || order.id)}
-                        className="font-mono font-bold text-sm text-slate-900 hover:text-[#FC5C03]"
-                      >
-                        #{order.orderNumber || order.id}
-                      </button>
-                      <button
-                        onClick={() => handleCopy(order.id, order.orderNumber || order.id)}
-                        className="text-slate-400 hover:text-slate-800 p-1"
-                        title="Copy Order ID"
-                      >
-                        {copiedId === order.id ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
-                      </button>
+                <div key={order.id} className="bg-white rounded-2xl border border-[#E8E8EE] p-4 space-y-3 mobile-card-interactive shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-black text-[#1A1D26]">#{order.orderNumber || order.id}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        order.paymentStatus === "VERIFIED" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
+                        order.paymentStatus === "FAILED" ? "bg-red-50 text-red-700 border border-red-200" :
+                        "bg-amber-50 text-amber-700 border border-amber-200"
+                      }`}>
+                        {order.paymentStatus}
+                      </span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        order.deliveryStatus === "Delivered" || order.deliveryStatus === "DELIVERED" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                        order.deliveryStatus === "Cancelled" || order.deliveryStatus === "CANCELLED" ? "bg-red-50 text-red-700 border border-red-200" :
+                        order.deliveryStatus === "Processing" || order.deliveryStatus === "PROCESSING" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                        "bg-slate-100 text-slate-700 border border-slate-200"
+                      }`}>
+                        {order.deliveryStatus}
+                      </span>
                     </div>
-
-                    <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                        order.deliveryStatus === "Delivered" || order.deliveryStatus === "DELIVERED"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : order.deliveryStatus === "Cancelled" || order.deliveryStatus === "CANCELLED"
-                          ? "bg-red-50 text-red-700 border border-red-200"
-                          : order.deliveryStatus === "Processing" || order.deliveryStatus === "PROCESSING"
-                          ? "bg-blue-50 text-blue-700 border border-blue-200"
-                          : "bg-amber-50 text-amber-800 border border-amber-200"
-                      }`}
+                  </div>
+                  
+                  <div className="text-xs text-[#7A8190]">
+                    <span className="font-semibold text-slate-700">{order.customerName}</span> • {order.customerPhone || order.customerEmail}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-[#FC5C03]">{formatPrice(order.totalBDT)}</span>
+                    <span className="text-[10px] text-gray-400 font-medium">{order.date || new Date(order.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-2 border-t border-slate-100">
+                    <button 
+                      onClick={() => openOrderDetail(order.orderNumber || order.id)} 
+                      className="flex-1 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                     >
-                      <span>{order.deliveryStatus}</span>
-                    </span>
-                  </div>
-
-                  {/* Customer Info */}
-                  <div className="flex items-center justify-between text-xs" onClick={(e) => e.stopPropagation()}>
-                    <div>
-                      <strong className="text-slate-900 font-bold block">{order.customerName}</strong>
-                      <span className="text-slate-500 font-mono text-[11px]">{order.customerPhone}</span>
-                    </div>
-
-                    {order.customerPhone && (
-                      <a
-                        href={`https://wa.me/88${order.customerPhone.replace(/[^0-9]/g, "")}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg font-bold inline-flex items-center gap-1 text-[11px]"
-                      >
-                        <MessageSquare className="w-3 h-3" />
-                        <span>WhatsApp</span>
-                      </a>
-                    )}
-                  </div>
-
-                  {/* Product Summary & Total */}
-                  <div className="p-2.5 bg-slate-50 rounded-xl space-y-1 text-xs">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-bold text-slate-800 line-clamp-1">
-                        {firstItem ? `${firstItem.productName} (${firstItem.variationName})` : "Digital Product"}
-                      </span>
-                      <strong className="text-slate-900 font-black text-sm shrink-0">
-                        {formatPrice(order.totalBDT)}
-                      </strong>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-slate-500">
-                      <span>
-                        {order.paymentMethod.toUpperCase()} • Trx: <strong className="font-mono text-[#FC5C03]">{order.trxId || "N/A"}</strong>
-                      </span>
-                      {additionalCount > 0 && (
-                        <span className="text-blue-600 font-bold">+{additionalCount} more items</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions Footer */}
-                  <div className="flex items-center justify-end gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+                      <Eye className="w-4 h-4" />
+                      View Details
+                    </button>
                     {order.deliveryStatus !== "Delivered" && order.deliveryStatus !== "DELIVERED" && order.deliveryStatus !== "Cancelled" && order.deliveryStatus !== "CANCELLED" && (
                       <>
                         <button
-                          onClick={() => handleAutoFulfill(order.orderNumber || order.id)}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-2xs transition-colors inline-flex items-center gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAutoFulfill(order.orderNumber || order.id);
+                          }}
+                          className="min-h-[44px] px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors flex items-center justify-center"
+                          title="Auto Fulfill"
                         >
-                          <KeyRound className="w-3.5 h-3.5" />
-                          <span>Auto</span>
+                          <KeyRound className="w-4 h-4" />
                         </button>
-
                         <button
-                          onClick={() => handleOpenDispatchModal(order)}
-                          className="px-3 py-1.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-lg shadow-2xs transition-colors inline-flex items-center gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDispatchModal(order);
+                          }}
+                          className="min-h-[44px] px-4 bg-[#FC5C03] hover:bg-[#EC4001] text-white rounded-xl transition-colors flex items-center justify-center"
+                          title="Send Email"
                         >
-                          <Mail className="w-3.5 h-3.5" />
-                          <span>Send</span>
+                          <Mail className="w-4 h-4" />
                         </button>
                       </>
                     )}
-
-                    <button
-                      onClick={() => openOrderDetail(order.orderNumber || order.id)}
-                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Details</span>
-                    </button>
                   </div>
                 </div>
               );
@@ -754,8 +701,8 @@ export default function AdminOrdersPage() {
           )}
         </div>
 
-        {/* Desktop View: Full Data Table (>= md) */}
-        <div className="hidden md:block overflow-x-auto">
+        {/* Desktop View: Full Data Table */}
+        <div className="desktop-table-only overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200 uppercase tracking-wider text-[11px] font-bold">
               <tr>

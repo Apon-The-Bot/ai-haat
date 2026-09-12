@@ -127,3 +127,76 @@ body {
   border-radius: 10px;
   border: 1px solid #E8E8EE;
 }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE-FIRST UI UTILITIES
+   ═══════════════════════════════════════════════════════ */
+
+/* Bottom navigation spacing — add to main content when bottom nav is visible */
+.has-bottom-nav {
+  padding-bottom: calc(56px + max(12px, env(safe-area-inset-bottom, 0px)));
+}
+
+/* Touch manipulation — prevents 300ms tap delay and improves scroll */
+.touch-action-manipulation {
+  touch-action: manipulation;
+}
+
+/* Bottom sheet backdrop */
+.sheet-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Sticky bottom bar safe area */
+.sticky-bottom-safe {
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+/* Mobile data card — interactive card state */
+.mobile-card-interactive {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.mobile-card-interactive:active {
+  transform: scale(0.98);
+}
+
+/* Skeleton shimmer loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f3f4f6 25%,
+    #e5e7eb 37%,
+    #f3f4f6 63%
+  );
+  background-size: 400% 100%;
+  animation: skeletonShimmer 1.4s ease infinite;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* Mobile table → card transition utility */
+@media (max-width: 767px) {
+  .desktop-table-only {
+    display: none !important;
+  }
+}
+@media (min-width: 768px) {
+  .mobile-cards-only {
+    display: none !important;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .mobile-card-interactive,
+  .skeleton {
+    animation: none !important;
+    transition: none !important;
+  }
+}

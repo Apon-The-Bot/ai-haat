@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { X, ShieldCheck, Zap, Lock, CheckCircle2 } from "lucide-react";
@@ -12,6 +12,18 @@ export function AuthModal() {
   const { isAuthModalOpen, setIsAuthModalOpen, login, redirectCallbackUrl } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Body scroll lock on mobile
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isAuthModalOpen]);
 
   if (!isAuthModalOpen) return null;
 
@@ -31,36 +43,41 @@ export function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-[#E8E8EE] overflow-hidden animate-in zoom-in-95 duration-200">
+    <div 
+      className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-end md:items-center justify-center md:p-4 animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="relative w-full h-[100dvh] md:h-auto max-w-none md:max-w-md bg-white md:rounded-3xl shadow-2xl md:border md:border-[#E8E8EE] overflow-hidden flex flex-col animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:zoom-in-95 duration-300">
         
         {/* Top Banner with Close Button */}
-        <div className="bg-[#1A1D26] p-6 text-white text-center relative border-b border-gray-800">
+        <div className="bg-[#1A1D26] px-6 pt-[max(env(safe-area-inset-top,1.5rem),1.5rem)] pb-6 md:p-6 text-white text-center relative border-b border-gray-800 shrink-0">
           <button
             onClick={() => setIsAuthModalOpen(false)}
-            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="absolute right-4 w-[44px] h-[44px] flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            style={{ top: 'max(env(safe-area-inset-top,1rem),1rem)' }}
             aria-label="Close"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
           
-          <div className="inline-block bg-white px-3.5 py-1.5 rounded-full mb-3 shadow-sm">
+          <div className="inline-block bg-white px-3.5 py-1.5 rounded-full mb-3 shadow-sm mt-2 md:mt-0">
             <Logo size="sm" showSubtitle={false} />
           </div>
 
-          <h3 className="text-lg sm:text-xl font-black text-white">
+          <h3 className="text-xl sm:text-xl font-black text-white">
             AI Haat-এ স্বাগতম
           </h3>
-          <p className="text-xs text-gray-300 mt-1 max-w-xs mx-auto">
+          <p className="text-xs text-gray-300 mt-1.5 max-w-xs mx-auto">
             আপনার অর্ডার, ডিজিটাল ভল্ট এবং ওয়ালেট ম্যানেজ করতে গুগল দিয়ে প্রবেশ করুন
           </p>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 sm:p-7 space-y-5">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-7 space-y-6 flex flex-col justify-center md:justify-start pb-[max(env(safe-area-inset-bottom,1.5rem),1.5rem)] md:pb-7">
           
           {errorMsg && (
-            <div className="text-red-500 text-sm text-center font-medium bg-red-50 p-2.5 rounded-lg border border-red-100">
+            <div className="text-red-500 text-sm text-center font-medium bg-red-50 p-3 rounded-xl border border-red-100">
               {errorMsg}
             </div>
           )}
@@ -70,7 +87,7 @@ export function AuthModal() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full py-3.5 px-4 bg-white hover:bg-gray-50 active:scale-[0.99] border-2 border-gray-200 hover:border-gray-400 text-gray-800 text-sm font-bold rounded-2xl shadow-xs transition-all flex items-center justify-center gap-3 group cursor-pointer disabled:opacity-60"
+            className="w-full min-h-[48px] py-3.5 px-4 bg-white hover:bg-gray-50 active:scale-[0.98] border-2 border-gray-200 hover:border-gray-400 text-gray-800 text-[15px] sm:text-sm font-bold rounded-2xl shadow-xs transition-all flex items-center justify-center gap-3 group cursor-pointer disabled:opacity-60"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-[#FC5C03] border-t-transparent rounded-full animate-spin" />
@@ -98,23 +115,25 @@ export function AuthModal() {
           </button>
 
           {/* Value Highlights */}
-          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-2.5">
-            <div className="flex items-center gap-2 text-xs text-gray-700 font-medium">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100 space-y-3">
+            <div className="flex items-start gap-3 text-[13px] md:text-xs text-gray-700 font-medium">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>১-ক্লিকে ইনস্ট্যান্ট লগইন, পাসওয়ার্ড মনে রাখার ঝামেলা নেই</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-700 font-medium">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="flex items-start gap-3 text-[13px] md:text-xs text-gray-700 font-medium">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>ডিজিটাল ভল্ট থেকে লাইসেন্স কি ও ক্রেডেনশিয়াল সংগ্রহ</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-700 font-medium">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="flex items-start gap-3 text-[13px] md:text-xs text-gray-700 font-medium">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>ওয়ালেট ব্যালেন্স দিয়ে ৫ সেকেন্ডে অর্ডার সম্পন্ন</span>
             </div>
           </div>
 
+          <div className="flex-1 md:hidden"></div>
+
           {/* Security & Privacy Footer */}
-          <div className="pt-2 border-t border-gray-100 flex items-center justify-center gap-1.5 text-[11px] text-[#7A8190] text-center">
+          <div className="pt-4 md:pt-2 border-t border-gray-100 flex items-center justify-center gap-1.5 text-[11px] md:text-[11px] text-[#7A8190] text-center shrink-0">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>গুগল অথেন্টিকেশন দ্বারা সুরক্ষিত ও এনক্রিপ্টেড</span>
           </div>

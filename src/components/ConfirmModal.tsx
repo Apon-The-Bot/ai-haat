@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { AlertTriangle, Trash2, X, Check, Info } from "lucide-react";
 
 interface ConfirmModalProps {
@@ -26,15 +26,34 @@ export function ConfirmModal({
   variant = "danger",
   isLoading = false,
 }: ConfirmModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen && !isLoading) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, isLoading]);
+
   if (!isOpen) return null;
 
   const isDanger = variant === "danger";
   const isWarning = variant === "warning";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl border border-slate-200 max-w-md w-full p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
-        
+    <>
+      <div 
+        className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer" 
+        onClick={() => !isLoading && onClose()}
+        aria-hidden="true"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="fixed bottom-0 left-0 right-0 md:bottom-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-50 bg-white rounded-t-2xl md:rounded-3xl border-t md:border border-slate-200 md:max-w-md w-full px-6 pt-6 shadow-2xl space-y-5 animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:zoom-in-95 duration-200"
+        style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}
+      >
         {/* Header with Icon */}
         <div className="flex items-start gap-4">
           <div
@@ -43,7 +62,7 @@ export function ConfirmModal({
                 ? "bg-red-50 text-red-600 border border-red-100"
                 : isWarning
                 ? "bg-amber-50 text-amber-600 border border-amber-100"
-                : "bg-blue-50 text-blue-600 border border-blue-100"
+                : "bg-orange-50 text-[#FC5C03] border border-orange-100"
             }`}
           >
             {isDanger ? (
@@ -67,19 +86,20 @@ export function ConfirmModal({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Buttons */}
-        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <div className="flex flex-col-reverse md:flex-row md:items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
           <button
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+            className="w-full md:w-auto min-h-[44px] px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center"
           >
             {cancelText}
           </button>
@@ -88,7 +108,7 @@ export function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className={`px-5 py-2.5 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 ${
+            className={`w-full md:w-auto min-h-[44px] px-5 py-2.5 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
               isDanger
                 ? "bg-red-600 hover:bg-red-700 shadow-red-200"
                 : isWarning
@@ -106,6 +126,6 @@ export function ConfirmModal({
         </div>
 
       </div>
-    </div>
+    </>
   );
 }

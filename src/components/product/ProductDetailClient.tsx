@@ -960,7 +960,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <HowToOrder />
 
       {/* 7. MOBILE STICKY PURCHASE BAR WITH ACTIVE VARIATION CONTEXT */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E8E8EE] p-3 shadow-2xl flex items-center justify-between gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E8E8EE] px-4 pt-3 shadow-up-md flex items-center justify-between gap-3"
+        style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))" }}
+      >
         <div className="min-w-0 flex-1">
           <span className="text-[10px] text-gray-500 block truncate font-bold">
             {selectedVariation.name} {quantity > 1 ? `× ${quantity}` : ""}
@@ -974,7 +977,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             type="button"
             disabled={isProductOutOfStock}
             onClick={handleAddToCart}
-            className="min-h-[40px] px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-[#FC5C03] border border-[#FC5C03]/30 rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+            className="min-h-[44px] px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#FC5C03] border border-[#FC5C03]/30 rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 touch-action-manipulation"
             aria-label="Add to cart"
           >
             কার্ট
@@ -983,7 +986,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             type="button"
             disabled={isProductOutOfStock}
             onClick={handleBuyNow}
-            className="min-h-[40px] px-5 py-2 bg-gradient-to-r from-[#FC5C03] to-[#EC4001] text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
+            className="min-h-[44px] px-5 py-2.5 bg-gradient-to-r from-[#FC5C03] to-[#EC4001] text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50 touch-action-manipulation"
             aria-label="Buy now"
           >
             এখনই কিনুন

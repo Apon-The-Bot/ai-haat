@@ -46,10 +46,10 @@ export function Hero() {
             </p>
 
             {/* CTA Buttons */}
-            <div className="pt-2 flex flex-wrap items-center gap-2.5 sm:gap-3">
+            <div className="pt-2 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
               <Link
                 href="/shop"
-                className="inline-flex items-center gap-2 px-6 sm:px-7 py-2.5 sm:py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm hover:shadow-md transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all min-h-touch touch-action-manipulation"
               >
                 <span>সব প্রোডাক্ট দেখুন</span>
                 <ArrowRight className="w-4 h-4" />
@@ -57,7 +57,7 @@ export function Hero() {
 
               <Link
                 href="/order-tracking"
-                className="inline-flex items-center gap-2 px-5 py-2.5 sm:py-3 bg-white text-[#1A1D26] hover:text-[#FC5C03] border border-[#E8E8EE] hover:border-[#FC5C03]/40 text-xs sm:text-sm font-bold rounded-lg shadow-2xs transition-all"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-[#1A1D26] hover:text-[#FC5C03] border border-[#E8E8EE] hover:border-[#FC5C03]/40 text-sm font-bold rounded-xl shadow-2xs transition-all min-h-touch"
               >
                 <span>অর্ডার ট্র্যাকিং</span>
               </Link>
@@ -81,14 +81,14 @@ export function Hero() {
 
           </div>
 
-          {/* RIGHT HERO AREA (5 Cols: 3 by 2 Product Tiles from Featured Products) */}
+          {/* RIGHT HERO AREA (5 Cols: Horizontal scroll on mobile, 3x2 grid on desktop) */}
           <div className="lg:col-span-5">
-            <div className="grid grid-cols-3 gap-2.5 sm:gap-3 p-3.5 bg-white/80 backdrop-blur-xs rounded-2xl border border-[#E8E8EE] shadow-sm">
+            <div className="flex lg:grid lg:grid-cols-3 gap-2.5 sm:gap-3 p-3.5 bg-white/80 backdrop-blur-xs rounded-2xl border border-[#E8E8EE] shadow-sm overflow-x-auto no-scrollbar snap-x snap-mandatory lg:overflow-visible">
               {featuredProducts.map((prod) => (
                 <Link
                   key={prod.id}
                   href={`/product/${prod.slug}`}
-                  className="group flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl border border-[#E8E8EE] hover:border-[#FC5C03] hover:shadow-cardHover transition-all text-center"
+                  className="group flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl border border-[#E8E8EE] hover:border-[#FC5C03] hover:shadow-cardHover transition-all text-center min-w-[110px] sm:min-w-[120px] lg:min-w-0 shrink-0 lg:shrink snap-center"
                 >
                   <div className="w-12 h-12 sm:w-14 sm:h-14 relative rounded-xl overflow-hidden mb-2.5 shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
                     <SafeImage

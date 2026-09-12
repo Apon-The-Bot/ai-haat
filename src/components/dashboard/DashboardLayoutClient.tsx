@@ -24,11 +24,35 @@ import {
   Banknote,
   LifeBuoy,
   Share2,
+  MoreHorizontal,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { SafeImage } from "@/components/SafeImage";
+
+/**
+ * Bottom navigation tab definition
+ */
+interface BottomNavTab {
+  name: string;
+  nameBn: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  /** Match additional paths as active */
+  matchPaths?: string[];
+}
+
+/**
+ * "More" menu item definition — items that live in the More bottom sheet
+ */
+interface MoreMenuItem {
+  name: string;
+  nameBn: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
 
 export function DashboardLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -37,67 +61,80 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
   const { language, setLanguage } = useLanguage();
   const isBn = language === "bn";
   const [mounted, setMounted] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const navItems = [
+  // Lock body scroll when More sheet is open
+  useEffect(() => {
+    if (isMoreOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isMoreOpen]);
+
+  // ──── BOTTOM NAVIGATION TABS (5 primary tabs) ────
+  const bottomTabs: BottomNavTab[] = [
     {
-      name: isBn ? "ওভারভিউ" : "Overview",
+      name: "Home",
+      nameBn: "হোম",
       href: "/dashboard",
       icon: LayoutDashboard,
     },
     {
-      name: isBn ? "আমার অর্ডার" : "My Orders",
+      name: "Orders",
+      nameBn: "অর্ডার",
       href: "/dashboard/orders",
       icon: ShoppingBag,
     },
     {
-      name: isBn ? "ডিজিটাল ভল্ট" : "Digital Vault",
+      name: "Vault",
+      nameBn: "ভল্ট",
       href: "/dashboard/keys",
       icon: KeyRound,
     },
     {
-      name: isBn ? "ওয়ারেন্টি ক্লেইমস" : "Warranty Claims",
-      href: "/dashboard/replacements",
-      icon: RotateCcw,
-    },
-    {
-      name: isBn ? "রিফান্ড রিকোয়েস্ট" : "Refund Requests",
-      href: "/dashboard/refunds",
-      icon: Banknote,
-    },
-    {
-      name: isBn ? "ওয়ালেট" : "Wallet",
+      name: "Wallet",
+      nameBn: "ওয়ালেট",
       href: "/dashboard/wallet",
       icon: Wallet,
     },
     {
-      name: isBn ? "নোটিফিকেশন" : "Notifications",
-      href: "/dashboard/notifications",
-      icon: Bell,
+      name: "More",
+      nameBn: "আরও",
+      href: "#more",
+      icon: MoreHorizontal,
     },
-    {
-      name: isBn ? "সিকিউরিটি" : "Security",
-      href: "/dashboard/security",
-      icon: ShieldCheck,
-    },
-    {
-      name: isBn ? "ইমেইল প্রেফারেন্স" : "Email Preferences",
-      href: "/dashboard/preferences",
-      icon: Mail,
-    },
-    {
-      name: isBn ? "সাপোর্ট ও সহায়তা" : "Support & Help",
-      href: "/dashboard/support",
-      icon: LifeBuoy,
-    },
-    {
-      name: isBn ? "অ্যাফিলিয়েট প্রোগ্রাম" : "Affiliate Program",
-      href: "/dashboard/affiliate",
-      icon: Share2,
-    },
+  ];
+
+  // ──── "MORE" MENU ITEMS ────
+  const moreItems: MoreMenuItem[] = [
+    { name: "Warranty Claims", nameBn: "ওয়ারেন্টি ক্লেইমস", href: "/dashboard/replacements", icon: RotateCcw },
+    { name: "Refund Requests", nameBn: "রিফান্ড রিকোয়েস্ট", href: "/dashboard/refunds", icon: Banknote },
+    { name: "Notifications", nameBn: "নোটিফিকেশন", href: "/dashboard/notifications", icon: Bell },
+    { name: "Security", nameBn: "সিকিউরিটি", href: "/dashboard/security", icon: ShieldCheck },
+    { name: "Email Preferences", nameBn: "ইমেইল প্রেফারেন্স", href: "/dashboard/preferences", icon: Mail },
+    { name: "Support & Help", nameBn: "সাপোর্ট ও সহায়তা", href: "/dashboard/support", icon: LifeBuoy },
+    { name: "Affiliate Program", nameBn: "অ্যাফিলিয়েট প্রোগ্রাম", href: "/dashboard/affiliate", icon: Share2 },
+  ];
+
+  // Full nav items for desktop sidebar (all items combined)
+  const allNavItems = [
+    { name: isBn ? "ওভারভিউ" : "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { name: isBn ? "আমার অর্ডার" : "My Orders", href: "/dashboard/orders", icon: ShoppingBag },
+    { name: isBn ? "ডিজিটাল ভল্ট" : "Digital Vault", href: "/dashboard/keys", icon: KeyRound },
+    { name: isBn ? "ওয়ারেন্টি ক্লেইমস" : "Warranty Claims", href: "/dashboard/replacements", icon: RotateCcw },
+    { name: isBn ? "রিফান্ড রিকোয়েস্ট" : "Refund Requests", href: "/dashboard/refunds", icon: Banknote },
+    { name: isBn ? "ওয়ালেট" : "Wallet", href: "/dashboard/wallet", icon: Wallet },
+    { name: isBn ? "নোটিফিকেশন" : "Notifications", href: "/dashboard/notifications", icon: Bell },
+    { name: isBn ? "সিকিউরিটি" : "Security", href: "/dashboard/security", icon: ShieldCheck },
+    { name: isBn ? "ইমেইল প্রেফারেন্স" : "Email Preferences", href: "/dashboard/preferences", icon: Mail },
+    { name: isBn ? "সাপোর্ট ও সহায়তা" : "Support & Help", href: "/dashboard/support", icon: LifeBuoy },
+    { name: isBn ? "অ্যাফিলিয়েট প্রোগ্রাম" : "Affiliate Program", href: "/dashboard/affiliate", icon: Share2 },
   ];
 
   const adminEmails = [
@@ -109,7 +146,18 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
   const userEmail = user?.email?.toLowerCase().trim() || "";
   const isAdmin = user?.role === "ADMIN" || (userEmail !== "" && adminEmails.includes(userEmail));
 
-  // Prevent flash of login screen while checking session
+  // Check if a tab is active (matches current path)
+  const isTabActive = (tab: BottomNavTab) => {
+    if (!pathname) return false;
+    if (tab.href === "#more") {
+      return moreItems.some((m) => pathname === m.href || pathname.startsWith(m.href + "/"));
+    }
+    if (tab.href === "/dashboard" && pathname === "/dashboard") return true;
+    if (tab.href !== "/dashboard" && pathname.startsWith(tab.href)) return true;
+    return tab.matchPaths?.some((p) => pathname.startsWith(p)) || false;
+  };
+
+  // ──── LOADING STATE ────
   if (!mounted) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center bg-gray-50/70">
@@ -118,7 +166,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
     );
   }
 
-  // If user is not logged in, show Auth Guard
+  // ──── AUTH GUARD ────
   if (!user) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center py-12 px-4 bg-gray-50/70">
@@ -172,52 +220,14 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
 
   return (
     <div className="min-h-screen bg-gray-50/70 py-4 sm:py-6 lg:py-8">
-      <div className="max-w-[1500px] w-[calc(100%-24px)] md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)] mx-auto space-y-4 sm:space-y-6">
+      {/* Main content area — add bottom padding on mobile for bottom nav */}
+      <div className="max-w-[1500px] w-[calc(100%-24px)] md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)] mx-auto space-y-4 sm:space-y-6 pb-20 lg:pb-0">
         
-        {/* Mobile / Tablet Horizontal Scroll Tab Bar */}
-        <div className="lg:hidden bg-white p-1.5 rounded-2xl border border-[#E8E8EE] shadow-2xs overflow-x-auto no-scrollbar flex items-center justify-between gap-1">
-          <div className="flex items-center gap-1">
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 bg-slate-900 text-white shadow-xs"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-[#FC5C03]" />
-                <span>Admin Panel</span>
-              </Link>
-            )}
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-colors ${
-                    isActive
-                      ? "bg-[#FC5C03] text-white shadow-2xs"
-                      : "text-gray-600 hover:text-black hover:bg-gray-50"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={() => setLanguage(language === "en" ? "bn" : "en")}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-100 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-200 shrink-0 ml-2 cursor-pointer"
-          >
-            <Globe className="w-3 h-3 text-[#FC5C03]" />
-            <span>{language === "en" ? "বাং" : "EN"}</span>
-          </button>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* DESKTOP SIDEBAR */}
+          {/* ═══════════════════════════════════════════
+              DESKTOP SIDEBAR (unchanged — visible lg+)
+              ═══════════════════════════════════════════ */}
           <aside className="hidden lg:block lg:col-span-4 xl:col-span-3 space-y-4 sticky top-20">
             
             {/* User Profile Card */}
@@ -300,7 +310,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
               <div className="p-4 bg-gradient-to-br from-[#1A1D26] to-black rounded-2xl text-white flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">
-                    {isBn ? "ওয়ালেট ব্যালেন্স" : "Wallet Balance"}
+                    {isBn ? "ওয়ালেট ব্যালেন্স" : "Wallet Balance"}
                   </span>
                   <span className="text-lg font-black text-white">
                     {formatPrice(user?.walletBalanceBDT || 0)}
@@ -317,7 +327,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
 
             {/* Navigation Links */}
             <div className="bg-white rounded-3xl border border-[#E8E8EE] p-2.5 shadow-2xs space-y-1">
-              {navItems.map((item) => {
+              {allNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -374,7 +384,9 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
 
           </aside>
 
-          {/* MAIN CONTENT AREA */}
+          {/* ═══════════════════════════════════════════
+              MAIN CONTENT AREA
+              ═══════════════════════════════════════════ */}
           <main className="lg:col-span-8 xl:col-span-9 min-w-0">
             {children}
           </main>
@@ -382,6 +394,178 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
         </div>
 
       </div>
+
+      {/* ═══════════════════════════════════════════════════════
+          MOBILE BOTTOM NAVIGATION (visible below lg breakpoint)
+          ═══════════════════════════════════════════════════════ */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E8E8EE] shadow-up-md"
+        style={{ paddingBottom: "max(4px, env(safe-area-inset-bottom, 0px))" }}
+        role="navigation"
+        aria-label={isBn ? "প্রধান নেভিগেশন" : "Main navigation"}
+      >
+        <div className="flex items-center justify-around px-1 pt-1">
+          {bottomTabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = isTabActive(tab);
+            const isMore = tab.href === "#more";
+
+            return (
+              <button
+                key={tab.href}
+                type="button"
+                onClick={() => {
+                  if (isMore) {
+                    setIsMoreOpen(true);
+                  } else {
+                    window.location.href = tab.href;
+                  }
+                }}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 min-w-[56px] rounded-xl transition-colors cursor-pointer touch-action-manipulation ${
+                  active
+                    ? "text-[#FC5C03]"
+                    : "text-gray-400 active:text-gray-600"
+                }`}
+                aria-label={isBn ? tab.nameBn : tab.name}
+                aria-current={active && !isMore ? "page" : undefined}
+              >
+                <Icon className={`w-5 h-5 ${active ? "text-[#FC5C03]" : ""}`} />
+                <span className={`text-[10px] font-bold leading-none ${
+                  active ? "text-[#FC5C03]" : "text-gray-500"
+                }`}>
+                  {isBn ? tab.nameBn : tab.name}
+                </span>
+                {active && !isMore && (
+                  <span className="w-1 h-1 rounded-full bg-[#FC5C03] mt-0.5" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* ═══════════════════════════════════════════════════════
+          "MORE" BOTTOM SHEET (mobile only)
+          ═══════════════════════════════════════════════════════ */}
+      {isMoreOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 sheet-backdrop animate-fade-in"
+            onClick={() => setIsMoreOpen(false)}
+          />
+          
+          {/* Sheet */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl animate-slide-up shadow-up-md"
+            style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom, 0px))" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={isBn ? "আরও অপশন" : "More options"}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-gray-300 rounded-full" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pb-3 border-b border-gray-100">
+              <h3 className="text-base font-black text-[#1A1D26]">
+                {isBn ? "আরও অপশন" : "More Options"}
+              </h3>
+              <button
+                onClick={() => setIsMoreOpen(false)}
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Menu Items */}
+            <div className="px-3 py-2 space-y-0.5">
+              {moreItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || (pathname?.startsWith(item.href + "/") ?? false);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMoreOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all min-h-touch ${
+                      isActive
+                        ? "bg-[#FFF2E8] text-[#FC5C03]"
+                        : "text-gray-700 active:bg-gray-50"
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${isActive ? "text-[#FC5C03]" : "text-gray-400"}`} />
+                    <span>{isBn ? item.nameBn : item.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Quick Links */}
+            <div className="px-3 pt-2 pb-1 border-t border-gray-100 space-y-0.5">
+              {/* Language Toggle */}
+              <div className="flex items-center justify-between px-3 py-2.5">
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
+                  <Globe className="w-4 h-4 text-[#FC5C03]" />
+                  <span>{isBn ? "ভাষা" : "Language"}</span>
+                </div>
+                <div className="flex items-center bg-gray-100 p-0.5 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("en")}
+                    className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                      language === "en" ? "bg-white text-[#FC5C03] shadow-2xs" : "text-gray-500"
+                    }`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("bn")}
+                    className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                      language === "bn" ? "bg-white text-[#FC5C03] shadow-2xs" : "text-gray-500"
+                    }`}
+                  >
+                    বাং
+                  </button>
+                </div>
+              </div>
+
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setIsMoreOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-slate-900 text-white min-h-touch"
+                >
+                  <ShieldCheck className="w-5 h-5 text-[#FC5C03]" />
+                  <span>{isBn ? "এডমিন প্যানেল" : "Admin Panel"}</span>
+                </Link>
+              )}
+
+              <Link
+                href="/shop"
+                onClick={() => setIsMoreOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:text-[#FC5C03]"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>{isBn ? "শপে ফিরে যান" : "Back to Store"}</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => { setIsMoreOpen(false); logout(); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>{isBn ? "লগআউট" : "Sign Out"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

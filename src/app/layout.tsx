@@ -3,6 +3,10 @@ import { Hind_Siliguri, Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { SITE_URL } from "@/lib/seo";
+import { validateEnv } from "@/lib/validate-env";
+
+// Validate all required environment variables on server startup
+validateEnv();
 
 const hindSiliguri = Hind_Siliguri({
   weight: ["400", "500", "600", "700"],
