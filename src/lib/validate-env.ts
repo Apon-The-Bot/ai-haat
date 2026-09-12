@@ -61,6 +61,7 @@ export function validateEnv(): void {
 
   const isProduction = process.env.NODE_ENV === "production";
   const missing: string[] = [];
+  const warnings: string[] = [];
 
   for (const rule of REQUIRED_VARS) {
     if (!rule.required) continue;
@@ -69,8 +70,21 @@ export function validateEnv(): void {
     const value = process.env[rule.key];
     if (!value || value.trim() === "") {
       const suffix = rule.hint ? ` (${rule.hint})` : "";
-      missing.push(`  • ${rule.key}${suffix}`);
+      if (rule.productionOnly) {
+        // Production-only vars (MFA, CRON, SMTP) — warn, don't crash.
+        // These are for advanced features that may not be deployed yet.
+        warnings.push(`  • ${rule.key}${suffix}`);
+      } else {
+        // Core vars (DATABASE_URL, NEXTAUTH, Google OAuth) — always critical.
+        missing.push(`  • ${rule.key}${suffix}`);
+      }
     }
+  }
+
+  if (warnings.length > 0) {
+    const header = `[ENV WARNING] ${warnings.length} production environment variable(s) missing:`;
+    const body = warnings.join("\n");
+    console.warn(`\n⚠️  ${header}\n${body}\nSome features (MFA, scheduled tasks, email) may not work.\n`);
   }
 
   if (missing.length > 0) {
@@ -78,12 +92,10 @@ export function validateEnv(): void {
     const body = missing.join("\n");
     const footer = "See .env.example for the full list of required variables.";
 
-    // In production, crash immediately — never run with missing secrets
     if (isProduction) {
       throw new Error(`${header}\n${body}\n${footer}`);
     }
 
-    // In development, log a prominent warning but allow partial startup
     console.warn(`\n⚠️  ${header}\n${body}\n${footer}\n`);
   }
 
