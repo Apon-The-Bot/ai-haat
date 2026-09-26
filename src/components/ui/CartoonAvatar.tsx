@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import { getGenderAvatar } from "@/utils/avatarHelper";
 
 interface CartoonAvatarProps {
@@ -13,9 +12,6 @@ interface CartoonAvatarProps {
   className?: string;
   rounded?: "full" | "xl" | "2xl";
   showOnlineDot?: boolean;
-  showProductBadge?: boolean;
-  productImage?: string;
-  productName?: string;
 }
 
 export function CartoonAvatar({
@@ -26,9 +22,6 @@ export function CartoonAvatar({
   className = "",
   rounded = "2xl",
   showOnlineDot = true,
-  showProductBadge = false,
-  productImage,
-  productName,
 }: CartoonAvatarProps) {
   const [hasError, setHasError] = useState(false);
   const avatarInfo = getGenderAvatar(name, gender, seed);
@@ -51,7 +44,6 @@ export function CartoonAvatar({
         className={`w-full h-full overflow-hidden ${roundedClass} bg-gradient-to-tr from-gray-100 to-gray-50 border border-gray-100/90 shadow-2xs flex items-center justify-center`}
       >
         {!hasError ? (
-          /* Using standard unoptimized img for instant 0ms local SVG rendering without next/image remote/optimization overhead */
           <img
             src={avatarInfo.avatarPath}
             alt={`${name} Avatar`}
@@ -82,18 +74,8 @@ export function CartoonAvatar({
           <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#22C55E] border-2 border-white shadow-xs" />
         </span>
       )}
-
-      {/* Tiny Product Thumbnail Badge (Corner Overlap) */}
-      {showProductBadge && productImage && (
-        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-md bg-white border border-gray-200/80 shadow-xs p-0.5 overflow-hidden flex items-center justify-center">
-          <img
-            src={productImage}
-            alt={productName || "Product"}
-            className="w-full h-full object-contain"
-          />
-        </div>
-      )}
     </div>
   );
 }
+
 export default CartoonAvatar;

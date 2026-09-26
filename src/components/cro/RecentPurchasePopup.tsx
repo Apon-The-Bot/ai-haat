@@ -366,7 +366,7 @@ export function RecentPurchasePopup() {
             {/* Top Accent Line */}
             <div className="absolute top-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-[#FC5C03] to-transparent opacity-80" />
 
-            {/* Customer Cartoon Avatar with Live Online Dot & Product Badge */}
+            {/* Customer Cartoon Avatar with Live Online Dot */}
             <Link
               href={`/product/${currentNotification.slug}`}
               className="relative shrink-0 hover:scale-105 transition-transform"
@@ -378,9 +378,6 @@ export function RecentPurchasePopup() {
                 size={48}
                 rounded="2xl"
                 showOnlineDot={true}
-                showProductBadge={true}
-                productImage={currentNotification.image}
-                productName={currentNotification.productName}
               />
             </Link>
 
