@@ -76,19 +76,32 @@ export const authOptions: NextAuthOptions = {
                 include: { security: true },
               });
               isNewUser = true;
-            } else if (isAdmin && dbUser.role !== "ADMIN") {
-              // Self-heal: elevate to ADMIN if email matches admin list
-              dbUser = await prisma.user.update({
-                where: { id: dbUser.id },
-                data: { role: "ADMIN" },
-                include: { security: true },
-              });
+            } else {
+              // Update user name/image and admin role if needed
+              const updateData: any = {};
+              if (isAdmin && dbUser.role !== "ADMIN") {
+                updateData.role = "ADMIN";
+              }
+              if (user.image && user.image !== dbUser.image) {
+                updateData.image = user.image;
+              }
+              if (user.name && !dbUser.name) {
+                updateData.name = user.name;
+              }
+              if (Object.keys(updateData).length > 0) {
+                dbUser = await prisma.user.update({
+                  where: { id: dbUser.id },
+                  data: updateData,
+                  include: { security: true },
+                });
+              }
             }
 
             const effectiveRole = isAdmin ? "ADMIN" : (dbUser.role || "USER");
             token.appUserId = dbUser.id; // Canonical Prisma User ID
             token.id = dbUser.id;
             token.role = effectiveRole;
+            token.picture = dbUser.image || user.image;
             token.walletBalanceBDT = dbUser.walletBalanceBDT || 0;
             token.mfaRequired = dbUser.security?.totpEnabled ?? false;
             token.googleSub = googleSub;
@@ -158,6 +171,9 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).role = isAdmin ? "ADMIN" : ((token.role as string) || "USER");
         (session.user as any).walletBalanceBDT = (token.walletBalanceBDT as number) || 0;
         (session.user as any).mfaRequired = Boolean(token.mfaRequired);
+        if (token.picture) {
+          session.user.image = token.picture as string;
+        }
       }
       return session;
     },

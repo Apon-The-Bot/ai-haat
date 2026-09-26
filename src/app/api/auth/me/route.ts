@@ -49,7 +49,8 @@ export async function GET(req: NextRequest) {
         dbUser = await prisma.user.create({
           data: {
             email: cleanEmail,
-            name: email.split("@")[0],
+            name: session?.user?.name || email.split("@")[0],
+            image: session?.user?.image || null,
             role: isAdmin ? "ADMIN" : "USER",
             walletBalanceBDT: 0,
           },
@@ -57,12 +58,24 @@ export async function GET(req: NextRequest) {
             security: true,
           },
         });
-      } else if (isAdmin && dbUser.role !== "ADMIN") {
-        dbUser = await prisma.user.update({
-          where: { id: dbUser.id },
-          data: { role: "ADMIN" },
-          include: { security: true },
-        });
+      } else {
+        const updateData: any = {};
+        if (isAdmin && dbUser.role !== "ADMIN") {
+          updateData.role = "ADMIN";
+        }
+        if (session?.user?.image && dbUser.image !== session.user.image) {
+          updateData.image = session.user.image;
+        }
+        if (session?.user?.name && !dbUser.name) {
+          updateData.name = session.user.name;
+        }
+        if (Object.keys(updateData).length > 0) {
+          dbUser = await prisma.user.update({
+            where: { id: dbUser.id },
+            data: updateData,
+            include: { security: true },
+          });
+        }
       }
 
       totpEnabled = dbUser.security?.totpEnabled ?? false;

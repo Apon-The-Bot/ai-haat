@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const next = {
               ...(prev || {}),
               ...data.user,
+              avatar: data.user.avatar || prev?.avatar || undefined,
             };
             if (typeof window !== "undefined") {
               localStorage.setItem("aihaat_user", JSON.stringify(next));
