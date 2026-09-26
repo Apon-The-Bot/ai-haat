@@ -196,7 +196,7 @@ export function QuickCheckoutModal() {
 
     if (paymentMethod === "wallet" && !canPayWithWallet) {
       showToast(
-        `ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই (বর্তমান: ৳${walletBalance}, প্রয়োজন: ৳${totalBDT})। বিকাশ/নগদ সিলেক্ট করুন।`,
+        `ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই (বর্তমান: ${formatPrice(walletBalance)}, প্রয়োজন: ${formatPrice(totalBDT)})। বিকাশ/নগদ সিলেক্ট করুন।`,
         "error"
       );
       return;
@@ -358,7 +358,7 @@ export function QuickCheckoutModal() {
                 <h3 className="text-lg font-black text-slate-900">অর্ডার সফলভাবে সম্পন্ন হয়েছে!</h3>
                 <p className="text-xs font-mono text-[#FC5C03] font-bold">অর্ডার #{successOrder.orderNumber}</p>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto pt-1">
-                  আপনার ওয়ালেট থেকে ৳{totalBDT} সফলভাবে পরিশোধ করা হয়েছে। আপনার লাইসেন্স বা লগইন তথ্য ডিজিটাল ভল্টে
+                  আপনার ওয়ালেট থেকে {formatPrice(totalBDT)} সফলভাবে পরিশোধ করা হয়েছে। আপনার লাইসেন্স বা লগইন তথ্য ডিজিটাল ভল্টে
                   যুক্ত হয়েছে।
                 </p>
               </div>
@@ -437,7 +437,7 @@ export function QuickCheckoutModal() {
                               isSelected ? "text-orange-300" : "text-slate-500"
                             }`}
                           >
-                            ৳{v.priceBDT}
+                            {formatPrice(v.priceBDT)}
                           </span>
                           {isVarOutOfStock && (
                             <span className="text-[9px] px-1.5 py-0.5 bg-red-100 text-red-600 rounded-md font-semibold">
@@ -643,7 +643,7 @@ export function QuickCheckoutModal() {
                                   : "bg-amber-100 text-amber-700"
                               }`}
                             >
-                              ৳{walletBalance}
+                              {formatPrice(walletBalance)}
                             </span>
                           )}
                         </div>
@@ -672,7 +672,7 @@ export function QuickCheckoutModal() {
                   <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
                     <span className="font-bold text-emerald-800 flex items-center gap-1">
                       <Tag className="w-3.5 h-3.5" />
-                      কুপন: {appliedCoupon.code} (-৳{appliedCoupon.discountBDT})
+                      কুপন: {appliedCoupon.code} (-{formatPrice(appliedCoupon.discountBDT)})
                     </span>
                     <button
                       type="button"
@@ -710,17 +710,17 @@ export function QuickCheckoutModal() {
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5 text-xs">
                 <div className="flex justify-between text-slate-500">
                   <span>সাবটোটাল ({quantity} টি):</span>
-                  <span className="font-mono text-slate-900">৳{subtotalBDT}</span>
+                  <span className="font-mono text-slate-900">{formatPrice(subtotalBDT)}</span>
                 </div>
                 {couponDiscountBDT > 0 && (
                   <div className="flex justify-between text-emerald-600 font-semibold">
                     <span>কুপন ছাড়:</span>
-                    <span className="font-mono">-৳{couponDiscountBDT}</span>
+                    <span className="font-mono">-{formatPrice(couponDiscountBDT)}</span>
                   </div>
                 )}
                 <div className="pt-1.5 border-t border-slate-200 flex justify-between items-center text-sm font-black text-slate-900">
                   <span>সর্বমোট প্রদেয়:</span>
-                  <span className="text-[#FC5C03] font-mono text-base">৳{totalBDT}</span>
+                  <span className="text-[#FC5C03] font-mono text-base">{formatPrice(totalBDT)}</span>
                 </div>
               </div>
 
@@ -742,8 +742,8 @@ export function QuickCheckoutModal() {
                     <Zap className="w-4 h-4 fill-current" />
                     <span>
                       {paymentMethod === "wallet"
-                        ? `⚡ ওয়ালেট থেকে ৳${totalBDT} দিয়ে কিনুন`
-                        : `⚡ ৳${totalBDT} দিয়ে এখনই কিনুন (বিকাশ/নগদ)`}
+                        ? `⚡ ওয়ালেট থেকে ${formatPrice(totalBDT)} দিয়ে কিনুন`
+                        : `⚡ ${formatPrice(totalBDT)} দিয়ে এখনই কিনুন (বিকাশ/নগদ)`}
                     </span>
                   </>
                 )}

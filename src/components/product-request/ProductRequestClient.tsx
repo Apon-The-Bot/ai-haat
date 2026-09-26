@@ -437,7 +437,9 @@ export function ProductRequestClient() {
               {submittedData.budgetBDT && (
                 <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                   <span className="text-xs text-gray-500 font-medium">টার্গেট বাজেট:</span>
-                  <span className="text-xs font-bold text-[#FC5C03]">৳{submittedData.budgetBDT}</span>
+                  <span className="text-xs font-bold text-[#FC5C03]">
+                    {formatPrice(submittedData.budgetBDT)}
+                  </span>
                 </div>
               )}
 
@@ -574,7 +576,12 @@ export function ProductRequestClient() {
                           {req.category && <span>ক্যাটাগরি: <b className="text-gray-700">{req.category}</b></span>}
                           {req.duration && <span>মেয়াদ: <b className="text-gray-700">{req.duration}</b></span>}
                           {(req.budgetBDT || req.targetBudget) && (
-                            <span>বাজেট: <b className="text-[#FC5C03]">৳{req.budgetBDT || req.targetBudget}</b></span>
+                            <span>
+                              বাজেট:{" "}
+                              <b className="text-[#FC5C03]">
+                                {formatPrice(Number(req.budgetBDT || req.targetBudget))}
+                              </b>
+                            </span>
                           )}
                         </div>
 

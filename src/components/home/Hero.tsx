@@ -6,9 +6,11 @@ import { ArrowRight, Shield, Zap, Headphones } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { SafeImage } from "@/components/SafeImage";
 import { useProducts } from "@/context/ProductsContext";
+import { useCurrency } from "@/context/CurrencyContext";
 
 export function Hero() {
   const { getFeaturedProducts } = useProducts();
+  const { formatPrice } = useCurrency();
   const featuredProducts = getFeaturedProducts().slice(0, 6);
 
   return (
@@ -103,7 +105,7 @@ export function Hero() {
                     {prod.name.split("(")[0].trim()}
                   </h4>
                   <span className="text-[9.5px] text-[#7A8190] truncate w-full mt-0.5">
-                    ৳{prod.minPriceBDT} থেকে
+                    {formatPrice(prod.minPriceBDT)} থেকে
                   </span>
                 </Link>
               ))}

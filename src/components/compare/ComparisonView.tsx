@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, X, Sparkles, ArrowRight, ShieldCheck, Zap, Scale, Star } from "lucide-react";
 import { SafeImage } from "@/components/SafeImage";
 import { useQuickCheckout } from "@/context/QuickCheckoutContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { Product } from "@/types";
 
 interface ToolSpec {
@@ -174,6 +175,7 @@ const COMPARISON_TOOLS: ToolSpec[] = [
 
 export function ComparisonView() {
   const { openQuickCheckout } = useQuickCheckout();
+  const { formatPrice } = useCurrency();
   const [activeTab, setActiveTab] = useState<"all" | "text" | "design" | "coding">("all");
 
   const filteredTools =
@@ -245,7 +247,10 @@ export function ComparisonView() {
               </h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-slate-900 font-mono">
-                  {tool.monthlyBDT}
+                  {formatPrice(tool.priceBDT)}
+                  <span className="text-xs font-semibold text-slate-500 font-sans ml-1">
+                    {tool.monthlyBDT.includes("লাইফটাইম") ? "/ লাইফটাইম" : "/ মাস"}
+                  </span>
                 </span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed pt-1">{tool.bestForBn}</p>
@@ -333,7 +338,10 @@ export function ComparisonView() {
                 className="w-full py-2.5 bg-gradient-to-r from-[#FC5C03] to-[#EC4001] hover:from-[#EC4001] hover:to-[#D43700] text-white text-xs font-black rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] cursor-pointer"
               >
                 <Zap className="w-3.5 h-3.5 fill-current" />
-                <span>১-ক্লিকে কিনুন ({tool.monthlyBDT})</span>
+                <span>
+                  ১-ক্লিকে কিনুন ({formatPrice(tool.priceBDT)}
+                  {tool.monthlyBDT.includes("লাইফটাইম") ? " / লাইফটাইম" : " / মাস"})
+                </span>
               </button>
               <Link
                 href={`/product/${tool.slug}`}

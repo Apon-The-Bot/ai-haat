@@ -306,9 +306,18 @@ function ShopContent() {
             </span>
             {PRICE_PRESETS.map((preset, idx) => {
               const isSelected = selectedPresetIndex === idx;
+              const label =
+                preset.min === 0 && preset.max === Infinity
+                  ? "All Prices"
+                  : preset.min === 0
+                  ? `Under ${formatPrice(preset.max)}`
+                  : preset.max === Infinity
+                  ? `${formatPrice(preset.min)}+`
+                  : `${formatPrice(preset.min)} - ${formatPrice(preset.max)}`;
+
               return (
                 <button
-                  key={preset.label}
+                  key={idx}
                   type="button"
                   onClick={() => handlePresetSelect(idx)}
                   className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
@@ -317,7 +326,7 @@ function ShopContent() {
                       : "bg-gray-100 text-[#7A8190] hover:bg-gray-200 hover:text-[#1A1D26]"
                   }`}
                 >
-                  {preset.label}
+                  {label}
                 </button>
               );
             })}
@@ -366,7 +375,7 @@ function ShopContent() {
           <div className="bg-white p-4 rounded-2xl border border-[#E8E8EE] shadow-2xs space-y-3 animate-in fade-in duration-150">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="text-xs font-bold text-[#1A1D26]">
-                কাস্টম প্রাইস রেঞ্জ স্লাইডার: ৳{minPrice} - ৳{maxPrice}
+                কাস্টম প্রাইস রেঞ্জ স্লাইডার: {formatPrice(minPrice)} - {formatPrice(maxPrice)}
               </div>
               <div className="flex items-center gap-2">
                 <input

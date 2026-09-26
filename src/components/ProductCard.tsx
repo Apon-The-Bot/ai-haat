@@ -160,7 +160,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Product Price Row */}
           <div className="flex items-baseline gap-1.5 pt-0.5">
             <span className="text-[14px] sm:text-[15.5px] font-extrabold text-[#FC5C03] tracking-tight">
-              {hasMultiplePrices ? `৳${product.minPriceBDT} থেকে` : formatPrice(currentPrice)}
+              {hasMultiplePrices ? `${formatPrice(product.minPriceBDT)} থেকে` : formatPrice(currentPrice)}
             </span>
             {origPrice > currentPrice && (
               <span className="text-[11px] text-gray-400 line-through">
