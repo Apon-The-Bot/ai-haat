@@ -89,7 +89,7 @@ export default function AdminDashboardPage() {
   const maxDailyRevenue = stats?.dailyTrend ? Math.max(...stats.dailyTrend.map((d) => d.revenue), 1000) : 1000;
 
   return (
-    <div className="space-y-6 max-w-[1500px] mx-auto pb-16">
+    <div className="space-y-6 w-full pb-16">
       
       {/* Top Banner & Period Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">

@@ -292,10 +292,10 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* BODY */}
-      <div className="flex-1 max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12">
+      <div className="flex-1 w-full flex">
         
         {/* DESKTOP SIDEBAR */}
-        <aside className="hidden lg:block lg:col-span-3 xl:col-span-2 bg-white border-r border-slate-200 p-4 space-y-5 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
+        <aside className="hidden lg:block w-64 xl:w-72 shrink-0 bg-white border-r border-slate-200 p-4 space-y-5 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
           {navigation.map((group) => (
             <div key={group.group} className="space-y-1">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
@@ -337,7 +337,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="lg:col-span-9 xl:col-span-10 p-4 sm:p-6 lg:p-8 min-w-0 bg-[#F8FAFC]">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-[#F8FAFC]">
           {children}
         </main>
 

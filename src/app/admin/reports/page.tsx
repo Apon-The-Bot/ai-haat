@@ -88,7 +88,7 @@ export default function AdminReportsPage() {
   const inventoryValuation = report?.inventoryValuation;
 
   return (
-    <div className="space-y-6 max-w-[1500px] mx-auto pb-16">
+    <div className="space-y-6 w-full pb-16">
       {/* Header & Date Range Picker */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
