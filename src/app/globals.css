@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,6 +15,9 @@
   --muted-text: #7A8190;
   --border-color: #E8E8EE;
   --footer-bg: #15171E;
+  --font-plus-jakarta: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-hind-siliguri: 'Hind Siliguri', sans-serif;
+  --font-inter: 'Inter', system-ui, sans-serif;
 }
 
 html {

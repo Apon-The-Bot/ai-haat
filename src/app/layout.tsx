@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Hind_Siliguri, Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { SITE_URL } from "@/lib/seo";
@@ -7,27 +6,6 @@ import { validateEnv } from "@/lib/validate-env";
 
 // Validate all required environment variables on server startup
 validateEnv();
-
-const hindSiliguri = Hind_Siliguri({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["bengali", "latin"],
-  display: "swap",
-  variable: "--font-hind-siliguri",
-});
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  weight: ["400", "500", "600", "700", "800"],
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-plus-jakarta",
-});
-
-const inter = Inter({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -107,7 +85,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn" className={`${hindSiliguri.variable} ${plusJakartaSans.variable} ${inter.variable}`}>
+    <html lang="bn">
       <body className="min-h-screen flex flex-col justify-between bg-white text-[#1A1D26] selection:bg-[#FC5C03] selection:text-white font-sans">
         <Providers>{children}</Providers>
       </body>
