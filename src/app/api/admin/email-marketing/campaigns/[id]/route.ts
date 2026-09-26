@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAdminMfa } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { logAdminAudit } from "@/lib/audit-logger";
@@ -7,14 +7,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const { id } = await params;
     const campaign = await prisma.emailCampaign.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         template: true,
         segment: true,
@@ -47,12 +48,13 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const { id } = await params;
     const body = await req.json();
     const {
       name,
@@ -72,7 +74,7 @@ export async function PATCH(
     } = body;
 
     const existing = await prisma.emailCampaign.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existing) {
@@ -88,7 +90,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.emailCampaign.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: name !== undefined ? name.trim() : undefined,
         subject: subject !== undefined ? subject.trim() : undefined,
@@ -133,14 +135,15 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const { id } = await params;
     const existing = await prisma.emailCampaign.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existing) {
@@ -155,7 +158,7 @@ export async function DELETE(
     }
 
     await prisma.emailCampaign.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     await logAdminAudit({
@@ -163,7 +166,7 @@ export async function DELETE(
       actorEmail: auth.user.email,
       action: "CAMPAIGN_DELETE",
       targetType: "EMAIL_CAMPAIGN",
-      targetId: params.id,
+      targetId: id,
       details: { name: existing.name },
     });
 

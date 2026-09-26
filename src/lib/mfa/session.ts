@@ -67,7 +67,7 @@ export async function getMfaSession(request: Request, userId?: string): Promise<
 }
 
 export async function getMfaSessionFromCookieStore(userId?: string): Promise<MfaSession | null> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const tokenObj = cookieStore.get(MFA_COOKIE_NAME);
   
   if (!tokenObj?.value) return null;

@@ -20,7 +20,7 @@ import { SITE_URL, safeJsonLd } from "@/lib/seo";
 import { renderSafeMarkdownInline } from "@/components/blog/safe-markdown";
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
@@ -30,7 +30,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const blog = BLOGS.find((b) => b.slug === params.slug);
+  const { slug } = await params;
+  const blog = BLOGS.find((b) => b.slug === slug);
   if (!blog) {
     return {
       title: "Blog Not Found | AI Haat",
@@ -77,8 +78,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function BlogDetailPage({ params }: Props) {
-  const blog = BLOGS.find((b) => b.slug === params.slug);
+export default async function BlogDetailPage({ params }: Props) {
+  const { slug } = await params;
+  const blog = BLOGS.find((b) => b.slug === slug);
 
   if (!blog) {
     notFound();

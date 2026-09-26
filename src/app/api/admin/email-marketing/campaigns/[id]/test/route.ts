@@ -9,12 +9,13 @@ export const dynamic = "force-dynamic";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const { id } = await params;
     const body = await req.json();
     const testEmail = body.testEmail?.trim() || auth.user.email;
 
@@ -23,7 +24,7 @@ export async function POST(
     }
 
     const campaign = await prisma.emailCampaign.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!campaign) {

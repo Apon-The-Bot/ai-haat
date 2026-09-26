@@ -7,14 +7,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const { id } = await params;
     const template = await prisma.emailTemplate.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!template) {
@@ -33,17 +34,18 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const { id } = await params;
     const body = await req.json();
     const { name, description, category, subject, contentHtml, thumbnail, duplicate } = body;
 
     const existing = await prisma.emailTemplate.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existing) {
@@ -77,7 +79,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.emailTemplate.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: name !== undefined ? name.trim() : undefined,
         description: description !== undefined ? description?.trim() : undefined,
@@ -109,14 +111,15 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const { id } = await params;
     const existing = await prisma.emailTemplate.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existing) {
@@ -124,7 +127,7 @@ export async function DELETE(
     }
 
     await prisma.emailTemplate.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     await logAdminAudit({
@@ -132,7 +135,7 @@ export async function DELETE(
       actorEmail: auth.user.email,
       action: "TEMPLATE_DELETE",
       targetType: "EMAIL_TEMPLATE",
-      targetId: params.id,
+      targetId: id,
       details: { name: existing.name },
     });
 

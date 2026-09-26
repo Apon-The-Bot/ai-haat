@@ -8,15 +8,16 @@ export const dynamic = "force-dynamic";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = await requireAuth();
     if (authResult instanceof NextResponse) return authResult;
     const { user } = authResult;
 
+    const { id } = await params;
     const ticket = await prisma.supportTicket.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { userId: true, status: true }
     });
 
@@ -35,7 +36,7 @@ export async function POST(
     }
 
     const newMsg = await addTicketMessage({
-      ticketId: params.id,
+      ticketId: id,
       senderId: user.id,
       senderType: MessageSenderType.CUSTOMER,
       senderName: user.name || "Customer",

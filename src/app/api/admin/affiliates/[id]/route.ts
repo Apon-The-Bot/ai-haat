@@ -7,14 +7,14 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireAdminMfa();
     if (auth instanceof NextResponse) return auth;
 
     const { user } = auth;
-    const affiliateId = params.id;
+    const { id: affiliateId } = await params;
     const body = await req.json();
     const { tier, customRatePercent, status } = body;
 

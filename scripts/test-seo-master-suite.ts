@@ -45,8 +45,8 @@ async function runMasterSeoSuite() {
   console.log('\n📌 TEST 2: Product Metadata Uniqueness & Dynamic Generation');
   const prodA = PRODUCTS[0];
   const prodB = PRODUCTS[1];
-  const metaA = await generateProductMetadata({ params: { slug: prodA.slug } });
-  const metaB = await generateProductMetadata({ params: { slug: prodB.slug } });
+  const metaA = await generateProductMetadata({ params: Promise.resolve({ slug: prodA.slug }) });
+  const metaB = await generateProductMetadata({ params: Promise.resolve({ slug: prodB.slug }) });
 
   assert(metaA.title !== metaB.title, 'Product A and Product B generate distinct dynamic titles');
   assert(metaA.description !== metaB.description, 'Product A and Product B generate distinct descriptions');
@@ -58,7 +58,7 @@ async function runMasterSeoSuite() {
 
   // TEST 3 — Invalid Product Slug Handling
   console.log('\n📌 TEST 3: Invalid Product Slug 404 / Noindex Protection');
-  const invalidMeta = await generateProductMetadata({ params: { slug: 'non-existent-product-12345-xyz' } });
+  const invalidMeta = await generateProductMetadata({ params: Promise.resolve({ slug: 'non-existent-product-12345-xyz' }) });
   const invalidProduct = await getProductBySlug('non-existent-product-12345-xyz');
   assert(invalidProduct === null, 'getProductBySlug returns null for nonexistent slug (triggers notFound())');
   assert(
@@ -232,7 +232,7 @@ async function runMasterSeoSuite() {
   // TEST 18 — Blog Metadata & Schema
   console.log('\n📌 TEST 18: Blog Article Metadata & BlogPosting Schema');
   const sampleBlog = BLOGS[0];
-  const blogMeta = await generateBlogMetadata({ params: { slug: sampleBlog.slug } });
+  const blogMeta = await generateBlogMetadata({ params: Promise.resolve({ slug: sampleBlog.slug }) });
   const titleStr = typeof blogMeta.title === 'string' ? blogMeta.title : String((blogMeta.title as any)?.default || '');
   assert(titleStr.includes(sampleBlog.title), 'Blog detail metadata generates dynamic title with article headline');
   assert(typeof blogMeta.alternates?.canonical === 'string' && blogMeta.alternates.canonical.includes(sampleBlog.slug), 'Blog canonical URL is correctly assigned');

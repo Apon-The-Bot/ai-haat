@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 interface OrderSuccessPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default function OrderSuccessPage({ searchParams }: OrderSuccessPageProps) {
-  const rawId = searchParams?.orderId || searchParams?.id || "";
+export default async function OrderSuccessPage({ searchParams }: OrderSuccessPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const rawId = resolvedSearchParams?.orderId || resolvedSearchParams?.id || "";
   const orderId = typeof rawId === "string" ? rawId.trim() : Array.isArray(rawId) ? rawId[0]?.trim() : "";
 
   // Strictly sanitize order identifier (alphanumeric, dashes, underscores only) to prevent open redirects or payload injection

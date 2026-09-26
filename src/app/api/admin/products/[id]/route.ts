@@ -4,12 +4,13 @@ import { getAdminProductById, updateProduct, deleteProduct } from "@/lib/commerc
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authResult = await requireAdminMfa();
     if (authResult instanceof NextResponse) return authResult;
 
-    const product = await getAdminProductById(params.id);
+    const { id } = await params;
+    const product = await getAdminProductById(id);
     if (!product) {
       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
@@ -20,25 +21,27 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authResult = await requireAdminMfa();
     if (authResult instanceof NextResponse) return authResult;
 
+    const { id } = await params;
     const body = await req.json();
-    const product = await updateProduct(params.id, body, authResult.user);
+    const product = await updateProduct(id, body, authResult.user);
     return NextResponse.json({ success: true, product });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authResult = await requireAdminMfa();
     if (authResult instanceof NextResponse) return authResult;
 
-    await deleteProduct(params.id, authResult.user);
+    const { id } = await params;
+    await deleteProduct(id, authResult.user);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

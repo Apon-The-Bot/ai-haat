@@ -7,13 +7,14 @@ export const dynamic = "force-dynamic";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const mfaAuth = await requireAdminMfa();
     if (mfaAuth instanceof NextResponse) return mfaAuth;
     const { user: admin } = mfaAuth;
 
+    const { id } = await params;
     const { message, isInternal, attachmentUrl, newStatus } = await req.json();
 
     if (!message) {
@@ -21,7 +22,7 @@ export async function POST(
     }
 
     const newMsg = await addTicketMessage({
-      ticketId: params.id,
+      ticketId: id,
       senderId: admin.id,
       senderType: MessageSenderType.ADMIN,
       senderName: admin.name || "Admin",

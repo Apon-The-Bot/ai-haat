@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       orderBy: { lastUsedAt: 'desc' }
     });
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const currentDeviceToken = cookieStore.get('DEVICE_TOKEN')?.value;
     
     const formatted = devices.map(d => ({

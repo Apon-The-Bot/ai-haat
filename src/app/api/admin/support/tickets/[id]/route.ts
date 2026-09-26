@@ -7,14 +7,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const mfaAuth = await requireAdminMfa();
     if (mfaAuth instanceof NextResponse) return mfaAuth;
 
+    const { id } = await params;
     const ticket = await prisma.supportTicket.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         messages: {
           orderBy: { createdAt: "asc" },
@@ -52,18 +53,19 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const mfaAuth = await requireAdminMfa();
     if (mfaAuth instanceof NextResponse) return mfaAuth;
     const { user: admin } = mfaAuth;
 
+    const { id } = await params;
     const body = await req.json();
     const { status, priority, assignedAdminId, replacementRequestId, refundId } = body;
 
     const existingTicket = await prisma.supportTicket.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingTicket) {
@@ -85,7 +87,7 @@ export async function PATCH(
     }
 
     const ticket = await prisma.supportTicket.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     });
 
