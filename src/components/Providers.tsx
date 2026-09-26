@@ -9,6 +9,7 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { ProductsProvider } from "@/context/ProductsContext";
+import { QuickCheckoutProvider } from "@/context/QuickCheckoutContext";
 import { AppShell } from "@/components/AppShell";
 import AnalyticsProvider from "@/components/analytics/AnalyticsProvider";
 import PageViewTracker from "@/components/analytics/PageViewTracker";
@@ -26,13 +27,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <CartProvider>
                   <AuthProvider>
                     <NotificationProvider>
-                      <AppShell>
-                        {children}
-                        <Suspense fallback={null}>
-                          <PageViewTracker />
-                          <ReferralTracker />
-                        </Suspense>
-                      </AppShell>
+                      <QuickCheckoutProvider>
+                        <AppShell>
+                          {children}
+                          <Suspense fallback={null}>
+                            <PageViewTracker />
+                            <ReferralTracker />
+                          </Suspense>
+                        </AppShell>
+                      </QuickCheckoutProvider>
                     </NotificationProvider>
                   </AuthProvider>
                 </CartProvider>

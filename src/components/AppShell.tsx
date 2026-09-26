@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
 import { AuthModal } from "@/components/AuthModal";
+import { QuickCheckoutModal } from "@/components/checkout/QuickCheckoutModal";
 import {
   FloatingOfferBar,
   FloatingWhatsAppWidget,
@@ -32,6 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Footer />
       <CartDrawer />
       <AuthModal />
+      <QuickCheckoutModal />
       <FloatingWhatsAppWidget />
     </>
   );

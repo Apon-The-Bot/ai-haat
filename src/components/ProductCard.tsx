@@ -8,6 +8,7 @@ import { Product, Variation } from "@/types";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useQuickCheckout } from "@/context/QuickCheckoutContext";
 import { SafeImage } from "@/components/SafeImage";
 
 interface ProductCardProps {
@@ -19,6 +20,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const { formatPrice } = useCurrency();
   const { addToCart } = useCart();
   const { user, openLoginModal } = useAuth();
+  const { openQuickCheckout } = useQuickCheckout();
 
   const [selectedVariation, setSelectedVariation] = useState<Variation>(
     product.variations?.[0] || {
@@ -50,12 +52,7 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
-    addToCart(product, selectedVariation, 1);
-    if (!user) {
-      openLoginModal("/checkout");
-    } else {
-      router.push("/checkout");
-    }
+    openQuickCheckout(product, selectedVariation);
   };
 
   const handleSelectVariation = (e: React.MouseEvent, v: Variation) => {

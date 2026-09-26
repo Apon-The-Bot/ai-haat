@@ -36,6 +36,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/context/AuthContext";
+import { useQuickCheckout } from "@/context/QuickCheckoutContext";
 import { HowToOrder } from "@/components/home/HowToOrder";
 import { SafeImage } from "@/components/SafeImage";
 import { PaymentLogo } from "@/components/PaymentLogo";
@@ -53,6 +54,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const { formatPrice } = useCurrency();
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const { openQuickCheckout } = useQuickCheckout();
 
   // Selected variation state
   const [selectedVariation, setSelectedVariation] = useState<Variation>(
@@ -175,12 +177,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   };
 
   const handleBuyNow = () => {
-    addToCart(product, selectedVariation, quantity);
-    if (!user) {
-      openLoginModal("/checkout");
-    } else {
-      router.push("/checkout");
-    }
+    openQuickCheckout(product, selectedVariation, quantity);
   };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {

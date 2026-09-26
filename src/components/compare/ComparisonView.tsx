@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Check, X, Sparkles, ArrowRight, ShieldCheck, Zap, Scale, Star } from "lucide-react";
 import { SafeImage } from "@/components/SafeImage";
+import { useQuickCheckout } from "@/context/QuickCheckoutContext";
+import { Product } from "@/types";
 
 interface ToolSpec {
   id: string;
@@ -171,6 +173,7 @@ const COMPARISON_TOOLS: ToolSpec[] = [
 ];
 
 export function ComparisonView() {
+  const { openQuickCheckout } = useQuickCheckout();
   const [activeTab, setActiveTab] = useState<"all" | "text" | "design" | "coding">("all");
 
   const filteredTools =
@@ -297,13 +300,47 @@ export function ComparisonView() {
             </div>
 
             {/* CTA Buy Button */}
-            <div className="pt-4">
+            <div className="pt-4 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  openQuickCheckout({
+                    id: tool.slug,
+                    slug: tool.slug,
+                    name: tool.name,
+                    priceBDT: tool.priceBDT,
+                    minPriceBDT: tool.priceBDT,
+                    maxPriceBDT: tool.priceBDT,
+                    category: tool.category,
+                    image: "/logo.png",
+                    inStock: true,
+                    variations: [
+                      {
+                        id: `${tool.slug}-1m`,
+                        name: "১ মাস এক্সেস",
+                        priceBDT: tool.priceBDT,
+                        inStock: true,
+                      },
+                    ],
+                    description: tool.bestForBn,
+                    shortDescription: tool.bestForBn,
+                    rating: tool.rating,
+                    reviewCount: 35,
+                    features: [],
+                    badge: tool.badge,
+                  } as unknown as Product);
+                }}
+                className="w-full py-2.5 bg-gradient-to-r from-[#FC5C03] to-[#EC4001] hover:from-[#EC4001] hover:to-[#D43700] text-white text-xs font-black rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] cursor-pointer"
+              >
+                <Zap className="w-3.5 h-3.5 fill-current" />
+                <span>১-ক্লিকে কিনুন ({tool.monthlyBDT})</span>
+              </button>
               <Link
                 href={`/product/${tool.slug}`}
-                className="w-full py-3 bg-slate-900 hover:bg-[#FC5C03] text-white text-xs font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 text-center"
               >
-                <span>সাবস্ক্রিপশন কিনুন</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>বিস্তারিত দেখুন</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
