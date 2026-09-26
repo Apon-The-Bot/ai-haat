@@ -36,10 +36,16 @@ import { getAttribution } from "@/lib/analytics/attribution";
 function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { items, subtotalBDT, clearCart } = useCart();
+  const { items, subtotalBDT, clearCart, addToCart } = useCart();
   const { formatPrice } = useCurrency();
   const { user, openLoginModal, refreshUser } = useAuth();
   const { showToast } = useToast();
+
+  // Renewal Context Detection
+  const isRenewalMode = searchParams?.get("renewal") === "true";
+  const renewOrderId = searchParams?.get("orderId") || searchParams?.get("renewOrderId");
+  const renewKeyId = searchParams?.get("renewKeyId");
+  const [isRenewalLoading, setIsRenewalLoading] = useState(false);
 
   // Form State
   const [paymentMethod, setPaymentMethod] = useState<"wallet" | "gateway">("gateway");
@@ -97,6 +103,43 @@ function CheckoutContent() {
       setPaymentMethod("wallet");
     }
   }, [user, subtotalBDT]);
+
+  // Auto-populate renewal item if user landed on checkout with empty cart
+  useEffect(() => {
+    if (!isRenewalMode || items.length > 0) return;
+    const targetSlug = searchParams?.get("slug") || searchParams?.get("productId");
+    if (!targetSlug) return;
+
+    let isMounted = true;
+    setIsRenewalLoading(true);
+    fetch(`/api/products/${encodeURIComponent(targetSlug)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!isMounted || !data.product) return;
+        const prod = data.product;
+        const varId = searchParams?.get("varId") || searchParams?.get("variationId");
+        const matchedVar =
+          prod.variations?.find((v: any) => v.id === varId) ||
+          prod.variations?.[0] ||
+          ({
+            id: "default",
+            name: "Standard",
+            priceBDT: prod.minPriceBDT,
+            inStock: true,
+          } as any);
+
+        addToCart(prod, matchedVar, 1);
+        showToast(`নবায়ন আইটেম "${prod.name}" কার্টে যুক্ত করা হয়েছে`, "success");
+      })
+      .catch((err) => console.warn("[Renewal Auto-Add Error]:", err))
+      .finally(() => {
+        if (isMounted) setIsRenewalLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isRenewalMode, items.length, searchParams, addToCart, showToast]);
 
   // Analytics: Track begin_checkout once on mount
   const checkoutTrackedRef = useRef(false);
@@ -387,6 +430,10 @@ function CheckoutContent() {
           senderNumber: paymentMethod === "wallet" ? "WALLET" : "GATEWAY",
           trxId: paymentMethod === "wallet" ? "WAL_PENDING" : "GATEWAY_PENDING",
           notes: fullOrderNotes,
+          isRenewal: isRenewalMode,
+          renewedFromOrderId: renewOrderId || null,
+          renewedFromKeyId: renewKeyId || null,
+          renewalContext: isRenewalMode ? `Renewal of Order #${renewOrderId}` : null,
           // Marketing Attribution
           ...getAttribution(),
         }),
@@ -532,7 +579,37 @@ function CheckoutContent() {
           </div>
         </div>
 
-        {items.length > 0 ? (
+        {/* RENEWAL NOTICE BANNER */}
+        {isRenewalMode && (
+          <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/5 border border-orange-200/90 p-4 sm:p-5 rounded-2xl flex items-center gap-3.5 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-[#FC5C03] text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-slate-900 text-sm sm:text-base">
+                  সাবস্ক্রিপশন রিনিউয়াল মোড (1-Click Renewal)
+                </span>
+                {renewOrderId && (
+                  <span className="text-[11px] font-mono px-2 py-0.5 bg-orange-100 text-[#FC5C03] rounded-md font-semibold">
+                    পূর্বের অর্ডার #{renewOrderId}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-600">
+                এই অর্ডারে আপনার পূর্বের সাবস্ক্রিপশন আইডি ও ক্রেডেনশিয়াল হিস্ট্রির সাথে নতুন মেয়াদ যুক্ত করা হবে।
+              </p>
+            </div>
+          </div>
+        )}
+
+        {isRenewalLoading ? (
+          <div className="py-20 text-center bg-white rounded-3xl border border-[#E8E8EE] max-w-lg mx-auto p-8 shadow-2xs space-y-3">
+            <div className="w-8 h-8 border-3 border-[#FC5C03] border-t-transparent rounded-full animate-spin mx-auto" />
+            <h3 className="text-sm font-bold text-slate-800">নবায়নকৃত সাবস্ক্রিপশন লোড হচ্ছে...</h3>
+            <p className="text-xs text-slate-500">অনুগ্রহ করে একটু অপেক্ষা করুন</p>
+          </div>
+        ) : items.length > 0 ? (
           <form onSubmit={handlePlaceOrder}>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
               

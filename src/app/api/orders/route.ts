@@ -490,6 +490,10 @@ export async function POST(req: NextRequest) {
       senderNumber,
       trxId,
       notes,
+      isRenewal,
+      renewedFromOrderId,
+      renewedFromKeyId,
+      renewalContext,
       utmSource, utmMedium, utmCampaign, utmContent, utmTerm, landingPage, referrer
     } = body;
 
@@ -580,6 +584,9 @@ export async function POST(req: NextRequest) {
             trxId: trxId || null,
             paymentStatus: "PENDING",
             deliveryStatus: "ORDER_PLACED",
+            isRenewal: Boolean(isRenewal),
+            renewedFromOrderId: renewedFromOrderId || null,
+            costPriceTotalBDT: quote.costPriceTotalBDT || null,
             // Marketing Attribution (truncated for safety)
             utmSource: typeof utmSource === 'string' ? utmSource.slice(0, 200) : undefined,
             utmMedium: typeof utmMedium === 'string' ? utmMedium.slice(0, 200) : undefined,
@@ -595,6 +602,7 @@ export async function POST(req: NextRequest) {
                 productName: p.productName,
                 variationName: p.variationName,
                 priceBDT: p.priceBDT,
+                costPriceBDT: p.costPriceBDT || null,
                 quantity: p.quantity,
                 image: p.image || null,
                 fulfillmentType: p.fulfillmentType || "AUTO_STOCK",
@@ -602,6 +610,8 @@ export async function POST(req: NextRequest) {
                 refundWindowDaysAtPurchase: p.refundWindowDays || 7,
                 replacementAllowedAtPurchase: p.replacementAllowed ?? true,
                 refundAllowedAtPurchase: p.refundAllowed ?? true,
+                renewedFromKeyId: renewedFromKeyId || null,
+                renewalContext: renewalContext || null,
               })),
             },
             timelineEvents: {

@@ -119,3 +119,24 @@ export async function processSubscriptionExpiryReminders(): Promise<ExpiryRemind
 
   return result;
 }
+
+/**
+ * Direct query helper to fetch expiring subscriptions for audits, diagnostics or reporting.
+ */
+export async function findExpiringSubscriptions(daysAhead: number = 3) {
+  const now = new Date();
+  const targetDate = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+  return prisma.deliveredKey.findMany({
+    where: {
+      warrantyExpiresAt: {
+        gt: now,
+        lte: targetDate,
+      },
+    },
+    include: {
+      order: true,
+      orderItem: true,
+    },
+  });
+}
+

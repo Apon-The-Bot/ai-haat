@@ -24,49 +24,54 @@ interface FrequentlyBoughtTogetherProps {
   bundleDiscountPercent?: number;
 }
 
-// Curated companion recommendations by category
-const COMPANION_SUGGESTIONS: Record<string, BundleCompanion[]> = {
-  ai: [
-    {
-      id: "comp-canva",
-      name: "Canva Pro Subscription (Brand Kit & AI)",
-      slug: "canva-pro",
-      image: "/images/products/canva-pro.svg",
-      priceBDT: 99,
-      originalPriceBDT: 150,
-      category: "Graphics",
-    },
-    {
-      id: "comp-vpn",
-      name: "NordVPN Complete Security (2-Year)",
-      slug: "nordvpn-complete-security",
-      image: "/images/products/nordvpn.svg",
-      priceBDT: 450,
-      originalPriceBDT: 600,
-      category: "VPN",
-    },
-  ],
-  software: [
-    {
-      id: "comp-office",
-      name: "Microsoft Office 365 ProPlus",
-      slug: "office-365",
-      image: "/images/products/office-365.svg",
-      priceBDT: 350,
-      originalPriceBDT: 500,
-      category: "Productivity",
-    },
-    {
-      id: "comp-win11",
-      name: "Windows 11 Pro Retail Key",
-      slug: "windows-11-pro-retail-key",
-      image: "/images/products/windows-11.svg",
-      priceBDT: 450,
-      originalPriceBDT: 650,
-      category: "OS",
-    },
-  ],
-};
+// Curated companion recommendations matching real catalog products
+const ALL_COMPANIONS: BundleCompanion[] = [
+  {
+    id: "p-canva-pro",
+    name: "Canva Pro Subscription (Brand Kit & AI Tools)",
+    slug: "canva-pro",
+    image: "/images/products/canva-pro.svg",
+    priceBDT: 99,
+    originalPriceBDT: 150,
+    category: "AI Tools",
+  },
+  {
+    id: "p-nordvpn",
+    name: "NordVPN Ultimate Security (Threat Protection & Meshnet)",
+    slug: "nordvpn-complete-security",
+    image: "/images/products/nordvpn.svg",
+    priceBDT: 140,
+    originalPriceBDT: 250,
+    category: "VPN",
+  },
+  {
+    id: "p-chatgpt-plus",
+    name: "ChatGPT Plus (GPT-4o & Canvas Access)",
+    slug: "chatgpt-plus",
+    image: "/images/products/chatgpt.svg",
+    priceBDT: 290,
+    originalPriceBDT: 450,
+    category: "AI Tools",
+  },
+  {
+    id: "p-windows-11-pro",
+    name: "Windows 11 Pro Genuine Retail Lifetime License Key",
+    slug: "windows-11-pro-retail-key",
+    image: "/images/products/windows-11.svg",
+    priceBDT: 390,
+    originalPriceBDT: 590,
+    category: "PC Key & Software",
+  },
+  {
+    id: "p-microsoft-365",
+    name: "Microsoft 365 Family (1TB OneDrive + Word/Excel)",
+    slug: "microsoft-365-family-seat",
+    image: "/images/products/microsoft-365.svg",
+    priceBDT: 450,
+    originalPriceBDT: 650,
+    category: "PC Key & Software",
+  },
+];
 
 export function FrequentlyBoughtTogether({
   primaryProduct,
@@ -77,9 +82,11 @@ export function FrequentlyBoughtTogether({
   const { showToast } = useToast();
   const { formatPrice } = useCurrency();
 
-  const companions =
-    COMPANION_SUGGESTIONS[primaryProduct.category] || COMPANION_SUGGESTIONS.ai;
-  const companion = companions[0]; // Choose top companion for 2-item high-converting combo
+  // Pick top companion that is NOT the current product
+  const availableCompanions = ALL_COMPANIONS.filter(
+    (c) => c.slug !== primaryProduct.slug && c.id !== primaryProduct.id
+  );
+  const companion = availableCompanions[0];
 
   const [includeCompanion, setIncludeCompanion] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
