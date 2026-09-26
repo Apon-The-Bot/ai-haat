@@ -1,0 +1,38 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="m5Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="m5Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FECDD3"/>
+      <stop offset="1" stop-color="#FFE4E6"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#m5Clip)">
+    <rect width="128" height="128" fill="url(#m5Bg)"/>
+    <!-- Charcoal Streetwear Hoodie -->
+    <path d="M22 132 C22 96 40 84 64 84 C88 84 106 96 106 132 Z" fill="#334155"/>
+    <path d="M52 84 C52 98 64 106 64 106 C64 106 76 98 76 84 Z" fill="#1E293B"/>
+    <!-- Neck -->
+    <rect x="56" y="68" width="16" height="20" rx="4" fill="#E5A66B"/>
+    <!-- Head -->
+    <ellipse cx="64" cy="58" rx="25" ry="27" fill="#F6C89F"/>
+    <!-- Ears -->
+    <circle cx="38" cy="59" r="6" fill="#E5A66B"/>
+    <circle cx="90" cy="59" r="6" fill="#E5A66B"/>
+    <!-- Cool Cap (Turned Backward/Slanted) -->
+    <path d="M36 44 C36 28 50 20 66 20 C82 20 92 28 92 44 Z" fill="#0284C7"/>
+    <path d="M30 44 C30 40 98 40 98 44 C98 48 30 48 30 44 Z" fill="#0369A1"/>
+    <!-- Hair peeking out -->
+    <path d="M38 50 C40 54 44 56 46 52" stroke="#18181B" stroke-width="3" stroke-linecap="round"/>
+    <path d="M82 52 C84 56 88 54 90 50" stroke="#18181B" stroke-width="3" stroke-linecap="round"/>
+    <!-- Eyes -->
+    <ellipse cx="52" cy="57" rx="3" ry="3.2" fill="#0F172A"/>
+    <ellipse cx="76" cy="57" rx="3" ry="3.2" fill="#0F172A"/>
+    <circle cx="53" cy="56" r="1" fill="#FFFFFF"/>
+    <circle cx="77" cy="56" r="1" fill="#FFFFFF"/>
+    <!-- Eyebrows -->
+    <path d="M46 50 C50 47 56 48 58 51" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M70 51 C72 48 78 47 82 50" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Sideways Grin -->
+    <path d="M57 69 C62 74 72 72 73 68" stroke="#9A3412" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+</svg>

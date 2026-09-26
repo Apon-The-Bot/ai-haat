@@ -1,0 +1,41 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="f4Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="f4Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DDD6FE"/>
+      <stop offset="1" stop-color="#EDE9FE"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#f4Clip)">
+    <rect width="128" height="128" fill="url(#f4Bg)"/>
+    <!-- Lilac Top -->
+    <path d="M22 132 C22 96 40 84 64 84 C88 84 106 96 106 132 Z" fill="#8B5CF6"/>
+    <!-- Long Wavy Hair Behind Shoulders -->
+    <path d="M28 60 C28 90 36 120 40 132 L88 132 C92 120 100 90 100 60 C100 30 84 18 64 18 C44 18 28 30 28 60 Z" fill="#451A03"/>
+    <!-- Neck -->
+    <rect x="57" y="68" width="14" height="20" rx="4" fill="#F8D7B8"/>
+    <!-- Head -->
+    <ellipse cx="64" cy="56" rx="23" ry="26" fill="#FBD8B5"/>
+    <!-- Gold/Amber Headband -->
+    <path d="M38 46 C38 28 90 28 90 46" stroke="#F59E0B" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="44" cy="38" r="3" fill="#D97706"/>
+    <!-- Front Hair strands -->
+    <path d="M38 48 C42 66 42 80 44 94 C46 84 46 66 42 50 Z" fill="#3B1501"/>
+    <path d="M90 48 C86 66 86 80 84 94 C82 84 82 66 86 50 Z" fill="#3B1501"/>
+    <!-- Cheeks Blush -->
+    <circle cx="49" cy="64" r="5" fill="#FDA4AF" opacity="0.5"/>
+    <circle cx="79" cy="64" r="5" fill="#FDA4AF" opacity="0.5"/>
+    <!-- Sparkling Eyes -->
+    <ellipse cx="53" cy="55" rx="3.2" ry="3.5" fill="#18181B"/>
+    <ellipse cx="75" cy="55" rx="3.2" ry="3.5" fill="#18181B"/>
+    <circle cx="54" cy="54" r="1.1" fill="#FFFFFF"/>
+    <circle cx="76" cy="54" r="1.1" fill="#FFFFFF"/>
+    <path d="M56 52 L59 50" stroke="#18181B" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M72 52 L69 50" stroke="#18181B" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Eyebrows -->
+    <path d="M47 47 C51 44 56 45 58 47" stroke="#451A03" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M70 47 C72 45 77 44 81 47" stroke="#451A03" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- Cheerful Rosy Smile -->
+    <path d="M57 67 C60 72 68 72 71 67" stroke="#E11D48" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+</svg>

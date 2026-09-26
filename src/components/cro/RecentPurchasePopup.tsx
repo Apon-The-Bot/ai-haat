@@ -4,13 +4,14 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck } from "lucide-react";
-import { SafeImage } from "@/components/SafeImage";
+import { CartoonAvatar } from "@/components/ui/CartoonAvatar";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
 
 export interface PurchaseNotification {
   id: string;
   customerName: string;
+  gender?: "male" | "female";
   city: string;
   area?: string;
   productName: string;
@@ -25,6 +26,7 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p1",
     customerName: "Tanvir H.",
+    gender: "male",
     city: "Dhaka",
     area: "Dhanmondi",
     productName: "ChatGPT Plus (GPT-4o & Canvas Access)",
@@ -37,6 +39,7 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p2",
     customerName: "Sakib A.",
+    gender: "male",
     city: "Chittagong",
     area: "GEC Circle",
     productName: "Windows 11 Pro Retail Key",
@@ -49,6 +52,7 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p3",
     customerName: "Nusrat J.",
+    gender: "female",
     city: "Sylhet",
     area: "Zindabazar",
     productName: "Canva Pro Subscription (Brand Kit & AI)",
@@ -61,6 +65,7 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p4",
     customerName: "Farhan M.",
+    gender: "male",
     city: "Rajshahi",
     area: "Shaheb Bazar",
     productName: "CapCut Pro PC & Mobile (VIP Auto Captions)",
@@ -73,6 +78,7 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p5",
     customerName: "Mahmud R.",
+    gender: "male",
     city: "Dhaka",
     area: "Uttara",
     productName: "Google Gemini Advanced (2TB Storage)",
@@ -85,6 +91,7 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p6",
     customerName: "Ahsan K.",
+    gender: "male",
     city: "Khulna",
     area: "Sonadanga",
     productName: "NordVPN Complete Security (2-Year)",
@@ -97,6 +104,7 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p7",
     customerName: "Rafiul I.",
+    gender: "male",
     city: "Comilla",
     area: "Kandirpar",
     productName: "Midjourney v6 Fast GPU Credits",
@@ -108,9 +116,10 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   },
   {
     id: "p8",
-    customerName: "Arif H.",
+    customerName: "Tasnim R.",
+    gender: "female",
     city: "Dhaka",
-    area: "Gulshan-2",
+    area: "Banani",
     productName: "Microsoft 365 Family Seat + 1TB OneDrive",
     slug: "microsoft-365-family-seat",
     image: "/images/products/microsoft-365.svg",
@@ -121,6 +130,7 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p9",
     customerName: "Sabbir N.",
+    gender: "male",
     city: "Barisal",
     area: "Sadar Road",
     productName: "Telegram Premium Gift Subscription",
@@ -133,6 +143,7 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p10",
     customerName: "Nafisa T.",
+    gender: "female",
     city: "Mymensingh",
     area: "Town Hall",
     productName: "YouTube Premium Family Seat (Ad-Free)",
@@ -145,26 +156,80 @@ const PURCHASE_POOL: PurchaseNotification[] = [
   {
     id: "p11",
     customerName: "Zubair E.",
+    gender: "male",
     city: "Rangpur",
     area: "Dhap",
     productName: "Cursor AI Pro (Developer Assistant)",
     slug: "cursor-ai-pro-subscription",
-    image: "/images/products/chatgpt-plus.svg",
+    image: "/images/products/cursor.svg",
     timeAgoEn: "15 mins ago",
     timeAgoBn: "১৫ মিনিট আগে",
     priceBDT: 380,
   },
   {
     id: "p12",
-    customerName: "Mehedi H.",
-    city: "Dhaka",
-    area: "Mirpur-10",
+    customerName: "Sadia A.",
+    gender: "female",
+    city: "Chittagong",
+    area: "Agrabad",
     productName: "Netflix Premium 4K UHD Private Profile",
     slug: "netflix-premium-4k-uhd",
     image: "/images/products/netflix.svg",
     timeAgoEn: "1 min ago",
     timeAgoBn: "১ মিনিট আগে",
     priceBDT: 280,
+  },
+  {
+    id: "p13",
+    customerName: "Anika B.",
+    gender: "female",
+    city: "Gazipur",
+    area: "Chowrasta",
+    productName: "Canva Pro Subscription (Brand Kit & AI)",
+    slug: "canva-pro",
+    image: "/images/products/canva-pro.svg",
+    timeAgoEn: "10 mins ago",
+    timeAgoBn: "১০ মিনিট আগে",
+    priceBDT: 99,
+  },
+  {
+    id: "p14",
+    customerName: "Arif H.",
+    gender: "male",
+    city: "Dhaka",
+    area: "Gulshan-2",
+    productName: "Discord Nitro + 2 Server Boosts",
+    slug: "discord-nitro",
+    image: "/images/products/discord-nitro.svg",
+    timeAgoEn: "12 mins ago",
+    timeAgoBn: "১২ মিনিট আগে",
+    priceBDT: 650,
+  },
+  {
+    id: "p15",
+    customerName: "Sumaiya K.",
+    gender: "female",
+    city: "Sylhet",
+    area: "Amberkhana",
+    productName: "Google One 2TB Cloud Storage",
+    slug: "google-one-cloud-storage",
+    image: "/images/products/google-one.svg",
+    timeAgoEn: "14 mins ago",
+    timeAgoBn: "১৪ মিনিট আগে",
+    priceBDT: 420,
+  },
+  {
+    id: "p16",
+    customerName: "Mehedi H.",
+    gender: "male",
+    city: "Dhaka",
+    area: "Mirpur-10",
+    productName: "ElevenLabs Creator Voice AI",
+    slug: "elevenlabs-creator",
+    image: "/images/products/elevenlabs.svg",
+    timeAgoEn: "18 mins ago",
+    timeAgoBn: "১৮ মিনিট আগে",
+    priceBDT: 490,
   },
 ];
 
@@ -301,22 +366,22 @@ export function RecentPurchasePopup() {
             {/* Top Accent Line */}
             <div className="absolute top-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-[#FC5C03] to-transparent opacity-80" />
 
-            {/* Product Thumbnail with Live Pulse */}
+            {/* Customer Cartoon Avatar with Live Online Dot & Product Badge */}
             <Link
               href={`/product/${currentNotification.slug}`}
-              className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-gray-50 border border-gray-100 p-1 flex items-center justify-center hover:scale-105 transition-transform"
+              className="relative shrink-0 hover:scale-105 transition-transform"
+              title={currentNotification.productName}
             >
-              <SafeImage
-                src={currentNotification.image}
-                alt={currentNotification.productName}
-                aspectRatio="1/1"
-                objectFit="contain"
-                sizes="48px"
+              <CartoonAvatar
+                name={currentNotification.customerName}
+                gender={currentNotification.gender}
+                size={48}
+                rounded="2xl"
+                showOnlineDot={true}
+                showProductBadge={true}
+                productImage={currentNotification.image}
+                productName={currentNotification.productName}
               />
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#22C55E] border-2 border-white" />
-              </span>
             </Link>
 
             {/* Content Details */}

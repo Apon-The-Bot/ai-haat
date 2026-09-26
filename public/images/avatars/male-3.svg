@@ -1,0 +1,40 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="m3Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="m3Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#FEF3C7"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#m3Clip)">
+    <rect width="128" height="128" fill="url(#m3Bg)"/>
+    <!-- Mustard Jacket & White Tee -->
+    <path d="M22 132 C22 96 42 84 64 84 C86 84 106 96 106 132 Z" fill="#D97706"/>
+    <path d="M50 84 C50 102 64 116 64 116 C64 116 78 102 78 84 Z" fill="#F8FAFC"/>
+    <!-- Neck -->
+    <rect x="56" y="68" width="16" height="20" rx="4" fill="#E8B382"/>
+    <!-- Head -->
+    <ellipse cx="64" cy="56" rx="25" ry="27" fill="#F6C89F"/>
+    <!-- Ears -->
+    <circle cx="38" cy="57" r="6" fill="#E8B382"/>
+    <circle cx="90" cy="57" r="6" fill="#E8B382"/>
+    <!-- Wavy Hair -->
+    <path d="M37 46 C36 28 50 20 64 20 C78 20 92 28 91 46 C84 38 74 34 64 34 C54 34 44 38 37 46 Z" fill="#1C1917"/>
+    <circle cx="48" cy="28" r="8" fill="#1C1917"/>
+    <circle cx="64" cy="24" r="8" fill="#1C1917"/>
+    <circle cx="78" cy="28" r="8" fill="#1C1917"/>
+    <!-- Trimmed Beard & Mustache -->
+    <path d="M42 60 C42 80 54 84 64 84 C74 84 86 80 86 60 C86 74 74 80 64 80 C54 80 42 74 42 60 Z" fill="#292524"/>
+    <path d="M54 68 C58 66 70 66 74 68 C70 70 58 70 54 68 Z" fill="#292524"/>
+    <!-- Eyes -->
+    <ellipse cx="52" cy="54" rx="3" ry="3.2" fill="#1C1917"/>
+    <ellipse cx="76" cy="54" rx="3" ry="3.2" fill="#1C1917"/>
+    <circle cx="53" cy="53" r="1" fill="#FFFFFF"/>
+    <circle cx="77" cy="53" r="1" fill="#FFFFFF"/>
+    <!-- Eyebrows -->
+    <path d="M46 46 C50 43 56 44 58 47" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M70 47 C72 44 78 43 82 46" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Smile -->
+    <path d="M58 72 C61 75 67 75 70 72" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

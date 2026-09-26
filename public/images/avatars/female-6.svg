@@ -1,0 +1,37 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="f6Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="f6Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#FEF3C7"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#f6Clip)">
+    <rect width="128" height="128" fill="url(#f6Bg)"/>
+    <!-- Teal Sports Tee -->
+    <path d="M22 132 C22 96 40 84 64 84 C88 84 106 96 106 132 Z" fill="#0F766E"/>
+    <!-- High Ponytail Hair Flowing to Side -->
+    <path d="M84 32 C96 32 108 44 106 68 C104 62 96 52 86 46 Z" fill="#1E1B4B"/>
+    <circle cx="84" cy="34" r="5" fill="#EF4444"/>
+    <!-- Neck -->
+    <rect x="57" y="68" width="14" height="20" rx="4" fill="#FBD8B5"/>
+    <!-- Head -->
+    <ellipse cx="64" cy="56" rx="23" ry="26" fill="#FCE0CA"/>
+    <!-- Sleek Pulled-Back Hair with Cute Side Bangs -->
+    <path d="M38 48 C38 28 50 20 66 20 C82 20 90 28 90 48 C84 40 76 34 64 34 C50 34 42 40 38 48 Z" fill="#1E1B4B"/>
+    <path d="M40 46 C44 58 46 64 48 70" stroke="#1E1B4B" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Cheeks Blush -->
+    <circle cx="49" cy="64" r="5" fill="#FB7185" opacity="0.45"/>
+    <circle cx="79" cy="64" r="5" fill="#FB7185" opacity="0.45"/>
+    <!-- Eyes: Energetic Smile & Wink -->
+    <ellipse cx="53" cy="55" rx="3.2" ry="3.5" fill="#1E1B4B"/>
+    <circle cx="54" cy="54" r="1.1" fill="#FFFFFF"/>
+    <path d="M72 56 C74 53 78 53 80 56" stroke="#1E1B4B" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Eyebrows -->
+    <path d="M47 47 C51 44 56 45 58 47" stroke="#1E1B4B" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M70 47 C72 45 77 44 81 47" stroke="#1E1B4B" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- Radiant Open Smile -->
+    <path d="M56 66 C56 74 72 74 72 66 Z" fill="#BE123C"/>
+    <path d="M58 66 C60 68 68 68 70 66" stroke="#FFFFFF" stroke-width="2"/>
+  </g>
+</svg>

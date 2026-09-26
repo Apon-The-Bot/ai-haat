@@ -1,0 +1,43 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="m6Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="m6Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A5F3FC"/>
+      <stop offset="1" stop-color="#CFFAFE"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#m6Clip)">
+    <rect width="128" height="128" fill="url(#m6Bg)"/>
+    <!-- Denim Shirt -->
+    <path d="M22 132 C22 96 40 84 64 84 C88 84 106 96 106 132 Z" fill="#0284C7"/>
+    <path d="M64 84 L64 128" stroke="#0369A1" stroke-width="3"/>
+    <circle cx="64" cy="98" r="2" fill="#FFFFFF"/>
+    <circle cx="64" cy="112" r="2" fill="#FFFFFF"/>
+    <!-- Neck -->
+    <rect x="56" y="68" width="16" height="20" rx="4" fill="#E8B382"/>
+    <!-- Head -->
+    <ellipse cx="64" cy="56" rx="25" ry="27" fill="#FBD8B5"/>
+    <!-- Ears -->
+    <circle cx="38" cy="57" r="6" fill="#E8B382"/>
+    <circle cx="90" cy="57" r="6" fill="#E8B382"/>
+    <!-- Neat Crew Cut -->
+    <path d="M38 48 C38 28 50 22 64 22 C78 22 90 28 90 48 C84 42 76 38 64 38 C52 38 44 42 38 48 Z" fill="#292524"/>
+    <!-- Cheeks Blush -->
+    <circle cx="48" cy="65" r="4" fill="#FCA5A5" opacity="0.3"/>
+    <circle cx="80" cy="65" r="4" fill="#FCA5A5" opacity="0.3"/>
+    <!-- Round Spectacles -->
+    <circle cx="51" cy="55" r="9" fill="#FFFFFF" fill-opacity="0.3" stroke="#854D0E" stroke-width="2.2"/>
+    <circle cx="77" cy="55" r="9" fill="#FFFFFF" fill-opacity="0.3" stroke="#854D0E" stroke-width="2.2"/>
+    <path d="M60 55 L68 55" stroke="#854D0E" stroke-width="2.2"/>
+    <!-- Eyes -->
+    <circle cx="51" cy="55" r="2.8" fill="#1C1917"/>
+    <circle cx="77" cy="55" r="2.8" fill="#1C1917"/>
+    <circle cx="52" cy="54" r="1" fill="#FFFFFF"/>
+    <circle cx="78" cy="54" r="1" fill="#FFFFFF"/>
+    <!-- Eyebrows -->
+    <path d="M44 44 C48 42 54 43 56 45" stroke="#292524" stroke-width="2" stroke-linecap="round"/>
+    <path d="M72 45 C74 43 80 42 84 44" stroke="#292524" stroke-width="2" stroke-linecap="round"/>
+    <!-- Calm Smile -->
+    <path d="M58 68 C61 72 67 72 70 68" stroke="#9A3412" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

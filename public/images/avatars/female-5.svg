@@ -1,0 +1,39 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="f5Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="f5Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BAE6FD"/>
+      <stop offset="1" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="f5Hijab" x1="30" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#0284C7"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#f5Clip)">
+    <rect width="128" height="128" fill="url(#f5Bg)"/>
+    <!-- Navy Cardigan -->
+    <path d="M22 132 C22 98 40 88 64 88 C88 88 106 98 106 132 Z" fill="#1E3A8A"/>
+    <!-- Sky Blue Hijab -->
+    <path d="M30 92 C30 84 48 80 64 80 C80 80 98 84 98 92 C98 118 78 128 64 128 C50 128 30 118 30 92 Z" fill="url(#f5Hijab)"/>
+    <ellipse cx="64" cy="54" rx="33" ry="34" fill="url(#f5Hijab)"/>
+    <!-- Face -->
+    <ellipse cx="64" cy="57" rx="20" ry="23" fill="#FBD8B5"/>
+    <path d="M48 46 C54 41 74 41 80 46 C74 43 54 43 48 46 Z" fill="#0369A1"/>
+    <!-- Cheeks Blush -->
+    <circle cx="52" cy="65" r="4.5" fill="#FB7185" opacity="0.4"/>
+    <circle cx="76" cy="65" r="4.5" fill="#FB7185" opacity="0.4"/>
+    <!-- Eyes -->
+    <ellipse cx="54" cy="56" rx="3.2" ry="3.5" fill="#0C4A6E"/>
+    <ellipse cx="74" cy="56" rx="3.2" ry="3.5" fill="#0C4A6E"/>
+    <circle cx="55" cy="55" r="1.1" fill="#FFFFFF"/>
+    <circle cx="75" cy="55" r="1.1" fill="#FFFFFF"/>
+    <path d="M57 53 L60 51" stroke="#0C4A6E" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M71 53 L68 51" stroke="#0C4A6E" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Eyebrows -->
+    <path d="M48 49 C52 46 57 47 59 49" stroke="#0C4A6E" stroke-width="2" stroke-linecap="round"/>
+    <path d="M69 49 C71 47 76 46 80 49" stroke="#0C4A6E" stroke-width="2" stroke-linecap="round"/>
+    <!-- Gentle Smile -->
+    <path d="M58 68 C61 72 67 72 70 68" stroke="#C2410C" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -34,6 +34,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/context/AuthContext";
 import { SafeImage } from "@/components/SafeImage";
+import { CartoonAvatar } from "@/components/ui/CartoonAvatar";
 import { ProofItem, Review } from "@/types";
 
 const CATEGORIES = [
@@ -963,9 +964,12 @@ export function ProofsClient() {
                     {/* Header Row */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FC5C03] to-amber-400 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                          {rev.author?.charAt(0) || "U"}
-                        </div>
+                        <CartoonAvatar
+                          name={rev.author}
+                          size={40}
+                          rounded="full"
+                          showOnlineDot={false}
+                        />
                         <div>
                           <div className="flex items-center gap-1.5">
                             <h4 className="text-xs sm:text-sm font-black text-[#1A1D26]">

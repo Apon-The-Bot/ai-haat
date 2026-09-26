@@ -1,0 +1,41 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="f7Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="f7Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFEDD5"/>
+      <stop offset="1" stop-color="#FFF7ED"/>
+    </linearGradient>
+    <linearGradient id="f7Hijab" x1="30" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EA580C"/>
+      <stop offset="1" stop-color="#C2410C"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#f7Clip)">
+    <rect width="128" height="128" fill="url(#f7Bg)"/>
+    <!-- Sage Green Tunic -->
+    <path d="M22 132 C22 98 40 88 64 88 C88 88 106 98 106 132 Z" fill="#4D7C0F"/>
+    <!-- Terracotta Hijab -->
+    <path d="M30 92 C30 84 48 80 64 80 C80 80 98 84 98 92 C98 118 78 128 64 128 C50 128 30 118 30 92 Z" fill="url(#f7Hijab)"/>
+    <ellipse cx="64" cy="54" rx="33" ry="34" fill="url(#f7Hijab)"/>
+    <!-- Face -->
+    <ellipse cx="64" cy="57" rx="20" ry="23" fill="#FBD8B5"/>
+    <path d="M48 46 C54 41 74 41 80 46 C74 43 54 43 48 46 Z" fill="#9A3412"/>
+    <!-- Cheeks Blush -->
+    <circle cx="52" cy="65" r="4.5" fill="#FB7185" opacity="0.4"/>
+    <circle cx="76" cy="65" r="4.5" fill="#FB7185" opacity="0.4"/>
+    <!-- Cute Round Glasses -->
+    <circle cx="52" cy="55" r="8.5" fill="#FFFFFF" fill-opacity="0.3" stroke="#7C2D12" stroke-width="2"/>
+    <circle cx="76" cy="55" r="8.5" fill="#FFFFFF" fill-opacity="0.3" stroke="#7C2D12" stroke-width="2"/>
+    <path d="M60.5 55 L67.5 55" stroke="#7C2D12" stroke-width="2"/>
+    <!-- Eyes -->
+    <circle cx="52" cy="55" r="2.6" fill="#1C1917"/>
+    <circle cx="76" cy="55" r="2.6" fill="#1C1917"/>
+    <circle cx="53" cy="54" r="1" fill="#FFFFFF"/>
+    <circle cx="77" cy="54" r="1" fill="#FFFFFF"/>
+    <!-- Eyebrows -->
+    <path d="M46 45 C50 43 55 44 57 46" stroke="#7C2D12" stroke-width="2" stroke-linecap="round"/>
+    <path d="M71 46 C73 44 78 43 82 45" stroke="#7C2D12" stroke-width="2" stroke-linecap="round"/>
+    <!-- Warm Intelligent Smile -->
+    <path d="M58 68 C61 72 67 72 70 68" stroke="#9A3412" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+</svg>

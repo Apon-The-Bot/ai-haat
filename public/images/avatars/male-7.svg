@@ -1,0 +1,44 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="m7Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="m7Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D9F99D"/>
+      <stop offset="1" stop-color="#ECFCCB"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#m7Clip)">
+    <rect width="128" height="128" fill="url(#m7Bg)"/>
+    <!-- Coral Hoodie -->
+    <path d="M22 132 C22 96 40 84 64 84 C88 84 106 96 106 132 Z" fill="#EA580C"/>
+    <path d="M52 84 C52 98 64 104 64 104 C64 104 76 98 76 84 Z" fill="#C2410C"/>
+    <!-- Neck -->
+    <rect x="56" y="68" width="16" height="20" rx="4" fill="#F6C89F"/>
+    <!-- Head -->
+    <ellipse cx="64" cy="56" rx="25" ry="27" fill="#FBD8B5"/>
+    <!-- Ears -->
+    <circle cx="38" cy="57" r="6" fill="#F6C89F"/>
+    <circle cx="90" cy="57" r="6" fill="#F6C89F"/>
+    <!-- Curly Afro/Texture Hair -->
+    <circle cx="44" cy="38" r="9" fill="#1C1917"/>
+    <circle cx="56" cy="30" r="9" fill="#1C1917"/>
+    <circle cx="72" cy="30" r="9" fill="#1C1917"/>
+    <circle cx="84" cy="38" r="9" fill="#1C1917"/>
+    <circle cx="64" cy="24" r="9" fill="#1C1917"/>
+    <circle cx="38" cy="46" r="7" fill="#1C1917"/>
+    <circle cx="90" cy="46" r="7" fill="#1C1917"/>
+    <!-- Eyes -->
+    <ellipse cx="52" cy="55" rx="3.2" ry="3.5" fill="#18181B"/>
+    <ellipse cx="76" cy="55" rx="3.2" ry="3.5" fill="#18181B"/>
+    <circle cx="53" cy="54" r="1.1" fill="#FFFFFF"/>
+    <circle cx="77" cy="54" r="1.1" fill="#FFFFFF"/>
+    <!-- Cheeks Blush -->
+    <circle cx="47" cy="63" r="5" fill="#FB7185" opacity="0.4"/>
+    <circle cx="81" cy="63" r="5" fill="#FB7185" opacity="0.4"/>
+    <!-- Eyebrows -->
+    <path d="M46 47 C50 44 56 45 58 48" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M70 48 C72 45 78 44 82 47" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Big Happy Smile -->
+    <path d="M54 66 C54 75 74 75 74 66 Z" fill="#991B1B"/>
+    <path d="M57 66 C59 69 69 69 71 66" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,42 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="f8Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="f8Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FCE7F3"/>
+      <stop offset="1" stop-color="#FDF2F8"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#f8Clip)">
+    <rect width="128" height="128" fill="url(#f8Bg)"/>
+    <!-- Yellow Cozy Sweater -->
+    <path d="M22 132 C22 96 40 84 64 84 C88 84 106 96 106 132 Z" fill="#EAB308"/>
+    <path d="M50 84 C50 94 64 100 64 100 C64 100 78 94 78 84 Z" fill="#CA8A04"/>
+    <!-- Top Bun Hairpiece -->
+    <circle cx="64" cy="22" r="14" fill="#3E2723"/>
+    <circle cx="64" cy="22" r="11" fill="#4E342E"/>
+    <!-- Neck -->
+    <rect x="57" y="68" width="14" height="20" rx="4" fill="#FBD8B5"/>
+    <!-- Head -->
+    <ellipse cx="64" cy="56" rx="23" ry="26" fill="#FCE0CA"/>
+    <!-- Hair Base Around Face -->
+    <path d="M38 48 C38 28 50 24 64 24 C78 24 90 28 90 48 C84 40 76 36 64 36 C52 36 44 40 38 48 Z" fill="#3E2723"/>
+    <!-- Cute Curly Wisps on sides -->
+    <path d="M39 52 C37 62 41 68 39 74" stroke="#3E2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M89 52 C91 62 87 68 89 74" stroke="#3E2723" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Cheeks Blush -->
+    <circle cx="49" cy="64" r="5" fill="#FB7185" opacity="0.45"/>
+    <circle cx="79" cy="64" r="5" fill="#FB7185" opacity="0.45"/>
+    <!-- Sparkling Eyes -->
+    <ellipse cx="53" cy="55" rx="3.2" ry="3.5" fill="#1C1917"/>
+    <ellipse cx="75" cy="55" rx="3.2" ry="3.5" fill="#1C1917"/>
+    <circle cx="54" cy="54" r="1.1" fill="#FFFFFF"/>
+    <circle cx="76" cy="54" r="1.1" fill="#FFFFFF"/>
+    <path d="M56 52 L59 50" stroke="#1C1917" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M72 52 L69 50" stroke="#18181B" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Eyebrows -->
+    <path d="M47 46 C51 43 56 44 58 46" stroke="#3E2723" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M70 46 C72 44 77 43 81 46" stroke="#3E2723" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- Sweet Smile -->
+    <path d="M57 67 C60 72 68 72 71 67" stroke="#BE123C" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+</svg>

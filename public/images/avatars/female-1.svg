@@ -1,0 +1,44 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="f1Clip"><rect width="128" height="128" rx="64" fill="#fff"/></clipPath>
+    <linearGradient id="f1Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBCFE8"/>
+      <stop offset="1" stop-color="#FCE7F3"/>
+    </linearGradient>
+    <linearGradient id="f1Hijab" x1="30" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F472B6"/>
+      <stop offset="1" stop-color="#DB2777"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#f1Clip)">
+    <rect width="128" height="128" fill="url(#f1Bg)"/>
+    <!-- Modest Lavender Blouse -->
+    <path d="M22 132 C22 98 40 88 64 88 C88 88 106 98 106 132 Z" fill="#9333EA"/>
+    <!-- Hijab Drapery on Shoulders -->
+    <path d="M30 92 C30 84 48 80 64 80 C80 80 98 84 98 92 C98 118 78 128 64 128 C50 128 30 118 30 92 Z" fill="url(#f1Hijab)"/>
+    <path d="M46 94 C54 104 74 104 82 94" stroke="#BE185D" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Hijab Outer Wrap Around Head -->
+    <ellipse cx="64" cy="54" rx="33" ry="34" fill="url(#f1Hijab)"/>
+    <!-- Inner Face Oval -->
+    <ellipse cx="64" cy="57" rx="20" ry="23" fill="#FBD8B5"/>
+    <!-- Under-cap fold / framing -->
+    <path d="M48 46 C54 41 74 41 80 46 C74 43 54 43 48 46 Z" fill="#9D174D"/>
+    <!-- Soft Cheeks Blush -->
+    <circle cx="52" cy="65" r="4.5" fill="#FB7185" opacity="0.45"/>
+    <circle cx="76" cy="65" r="4.5" fill="#FB7185" opacity="0.45"/>
+    <!-- Almond Eyes with delicate lashes -->
+    <ellipse cx="54" cy="56" rx="3.2" ry="3.5" fill="#18181B"/>
+    <ellipse cx="74" cy="56" rx="3.2" ry="3.5" fill="#18181B"/>
+    <circle cx="55" cy="55" r="1.1" fill="#FFFFFF"/>
+    <circle cx="75" cy="55" r="1.1" fill="#FFFFFF"/>
+    <!-- Eyelash flicks -->
+    <path d="M57 53 L60 51" stroke="#18181B" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M71 53 L68 51" stroke="#18181B" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Graceful Eyebrows -->
+    <path d="M48 49 C52 46 57 47 59 49" stroke="#500724" stroke-width="2" stroke-linecap="round"/>
+    <path d="M69 49 C71 47 76 46 80 49" stroke="#500724" stroke-width="2" stroke-linecap="round"/>
+    <!-- Sweet Rosy Smile -->
+    <path d="M58 68 C61 72 67 72 70 68" stroke="#E11D48" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M60 69 Q64 72 68 69" fill="#FFF1F2"/>
+  </g>
+</svg>
