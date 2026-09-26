@@ -5,6 +5,7 @@ import { sendOrderDeliveryEmail } from "@/utils/email";
 import { sendCustomerExpiryNoticeEmail } from "@/lib/email-service";
 import { sendTelegramMessage, sendLowStockTelegramAlert, sendStockExpiryTelegramAlert } from "@/utils/telegram";
 import { isEmailSuppressed } from "@/lib/commerce/abandoned-cart";
+import { notifyWaitingCustomersForProduct } from "@/lib/commerce/stock-waitlist";
 import crypto from "crypto";
 
 export interface StockSummaryItem {
@@ -69,7 +70,7 @@ export async function addStockItem(data: {
     ? Number(data.costPriceBDT)
     : null;
 
-  return prisma.digitalStock.create({
+  const created = await prisma.digitalStock.create({
     data: {
       productId: data.productId,
       variationId: data.variationId || null,
@@ -85,6 +86,13 @@ export async function addStockItem(data: {
       notes: data.notes || null,
     },
   });
+
+  // Automatically notify pending waitlist subscribers for this restock
+  notifyWaitingCustomersForProduct(data.productId, data.variationId).catch((err) => {
+    console.error("[StockWaitlist] Auto-notify error on addStockItem:", err);
+  });
+
+  return created;
 }
 
 /**
@@ -168,6 +176,12 @@ export async function bulkImportStock(data: {
     } catch (err: any) {
       errors.push(`Row #${i + 1}: ${err.message}`);
     }
+  }
+
+  if (importedCount > 0) {
+    notifyWaitingCustomersForProduct(data.productId, data.variationId).catch((err) => {
+      console.error("[StockWaitlist] Auto-notify error on bulkImportStock:", err);
+    });
   }
 
   return {

@@ -29,6 +29,7 @@ import {
   BadgeCheck,
   Check,
   AlertCircle,
+  Bell,
 } from "lucide-react";
 import { Product, Variation, Review } from "@/types";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -100,6 +101,63 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
   // FAQ accordion open index state
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  // Stock Waitlist Notification state
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyPhone, setNotifyPhone] = useState("");
+  const [isSubmittingNotify, setIsSubmittingNotify] = useState(false);
+  const [notifySuccess, setNotifySuccess] = useState(false);
+  const notifyRef = useRef<HTMLDivElement>(null);
+
+  // Pre-fill user email if authenticated
+  useEffect(() => {
+    if (user?.email && !notifyEmail) {
+      setNotifyEmail(user.email);
+    }
+  }, [user?.email, notifyEmail]);
+
+  // Handle URL hash #stock-alert auto scroll
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#stock-alert") {
+      setTimeout(() => {
+        notifyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 500);
+    }
+  }, []);
+
+  const handleStockNotifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notifyEmail || !notifyEmail.includes("@")) {
+      showToast("অনুগ্রহ করে একটি সঠিক ইমেইল লিখুন", "error");
+      return;
+    }
+
+    setIsSubmittingNotify(true);
+    try {
+      const res = await fetch("/api/stock-waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: notifyEmail,
+          phone: notifyPhone || undefined,
+          productId: product.id,
+          variationId: selectedVariation.id !== "default" ? selectedVariation.id : null,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setNotifySuccess(true);
+        showToast(data.message || "স্টক আসার সাথে সাথে ইমেইল পাঠানো হবে!", "success");
+      } else {
+        showToast(data.error || "সাবস্ক্রিপশন ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।", "error");
+      }
+    } catch {
+      showToast("নেটওয়ার্ক সমস্যা। অনুগ্রহ করে আবার চেষ্টা করুন।", "error");
+    } finally {
+      setIsSubmittingNotify(false);
+    }
+  };
 
   const handleCopyLink = () => {
     if (typeof window !== "undefined") {
@@ -548,25 +606,90 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               </div>
             </div>
 
-            {/* 7. Action Buttons (Buy Now & Add to Cart) */}
+            {/* 7. Action Buttons (Buy Now & Add to Cart) or Stock Alert */}
             {isProductOutOfStock ? (
-              <div className="space-y-3 pt-2">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-center space-y-1">
-                  <span className="text-sm font-black text-red-600 block">
-                    ❌ এই ভ্যারিয়েন্ট / প্রোডাক্টটি সাময়িকভাবে স্টক আউট
-                  </span>
-                  <p className="text-xs text-red-700/80">
-                    স্টক আসার সাথে সাথেই পুনরায় অর্ডার করা যাবে। আপনি অন্য কোনো ভ্যারিয়েন্ট নির্বাচন করতে পারেন।
-                  </p>
-                </div>
+              <div id="stock-alert" ref={notifyRef} className="pt-2 space-y-3">
+                <div className="p-4 sm:p-5 bg-gradient-to-b from-amber-50/70 to-orange-50/40 border border-amber-200/80 rounded-2xl space-y-3.5 shadow-2xs">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#FC5C03]/10 text-[#FC5C03] flex items-center justify-center shrink-0 border border-[#FC5C03]/20">
+                      <Bell className="w-5 h-5 fill-current/20 text-[#FC5C03]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
+                          সাময়িকভাবে স্টক আউট
+                        </span>
+                        {selectedVariation && selectedVariation.name !== "Standard Edition" && (
+                          <span className="text-[11px] text-gray-600 font-bold truncate max-w-[200px]">
+                            ({selectedVariation.name})
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-sm sm:text-base font-black text-gray-900 mt-1">
+                        স্টক আসার সাথে সাথে ইমেইলে নোটিফিকেশন চান?
+                      </h4>
+                      <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
+                        আপনার ইমেইলটি দিয়ে রাখুন। আমাদের নতুন স্টক আসার সাথে সাথে সবার আগে আপনার কাছে অটোমেটিক এলার্ট পৌঁছে যাবে।
+                      </p>
+                    </div>
+                  </div>
 
-                <button
-                  type="button"
-                  disabled
-                  className="w-full py-3.5 bg-gray-200 text-gray-500 text-sm font-bold rounded-xl cursor-not-allowed flex items-center justify-center gap-1.5"
-                >
-                  <span>স্টক আউট (Out of Stock)</span>
-                </button>
+                  {notifySuccess ? (
+                    <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-emerald-800 animate-fadeIn">
+                      <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <div className="text-xs font-bold leading-snug">
+                        ধন্যবাদ! আপনার নোটিফিকেশন রিকোয়েস্ট গ্রহণ করা হয়েছে। স্টক আসার সাথে সাথে আপনার ইমেইলে নোটিফিকেশন পাঠানো হবে।
+                      </div>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleStockNotifySubmit} className="space-y-2 pt-1">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="email"
+                            required
+                            value={notifyEmail}
+                            onChange={(e) => setNotifyEmail(e.target.value)}
+                            placeholder="আপনার ইমেইল অ্যাড্রেস লিখুন..."
+                            className="w-full h-11 px-3.5 bg-white border border-gray-300 rounded-xl text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FC5C03] focus:border-transparent transition-all shadow-2xs"
+                          />
+                        </div>
+                        <div className="sm:w-44">
+                          <input
+                            type="tel"
+                            value={notifyPhone}
+                            onChange={(e) => setNotifyPhone(e.target.value)}
+                            placeholder="হোয়াটসঅ্যাপ/ফোন (ঐচ্ছিক)"
+                            className="w-full h-11 px-3.5 bg-white border border-gray-300 rounded-xl text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FC5C03] focus:border-transparent transition-all shadow-2xs"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={isSubmittingNotify}
+                          className="h-11 px-5 bg-gradient-to-r from-[#FC5C03] to-[#EC4001] hover:from-[#EC4001] hover:to-[#D43700] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-60"
+                        >
+                          {isSubmittingNotify ? (
+                            <>
+                              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                              <span>সংরক্ষণ হচ্ছে...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Bell className="w-4 h-4 fill-current" />
+                              <span>স্টক আসলে জানান</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-gray-500 px-1 pt-0.5">
+                        <span className="flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          কোনো স্প্যাম নয় — শুধুমাত্র রিস্টক এলার্ট পাঠানো হবে।
+                        </span>
+                      </div>
+                    </form>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="space-y-2.5 pt-2">
@@ -973,24 +1096,37 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            disabled={isProductOutOfStock}
-            onClick={handleAddToCart}
-            className="min-h-[44px] px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#FC5C03] border border-[#FC5C03]/30 rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 touch-action-manipulation"
-            aria-label="Add to cart"
-          >
-            কার্ট
-          </button>
-          <button
-            type="button"
-            disabled={isProductOutOfStock}
-            onClick={handleBuyNow}
-            className="min-h-[44px] px-5 py-2.5 bg-gradient-to-r from-[#FC5C03] to-[#EC4001] text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50 touch-action-manipulation"
-            aria-label="Buy now"
-          >
-            এখনই কিনুন
-          </button>
+          {isProductOutOfStock ? (
+            <button
+              type="button"
+              onClick={() => {
+                notifyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }}
+              className="min-h-[44px] px-4 py-2.5 bg-gradient-to-r from-[#FC5C03] to-[#EC4001] text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer touch-action-manipulation"
+            >
+              <Bell className="w-3.5 h-3.5 fill-current" />
+              <span>স্টক আসলে জানান</span>
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="min-h-[44px] px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#FC5C03] border border-[#FC5C03]/30 rounded-xl text-xs font-bold transition-colors cursor-pointer touch-action-manipulation"
+                aria-label="Add to cart"
+              >
+                কার্ট
+              </button>
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                className="min-h-[44px] px-5 py-2.5 bg-gradient-to-r from-[#FC5C03] to-[#EC4001] text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer touch-action-manipulation"
+                aria-label="Buy now"
+              >
+                এখনই কিনুন
+              </button>
+            </>
+          )}
         </div>
       </div>
 

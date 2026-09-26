@@ -15,6 +15,7 @@ import {
   renderCustomerExpiryNoticeEmail,
   renderAbandonedCartRecoveryEmail,
   renderReviewRequestEmail,
+  renderBackInStockEmail,
   type OrderDeliveryEmailParams,
   type WalletTopupEmailParams,
   type ReplacementUpdateEmailParams,
@@ -29,6 +30,7 @@ import {
   type CustomerExpiryNoticeEmailParams,
   type AbandonedCartRecoveryEmailParams,
   type ReviewRequestEmailParams,
+  type BackInStockEmailParams,
   type EmailRenderResult,
 } from "./email-templates";
 
@@ -511,6 +513,21 @@ export async function sendReviewRequestEmail(
   params: ReviewRequestEmailParams
 ): Promise<EmailServiceResult> {
   const rendered = renderReviewRequestEmail(params);
+  return sendEmail({
+    to: params.customerEmail,
+    subject: rendered.subject,
+    html: rendered.html,
+    text: rendered.text,
+  });
+}
+
+/**
+ * Dispatches a Back in Stock notification email to waiting customers.
+ */
+export async function sendBackInStockEmail(
+  params: BackInStockEmailParams
+): Promise<EmailServiceResult> {
+  const rendered = renderBackInStockEmail(params);
   return sendEmail({
     to: params.customerEmail,
     subject: rendered.subject,

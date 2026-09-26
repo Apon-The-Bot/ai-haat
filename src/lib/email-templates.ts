@@ -164,6 +164,17 @@ export interface ReviewRequestEmailParams {
   subject?: string;
 }
 
+export interface BackInStockEmailParams {
+  customerName?: string;
+  customerEmail: string;
+  productName: string;
+  variationName?: string;
+  productPriceBDT?: number;
+  productImageUrl?: string;
+  productUrl: string;
+  subject?: string;
+}
+
 export interface EmailRenderResult {
   subject: string;
   html: string;
@@ -1872,3 +1883,100 @@ export function renderReviewRequestEmail(params: ReviewRequestEmailParams): Emai
 
   return { subject, html, text };
 }
+
+/**
+ * Renders a high-conversion, branded Back in Stock (Notify Me) transactional email.
+ */
+export function renderBackInStockEmail(params: BackInStockEmailParams): EmailRenderResult {
+  const customerName = params.customerName?.trim() || "সম্মানিত গ্রাহক";
+  const subject = params.subject || `🎉 গুড নিউজ! ${params.productName} এখন স্টকে পাওয়া যাচ্ছে | AI Haat`;
+  const previewText = `আপনার কাঙ্ক্ষিত ${params.productName} আবার স্টকে চলে এসেছে! এখনই অর্ডার করুন।`;
+
+  const formattedPrice = params.productPriceBDT !== undefined
+    ? formatCurrency(params.productPriceBDT)
+    : "";
+
+  const contentHtml = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h2 style="font-size: 22px; font-weight: 800; color: #0F172A; margin: 0 0 8px 0; line-height: 1.3;">
+        🎉 আপনার অপেক্ষার সমাপ্তি!
+      </h2>
+      <p style="font-size: 14px; color: #475569; margin: 0; line-height: 1.6;">
+        হ্যালো <b>${escapeHtml(customerName)}</b>, আপনি যে প্রোডাক্টটির জন্য অপেক্ষা করছিলেন, সেটি আবার আমাদের স্টকে চলে এসেছে।
+      </p>
+    </div>
+
+    <!-- Product Showcase Box -->
+    <div style="background-color: #FFFFFF; border: 1.5px solid #FED7AA; border-radius: 16px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(252, 92, 3, 0.06);">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          ${params.productImageUrl ? `
+            <td width="90" valign="top" style="padding-right: 16px;">
+              <img src="${escapeHtml(params.productImageUrl)}" alt="${escapeHtml(params.productName)}" width="80" height="80" style="border-radius: 12px; object-fit: cover; display: block; border: 1px solid #E2E8F0;" />
+            </td>
+          ` : ""}
+          <td valign="middle">
+            <div style="display: inline-block; background-color: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;">
+              ● বর্তমানে স্টকে এভেইলেবল
+            </div>
+            <div style="font-size: 17px; font-weight: 800; color: #0F172A; line-height: 1.3;">
+              ${escapeHtml(params.productName)}
+            </div>
+            ${params.variationName ? `
+              <div style="font-size: 13px; font-weight: 600; color: #EA580C; margin-top: 4px;">
+                ভ্যারিয়েন্ট: ${escapeHtml(params.variationName)}
+              </div>
+            ` : ""}
+            ${formattedPrice ? `
+              <div style="font-size: 16px; font-weight: 800; color: #0F172A; margin-top: 6px;">
+                মূল্য: <span style="color: #FC5C03;">${formattedPrice}</span>
+              </div>
+            ` : ""}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Urgent / Limited Stock Banner -->
+    <div style="background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%); border-left: 4px solid #FC5C03; border-radius: 10px; padding: 14px 16px; margin-bottom: 24px;">
+      <div style="font-size: 13px; font-weight: 700; color: #9A3412; margin-bottom: 2px;">
+        ⚡ স্টক অত্যন্ত সীমিত!
+      </div>
+      <div style="font-size: 12px; color: #C2410C; line-height: 1.5;">
+        যেহেতু অনেকেই এই প্রোডাক্টটির জন্য অপেক্ষা করছিলেন, তাই যেকোনো মুহূর্তে স্টক শেষ হয়ে যেতে পারে। অনুগ্রহ করে দ্রুত অর্ডার নিশ্চিত করুন।
+      </div>
+    </div>
+
+    <!-- Action Button -->
+    <div style="text-align: center; margin-bottom: 28px;">
+      <a href="${escapeHtml(params.productUrl)}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #FC5C03 0%, #EA580C 100%); color: #FFFFFF; text-decoration: none; font-size: 15px; font-weight: 800; padding: 14px 32px; border-radius: 12px; box-shadow: 0 4px 14px rgba(252, 92, 3, 0.4); text-transform: none; letter-spacing: 0.3px;">
+        👉 এখনই অর্ডার করুন (Buy Now)
+      </a>
+      <div style="font-size: 11px; color: #64748B; margin-top: 10px;">
+        বিকাশ, নগদ, রকেটে পেমেন্ট করুন এবং ৫-১৫ মিনিটে ইনস্ট্যান্ট ডেলিভারি গ্রহণ করুন।
+      </div>
+    </div>
+
+    <!-- Support Help Box -->
+    <div style="background-color: #F8FAFC; border-radius: 12px; border: 1px solid #E2E8F0; padding: 14px 18px; text-align: center;">
+      <div style="font-size: 12px; color: #475569;">
+        কোনো জিজ্ঞাসা বা সহায়তার জন্য আমাদের ২৪/৭ সাপোর্ট টিমের সাথে যোগাযোগ করতে পারেন।
+      </div>
+    </div>
+  `;
+
+  const html = renderBaseEmailLayout({
+    previewText,
+    badgeText: "রিস্টক নোটিফিকেশন",
+    badgeBg: "rgba(252, 92, 3, 0.15)",
+    badgeColor: "#FC5C03",
+    badgeBorder: "rgba(252, 92, 3, 0.35)",
+    contentHtml,
+    footerNotice: "আপনি AI Haat-এ এই প্রোডাক্টটির জন্য স্টক এলার্ট রিকোয়েস্ট করেছিলেন বিধায় এই ইমেইলটি পাঠানো হয়েছে।",
+  });
+
+  const text = `🎉 গুড নিউজ! ${params.productName} এখন স্টকে এভেইলেবল!\n\nহ্যালো ${customerName},\nআপনার কাঙ্ক্ষিত প্রোডাক্ট ${params.productName} ${params.variationName ? `(${params.variationName})` : ""} আবার স্টকে এসেছে।\n\nএখনই অর্ডার করতে ভিজিট করুন: ${params.productUrl}\n\nধন্যবাদ,\nAI Haat টিম`;
+
+  return { subject, html, text };
+}
+

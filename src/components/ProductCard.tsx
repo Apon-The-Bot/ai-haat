@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Star, Zap, ShoppingBag, AlertCircle } from "lucide-react";
+import { Star, Zap, ShoppingBag, AlertCircle, Bell } from "lucide-react";
 import { Product, Variation } from "@/types";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
@@ -66,7 +66,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="group relative flex flex-col h-full bg-white rounded-2xl border border-[#E8E8EE] overflow-hidden hover:border-[#FC5C03]/60 hover:shadow-cardHover transition-all duration-200">
-      <Link href={`/product/${product.slug}`} className="flex flex-col h-full">
+      <Link href={isOutOfStock ? `/product/${product.slug}#stock-alert` : `/product/${product.slug}`} className="flex flex-col h-full">
         {/* 1. Square Product Thumbnail (1:1 Ratio) */}
         <div className="relative w-full aspect-square bg-[#F9FAFB] overflow-hidden">
           <SafeImage
@@ -203,31 +203,41 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
 
           {/* 1-Click Action Buttons with Safe Touch Targets >= 38px */}
-          <div className="pt-2 border-t border-gray-100 mt-auto flex items-center gap-1.5">
-            <button
-              type="button"
-              disabled={isOutOfStock}
-              onClick={handleAddToCart}
-              className="flex-1 min-h-[38px] py-1.5 px-2 bg-gray-50 hover:bg-[#FFF2E8] text-[#1A1D26] hover:text-[#FC5C03] border border-[#E8E8EE] hover:border-[#FC5C03]/40 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Add to Cart"
-              aria-label={`Add ${product.name} to cart`}
-            >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>কার্ট</span>
-            </button>
+          {isOutOfStock ? (
+            <div className="pt-2 border-t border-gray-100 mt-auto flex items-center">
+              <div
+                className="w-full min-h-[38px] py-1.5 px-2 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-orange-100 hover:to-orange-50 text-[#EA580C] hover:text-[#FC5C03] border border-amber-200/80 hover:border-[#FC5C03]/50 rounded-xl text-[11px] sm:text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+                title="স্টক আসলে জানান"
+              >
+                <Bell className="w-3.5 h-3.5 fill-current/20 text-[#EA580C]" />
+                <span>স্টক আসলে জানান</span>
+              </div>
+            </div>
+          ) : (
+            <div className="pt-2 border-t border-gray-100 mt-auto flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="flex-1 min-h-[38px] py-1.5 px-2 bg-gray-50 hover:bg-[#FFF2E8] text-[#1A1D26] hover:text-[#FC5C03] border border-[#E8E8EE] hover:border-[#FC5C03]/40 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                title="Add to Cart"
+                aria-label={`Add ${product.name} to cart`}
+              >
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>কার্ট</span>
+              </button>
 
-            <button
-              type="button"
-              disabled={isOutOfStock}
-              onClick={handleBuyNow}
-              className="flex-1 min-h-[38px] py-1.5 px-2 bg-[#FC5C03] hover:bg-[#EC4001] text-white rounded-xl text-[11px] sm:text-xs font-bold shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              title="1-Click Buy Now"
-              aria-label={`Buy ${product.name} now`}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>কিনুন</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                className="flex-1 min-h-[38px] py-1.5 px-2 bg-[#FC5C03] hover:bg-[#EC4001] text-white rounded-xl text-[11px] sm:text-xs font-bold shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                title="1-Click Buy Now"
+                aria-label={`Buy ${product.name} now`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>কিনুন</span>
+              </button>
+            </div>
+          )}
 
         </div>
       </Link>

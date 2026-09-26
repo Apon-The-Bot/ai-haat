@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { ProductStatus, ProductType, ProductVisibility, FulfillmentType } from "@prisma/client";
 import { logAdminAudit } from "@/lib/audit-logger";
 import { validateProductInvariants } from "@/lib/commerce/resolver";
+import { notifyWaitingCustomersForProduct } from "@/lib/commerce/stock-waitlist";
 
 export interface AdminProductCreateInput {
   name: string;
@@ -779,6 +780,13 @@ export async function updateProduct(id: string, data: AdminProductUpdateInput, a
     targetId: id,
     details: { id, updatedFields: Object.keys(data) },
   }).catch((e) => console.error("Audit log error:", e));
+
+  // If product came back in stock, automatically notify waiting customers
+  if (existing.inStock === false && updatedProduct.inStock === true) {
+    notifyWaitingCustomersForProduct(id, null, adminUser).catch((e) => {
+      console.error("[StockWaitlist] Auto-notify error on product restock:", e);
+    });
+  }
 
   return updatedProduct;
 }

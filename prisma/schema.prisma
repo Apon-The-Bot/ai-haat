@@ -274,6 +274,7 @@ model User {
   affiliatePayouts AffiliatePayoutRequest[]
   emailContact     EmailContact?
   campaignRecipients EmailCampaignRecipient[]
+  stockWaitlists   StockWaitlist[]
 
   @@map("users")
 }
@@ -364,6 +365,7 @@ model Product {
   batches            InventoryBatch[]
   productSuppliers   ProductSupplier[]
   supportTickets     SupportTicket[]
+  stockWaitlists     StockWaitlist[]
 
   @@index([category])
   @@index([status, visibility])
@@ -396,6 +398,7 @@ model Variation {
   digitalStocks DigitalStock[]
   batches       InventoryBatch[]
   productSuppliers ProductSupplier[]
+  stockWaitlists   StockWaitlist[]
 
   @@map("variations")
 }
@@ -1456,4 +1459,26 @@ model RateLimitBucket {
 
   @@index([expiresAt])
   @@map("rate_limit_buckets")
+}
+
+model StockWaitlist {
+  id           String      @id @default(cuid())
+  email        String      @db.VarChar(191)
+  phone        String?     @db.VarChar(50)
+  productId    String
+  variationId  String?
+  userId       String?
+  status       String      @default("PENDING") @db.VarChar(20) // PENDING, NOTIFIED, CANCELLED
+  notifiedAt   DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variation    Variation?  @relation(fields: [variationId], references: [id], onDelete: SetNull)
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([email, productId, variationId])
+  @@index([productId, status])
+  @@index([status])
+  @@map("stock_waitlist")
 }

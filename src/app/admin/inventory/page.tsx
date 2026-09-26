@@ -26,10 +26,12 @@ import {
   Sparkles,
   Download,
   AlertTriangle,
+  Bell,
 } from "lucide-react";
 import { BulkActionBar, BulkActionItem } from "@/components/admin/BulkActionBar";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { useToast } from "@/context/ToastContext";
+import { StockWaitlistAdminTab } from "@/components/admin/StockWaitlistAdminTab";
 
 interface StockSummary {
   productId: string;
@@ -96,7 +98,8 @@ function AdminInventoryContent() {
   const searchParams = useSearchParams();
   const productParam = searchParams?.get("product") || searchParams?.get("productId");
 
-  const [activeTab, setActiveTab] = useState<"stocks" | "replacements">("stocks");
+  const [activeTab, setActiveTab] = useState<"stocks" | "replacements" | "waitlist">("stocks");
+  const [waitlistCount, setWaitlistCount] = useState<number>(0);
   const [summary, setSummary] = useState<StockSummary[]>([]);
   const [stocks, setStocks] = useState<StockItem[]>([]);
   const [replacements, setReplacements] = useState<ReplacementItem[]>([]);
@@ -196,8 +199,21 @@ function AdminInventoryContent() {
     }
   };
 
+  const fetchWaitlistCount = async () => {
+    try {
+      const res = await fetch("/api/admin/stock-waitlist");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && typeof data.totalPendingSubscribers === "number") {
+          setWaitlistCount(data.totalPendingSubscribers);
+        }
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     fetchInventory();
+    fetchWaitlistCount();
   }, [statusFilter, productFilter]);
 
   const handleRevealStock = async (stockId: string) => {
@@ -632,6 +648,18 @@ function AdminInventoryContent() {
           <span>রিপ্লেসমেন্ট কিউ ({replacements.filter((r) => r.status === "REQUESTED").length} Pending)</span>
         </button>
 
+        <button
+          onClick={() => setActiveTab("waitlist")}
+          className={`px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === "waitlist"
+              ? "bg-amber-600 text-white shadow-sm"
+              : "bg-white text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <Bell className="w-4 h-4" />
+          <span>স্টক এলার্ট ডিমান্ড {waitlistCount > 0 ? `(${waitlistCount})` : ""}</span>
+        </button>
+
         <Link
           href="/admin/inventory/batches"
           className="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer bg-white text-slate-600 hover:bg-slate-100"
@@ -842,7 +870,7 @@ function AdminInventoryContent() {
             </div>
           </div>
         </>
-      ) : (
+      ) : activeTab === "replacements" ? (
         /* Replacements Queue */
         <div className="space-y-4">
           {replacements.length > 0 ? (
@@ -932,6 +960,15 @@ function AdminInventoryContent() {
             </div>
           )}
         </div>
+      ) : (
+        /* Stock Waitlist Demand Tab */
+        <StockWaitlistAdminTab
+          onAddStockForProduct={(pId) => {
+            setSelectedProduct(pId);
+            setProductFilter(pId);
+            setShowAddModal(true);
+          }}
+        />
       )}
 
       {/* Add Single Stock Modal */}
