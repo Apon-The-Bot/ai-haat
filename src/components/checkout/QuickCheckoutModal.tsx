@@ -18,6 +18,8 @@ import {
   Minus,
   AlertCircle,
   Lock,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
 import { useQuickCheckout } from "@/context/QuickCheckoutContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -115,6 +117,10 @@ export function QuickCheckoutModal() {
   const couponDiscountBDT = appliedCoupon?.discountBDT ?? 0;
   const totalBDT = Math.max(0, subtotalBDT - couponDiscountBDT);
 
+  const isCurrentOutOfStock =
+    product.inStock === false ||
+    (selectedVariation ? selectedVariation.inStock === false : false);
+
   const walletBalance = Number(user?.walletBalanceBDT || 0);
   const canPayWithWallet = user && walletBalance >= totalBDT;
 
@@ -165,9 +171,14 @@ export function QuickCheckoutModal() {
     e.preventDefault();
     if (isSubmitting) return;
 
+    if (isCurrentOutOfStock) {
+      showToast("দুঃখিত, নির্বাচিত অপশনটি বর্তমানে স্টক আউট।", "error");
+      return;
+    }
+
     const cleanName = fullName.trim();
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.trim();
+    const cleanPhone = phone.trim().replace(/[^\d+]/g, "");
 
     if (!cleanName) {
       showToast("অনুগ্রহ করে আপনার পুরো নাম প্রদান করুন।", "error");
@@ -177,8 +188,9 @@ export function QuickCheckoutModal() {
       showToast("অনুগ্রহ করে একটি সঠিক ইমেইল প্রদান করুন।", "error");
       return;
     }
-    if (!cleanPhone || cleanPhone.length < 10) {
-      showToast("অনুগ্রহ করে সচল মোবাইল নাম্বার প্রদান করুন।", "error");
+    const digitsOnly = cleanPhone.replace(/\D/g, "");
+    if (!cleanPhone || digitsOnly.length < 11) {
+      showToast("অনুগ্রহ করে একটি সঠিক ১১ ডিজিটের মোবাইল নাম্বার প্রদান করুন (যেমন: 017XXXXXXXX)।", "error");
       return;
     }
 
@@ -405,21 +417,33 @@ export function QuickCheckoutModal() {
                   <div className="flex flex-wrap gap-2">
                     {product.variations.map((v: Variation) => {
                       const isSelected = selectedVariation?.id === v.id;
+                      const isVarOutOfStock = v.inStock === false;
                       return (
                         <button
                           key={v.id}
                           type="button"
                           onClick={() => setSelectedVariation(v)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border flex items-center gap-1.5 ${
                             isSelected
                               ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                              : isVarOutOfStock
+                              ? "bg-slate-50 text-slate-400 border-dashed border-slate-300"
                               : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                           }`}
                         >
                           <span>{v.name}</span>
-                          <span className="ml-1.5 opacity-80 font-mono text-[11px] font-normal">
+                          <span
+                            className={`font-mono text-[11px] ${
+                              isSelected ? "text-orange-300" : "text-slate-500"
+                            }`}
+                          >
                             ৳{v.priceBDT}
                           </span>
+                          {isVarOutOfStock && (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-red-100 text-red-600 rounded-md font-semibold">
+                              স্টক শেষ
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -506,6 +530,56 @@ export function QuickCheckoutModal() {
                     placeholder="example@gmail.com"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#FC5C03]/20 focus:border-[#FC5C03]"
                   />
+                </div>
+
+                {/* Delivery Preference */}
+                <div className="space-y-1.5 pt-1 border-t border-slate-100">
+                  <label className="text-[11px] font-semibold text-slate-600 block">
+                    ডেলিভারির মাধ্যম বেছে নিন:
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryMethod("EMAIL")}
+                      className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                        deliveryMethod === "EMAIL"
+                          ? "border-[#FC5C03] bg-orange-50/60 text-[#FC5C03] ring-1 ring-[#FC5C03]"
+                          : "border-slate-200 text-slate-600 bg-white hover:bg-slate-50"
+                      }`}
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>ইমেইল ও ভল্ট</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeliveryMethod("WHATSAPP");
+                        if (!deliveryHandle && phone) setDeliveryHandle(phone);
+                      }}
+                      className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                        deliveryMethod === "WHATSAPP"
+                          ? "border-[#FC5C03] bg-orange-50/60 text-[#FC5C03] ring-1 ring-[#FC5C03]"
+                          : "border-slate-200 text-slate-600 bg-white hover:bg-slate-50"
+                      }`}
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>হোয়াটসঅ্যাপ</span>
+                    </button>
+                  </div>
+                  {deliveryMethod === "WHATSAPP" && (
+                    <div className="pt-1 animate-in fade-in duration-150">
+                      <input
+                        type="tel"
+                        placeholder="আপনার WhatsApp নম্বর (যদি মোবাইল নম্বর থেকে আলাদা হয়)"
+                        value={deliveryHandle}
+                        onChange={(e) => setDeliveryHandle(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#FC5C03]/20 focus:border-[#FC5C03]"
+                      />
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        অ্যাকাউন্টের লগইন তথ্য সরাসরি এই WhatsApp নম্বরে পাঠিয়ে দেওয়া হবে।
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -602,7 +676,10 @@ export function QuickCheckoutModal() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => setAppliedCoupon(null)}
+                      onClick={() => {
+                        setAppliedCoupon(null);
+                        setCouponCode("");
+                      }}
                       className="text-[11px] font-bold text-red-600 hover:underline cursor-pointer"
                     >
                       বাতিল
@@ -650,14 +727,16 @@ export function QuickCheckoutModal() {
               {/* 8. 1-Click Action Button */}
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3.5 px-4 bg-gradient-to-r from-orange-500 via-[#FC5C03] to-[#E04F00] hover:opacity-95 text-white font-black text-sm rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                disabled={isSubmitting || isCurrentOutOfStock}
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-orange-500 via-[#FC5C03] to-[#E04F00] hover:opacity-95 text-white font-black text-sm rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>অর্ডার প্রসেস হচ্ছে...</span>
                   </div>
+                ) : isCurrentOutOfStock ? (
+                  <span>❌ এই অপশনটি বর্তমানে স্টক আউট</span>
                 ) : (
                   <>
                     <Zap className="w-4 h-4 fill-current" />
