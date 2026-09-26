@@ -33,10 +33,15 @@ import {
   ChevronUp,
   RefreshCw,
   Plus,
+  CheckSquare,
+  Square,
+  Trash2,
 } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import { generateDeliveryHtml } from "@/utils/emailTemplate";
+import { BulkActionBar, BulkActionItem } from "@/components/admin/BulkActionBar";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 interface OrderItemDetail {
   id?: string;
@@ -188,6 +193,27 @@ export default function AdminOrdersPage() {
   const [isSavingNote, setIsSavingNote] = useState(false);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Row selection state for bulk actions
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
+
+  // Bulk action confirmation modal state
+  const [bulkConfirmModal, setBulkConfirmModal] = useState<{
+    isOpen: boolean;
+    actionType: "MARK_DELIVERED" | "MARK_PAID" | "CANCEL_ORDERS" | null;
+    title: string;
+    message: string;
+    confirmText: string;
+    variant: "primary" | "warning" | "danger";
+  }>({
+    isOpen: false,
+    actionType: null,
+    title: "",
+    message: "",
+    confirmText: "নিশ্চিত করুন",
+    variant: "primary",
+  });
 
   // Fetch Orders from Server-Side API
   const fetchOrders = useCallback(
@@ -496,6 +522,173 @@ export default function AdminOrdersPage() {
     showToast("অর্ডার ডাটা CSV হিসেবে সফলভাবে এক্সপোর্ট হয়েছে!", "success");
   };
 
+  // Row selection handlers
+  const handleToggleSelectOrder = (orderId: string) => {
+    setSelectedOrderIds((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+  };
+
+  const isCurrentPageAllSelected =
+    orders.length > 0 && orders.every((o) => selectedOrderIds.includes(o.id || o.orderNumber));
+
+  const handleSelectAllCurrentPage = () => {
+    if (isCurrentPageAllSelected) {
+      const pageIds = new Set(orders.map((o) => o.id || o.orderNumber));
+      setSelectedOrderIds((prev) => prev.filter((id) => !pageIds.has(id)));
+    } else {
+      const pageIds = orders.map((o) => o.id || o.orderNumber);
+      setSelectedOrderIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedOrderIds([]);
+  };
+
+  // Bulk Export Selected Orders to CSV
+  const handleBulkExportCSV = async () => {
+    if (selectedOrderIds.length === 0) return;
+
+    try {
+      showToast("সিলেক্টেড অর্ডার এক্সপোর্ট হচ্ছে...", "info");
+      const res = await fetch("/api/admin/orders/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "EXPORT",
+          orderIds: selectedOrderIds,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to export selected orders");
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `AI_Haat_Selected_Orders_${new Date().toISOString().split("T")[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`${selectedOrderIds.length} টি অর্ডার সফলভাবে CSV তে এক্সপোর্ট হয়েছে!`, "success");
+    } catch (err: any) {
+      showToast(err.message || "সিলেক্টেড অর্ডার এক্সপোর্ট করতে সমস্যা হয়েছে", "error");
+    }
+  };
+
+  // Bulk Action Initiators
+  const triggerBulkMarkDelivered = () => {
+    setBulkConfirmModal({
+      isOpen: true,
+      actionType: "MARK_DELIVERED",
+      title: `${selectedOrderIds.length} টি অর্ডার 'Delivered' করবেন?`,
+      message: `আপনি কি নিশ্চিত যে সিলেক্টেড ${selectedOrderIds.length} টি অর্ডারের ডেলিভারি স্ট্যাটাস DELIVERED করতে চান?`,
+      confirmText: "ডেলিভার নিশ্চিত করুন",
+      variant: "primary",
+    });
+  };
+
+  const triggerBulkMarkPaid = () => {
+    setBulkConfirmModal({
+      isOpen: true,
+      actionType: "MARK_PAID",
+      title: `${selectedOrderIds.length} টি অর্ডার 'Paid' (Verified) করবেন?`,
+      message: `সিলেক্টেড ${selectedOrderIds.length} টি অর্ডারের পেমেন্ট স্ট্যাটাস VERIFIED করা হবে।`,
+      confirmText: "পেমেন্ট ভেরিফাই করুন",
+      variant: "warning",
+    });
+  };
+
+  const triggerBulkCancel = () => {
+    setBulkConfirmModal({
+      isOpen: true,
+      actionType: "CANCEL_ORDERS",
+      title: `${selectedOrderIds.length} টি অর্ডার বাতিল (Cancel) করবেন?`,
+      message: `সাবধান! সিলেক্টেড ${selectedOrderIds.length} টি অর্ডার বাতিল করা হবে এবং পেমেন্ট FAILED হিসেবে চিহ্নিত হবে। (ইতিমধ্যে ডেলিভার হওয়া অর্ডার সুরক্ষিত থাকবে)`,
+      confirmText: "অর্ডার বাতিল করুন",
+      variant: "danger",
+    });
+  };
+
+  // Execute Bulk Action from ConfirmModal
+  const handleExecuteBulkAction = async () => {
+    if (!bulkConfirmModal.actionType || selectedOrderIds.length === 0) return;
+
+    setIsBulkActionLoading(true);
+    try {
+      let body: any = { orderIds: selectedOrderIds };
+
+      if (bulkConfirmModal.actionType === "MARK_DELIVERED") {
+        body.action = "STATUS";
+        body.deliveryStatus = "DELIVERED";
+      } else if (bulkConfirmModal.actionType === "MARK_PAID") {
+        body.action = "STATUS";
+        body.paymentStatus = "VERIFIED";
+      } else if (bulkConfirmModal.actionType === "CANCEL_ORDERS") {
+        body.action = "CANCEL";
+        body.cancelReason = "Cancelled in bulk by admin";
+      }
+
+      const res = await fetch("/api/admin/orders/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message || "বাল্ক অপারেশন সফলভাবে সম্পন্ন হয়েছে!", "success");
+        setBulkConfirmModal((prev) => ({ ...prev, isOpen: false, actionType: null }));
+        setSelectedOrderIds([]);
+        fetchOrders(true);
+      } else {
+        showToast(data.error || "বাল্ক অপারেশন সম্পন্ন করা যায়নি", "error");
+      }
+    } catch {
+      showToast("সার্ভার ত্রুটি। আবার চেষ্টা করুন।", "error");
+    } finally {
+      setIsBulkActionLoading(false);
+    }
+  };
+
+  // Bulk action items configuration for BulkActionBar
+  const bulkActions: BulkActionItem[] = [
+    {
+      id: "bulk-mark-delivered",
+      label: "Mark Delivered",
+      icon: CheckCircle2,
+      variant: "success",
+      onClick: triggerBulkMarkDelivered,
+      disabled: isBulkActionLoading,
+    },
+    {
+      id: "bulk-mark-paid",
+      label: "Mark Paid",
+      icon: CreditCard,
+      variant: "warning",
+      onClick: triggerBulkMarkPaid,
+      disabled: isBulkActionLoading,
+    },
+    {
+      id: "bulk-export-csv",
+      label: "Export CSV",
+      icon: Download,
+      variant: "default",
+      onClick: handleBulkExportCSV,
+      disabled: isBulkActionLoading,
+    },
+    {
+      id: "bulk-cancel",
+      label: "Cancel Orders",
+      icon: Ban,
+      variant: "danger",
+      onClick: triggerBulkCancel,
+      disabled: isBulkActionLoading,
+    },
+  ];
+
   return (
     <div className="space-y-6 w-full pb-20">
       
@@ -623,12 +816,51 @@ export default function AdminOrdersPage() {
         
         {/* Mobile View: Responsive Stacked Cards */}
         <div className="mobile-cards-only p-4 space-y-4 bg-slate-50/50">
+          {orders.length > 0 && (
+            <div className="flex items-center justify-between px-1 py-1">
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isCurrentPageAllSelected}
+                  onChange={handleSelectAllCurrentPage}
+                  className="w-4 h-4 rounded text-[#FC5C03] focus:ring-[#FC5C03] border-slate-300 cursor-pointer"
+                />
+                <span>Select All Visible ({orders.length})</span>
+              </label>
+              {selectedOrderIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="text-xs text-slate-500 hover:text-slate-800 font-semibold"
+                >
+                  Clear ({selectedOrderIds.length})
+                </button>
+              )}
+            </div>
+          )}
           {orders.length > 0 ? (
             orders.map((order) => {
+              const orderKey = order.id || order.orderNumber;
+              const isSelected = selectedOrderIds.includes(orderKey);
+
               return (
-                <div key={order.id} className="bg-white rounded-2xl border border-[#E8E8EE] p-4 space-y-3 mobile-card-interactive shadow-sm">
+                <div
+                  key={order.id}
+                  className={`bg-white rounded-2xl border p-4 space-y-3 mobile-card-interactive shadow-sm transition-colors ${
+                    isSelected ? "border-[#FC5C03] ring-1 ring-[#FC5C03]/20 bg-orange-50/10" : "border-[#E8E8EE]"
+                  }`}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-black text-[#1A1D26]">#{order.orderNumber || order.id}</span>
+                    <div className="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleSelectOrder(orderKey)}
+                        className="w-4 h-4 rounded text-[#FC5C03] focus:ring-[#FC5C03] border-slate-300 cursor-pointer"
+                        aria-label={`Select order ${order.orderNumber || order.id}`}
+                      />
+                      <span className="text-sm font-black text-[#1A1D26]">#{order.orderNumber || order.id}</span>
+                    </div>
                     <div className="flex items-center gap-1.5">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         order.paymentStatus === "VERIFIED" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
@@ -706,6 +938,15 @@ export default function AdminOrdersPage() {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200 uppercase tracking-wider text-[11px] font-bold">
               <tr>
+                <th className="py-4 px-4 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isCurrentPageAllSelected}
+                    onChange={handleSelectAllCurrentPage}
+                    className="w-4 h-4 rounded text-[#FC5C03] focus:ring-[#FC5C03] border-slate-300 cursor-pointer"
+                    aria-label="Select all orders on this page"
+                  />
+                </th>
                 <th className="py-4 px-5">Order ID</th>
                 <th className="py-4 px-5">Customer Details</th>
                 <th className="py-4 px-5">Products & Multi-Items</th>
@@ -722,13 +963,28 @@ export default function AdminOrdersPage() {
                   const itemsCount = order.items.reduce((acc, it) => acc + (it.quantity || 1), 0);
                   const firstItem = order.items[0];
                   const additionalCount = order.items.length - 1;
+                  const orderKey = order.id || order.orderNumber;
+                  const isSelected = selectedOrderIds.includes(orderKey);
 
                   return (
                     <tr
                       key={order.id}
-                      className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                      className={`hover:bg-slate-50/80 transition-colors group cursor-pointer ${
+                        isSelected ? "bg-orange-50/20" : ""
+                      }`}
                       onClick={() => openOrderDetail(order.orderNumber || order.id)}
                     >
+                      {/* Checkbox */}
+                      <td className="py-4 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelectOrder(orderKey)}
+                          className="w-4 h-4 rounded text-[#FC5C03] focus:ring-[#FC5C03] border-slate-300 cursor-pointer"
+                          aria-label={`Select order ${order.orderNumber || order.id}`}
+                        />
+                      </td>
+
                       {/* Order ID & Created */}
                       <td className="py-4 px-5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1.5">
@@ -887,7 +1143,7 @@ export default function AdminOrdersPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-slate-400">
+                  <td colSpan={8} className="py-16 text-center text-slate-400">
                     <div className="max-w-xs mx-auto space-y-2">
                       <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto" />
                       <p className="font-bold text-slate-700 text-sm">No orders matching criteria</p>
@@ -1526,6 +1782,33 @@ export default function AdminOrdersPage() {
           </div>
         </div>
       )}
+
+      {/* FLOATING BULK ACTION BAR */}
+      <BulkActionBar
+        selectedCount={selectedOrderIds.length}
+        totalCount={orders.length}
+        onClearSelection={handleClearSelection}
+        onSelectAll={handleSelectAllCurrentPage}
+        isAllSelected={isCurrentPageAllSelected}
+        actions={bulkActions}
+        itemName="order"
+      />
+
+      {/* BULK ACTION CONFIRMATION MODAL */}
+      <ConfirmModal
+        isOpen={bulkConfirmModal.isOpen}
+        onClose={() =>
+          !isBulkActionLoading &&
+          setBulkConfirmModal((prev) => ({ ...prev, isOpen: false, actionType: null }))
+        }
+        onConfirm={handleExecuteBulkAction}
+        title={bulkConfirmModal.title}
+        message={bulkConfirmModal.message}
+        confirmText={bulkConfirmModal.confirmText}
+        cancelText="বাতিল"
+        variant={bulkConfirmModal.variant}
+        isLoading={isBulkActionLoading}
+      />
 
     </div>
   );

@@ -22,12 +22,17 @@ import {
   User,
   Check,
   ArchiveRestore,
-  Archive
+  Archive,
+  Download,
+  Eye,
+  EyeOff,
+  DollarSign
 } from "lucide-react";
 import { SafeImage } from "@/components/SafeImage";
 import { Product } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { BulkActionBar, BulkActionItem } from "@/components/admin/BulkActionBar";
 
 export default function AdminProductsPage() {
   const { showToast } = useToast();
@@ -41,10 +46,28 @@ export default function AdminProductsPage() {
   const [fulfillmentFilter, setFulfillmentFilter] = useState("ALL");
   const [stockFilter, setStockFilter] = useState("ALL");
 
-  // Selection for Bulk Actions
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Selection for Bulk Actions (row selection state: selectedProductIds)
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [bulkPriceChange, setBulkPriceChange] = useState({ type: "percentage", value: 0 });
+  
+  // ConfirmModal for destructive bulk actions
+  const [bulkConfirmModal, setBulkConfirmModal] = useState<{
+    isOpen: boolean;
+    action: "ARCHIVE" | "DELETE" | null;
+    title: string;
+    message: string;
+    confirmText: string;
+    variant: "danger" | "warning";
+  }>({
+    isOpen: false,
+    action: null,
+    title: "",
+    message: "",
+    confirmText: "",
+    variant: "danger",
+  });
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
 
   const fetchProducts = async () => {
     try {
@@ -200,66 +223,168 @@ export default function AdminProductsPage() {
   
   // Bulk Selection
   const toggleSelectAll = () => {
-    if (selectedIds.size === filtered.length && filtered.length > 0) {
-      setSelectedIds(new Set());
+    if (selectedProductIds.size === filtered.length && filtered.length > 0) {
+      setSelectedProductIds(new Set());
     } else {
-      setSelectedIds(new Set(filtered.map(p => p.id)));
+      setSelectedProductIds(new Set(filtered.map((p) => p.id)));
     }
   };
-  
+
   const toggleSelect = (id: string) => {
-    const next = new Set(selectedIds);
+    const next = new Set(selectedProductIds);
     if (next.has(id)) next.delete(id);
     else next.add(id);
-    setSelectedIds(next);
+    setSelectedProductIds(next);
   };
-  
-  const handleBulkAction = async (action: string) => {
-    const ids = Array.from(selectedIds);
-    if(ids.length === 0) return;
-    
-    if (action === "PRICE") {
-        setIsBulkModalOpen(true);
-        return;
-    }
-    
+
+  const clearSelection = () => {
+    setSelectedProductIds(new Set());
+  };
+
+  const selectAllProducts = () => {
+    setSelectedProductIds(new Set(filtered.map((p) => p.id)));
+  };
+
+  const handleBulkStatusChange = async (targetStatus: "ACTIVE" | "INACTIVE") => {
+    const ids = Array.from(selectedProductIds);
+    if (ids.length === 0) return;
+
     // Optimistic Update
-    setProductList(prev => prev.map(p => {
-        if(!ids.includes(p.id)) return p;
-        if(action === "ACTIVATE") return {...p, status: "ACTIVE"};
-        if(action === "DEACTIVATE") return {...p, status: "INACTIVE"};
-        if(action === "ARCHIVE") return {...p, status: "ARCHIVED"};
-        return p;
-    }));
-    
+    setProductList((prev) =>
+      prev.map((p) => (ids.includes(p.id) ? { ...p, status: targetStatus } : p))
+    );
+
     try {
-        await fetch("/api/admin/products/bulk", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action, ids })
-        });
-        showToast(`Bulk action applied`, "success");
-        setSelectedIds(new Set());
-    } catch(e) {
-        showToast("Bulk action failed", "error");
+      const res = await fetch("/api/admin/products/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "STATUS", productIds: ids, status: targetStatus }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to update status");
+      }
+      showToast(
+        `Successfully ${targetStatus === "ACTIVE" ? "activated" : "deactivated"} ${ids.length} product(s)`,
+        "success"
+      );
+      clearSelection();
+      fetchProducts();
+    } catch (e: any) {
+      showToast(e.message || "Bulk action failed", "error");
+      fetchProducts();
     }
   };
-  
-  const executeBulkPrice = async () => {
-    const ids = Array.from(selectedIds);
-    if(ids.length === 0) return;
+
+  const handleBulkExportCSV = async () => {
+    const ids = Array.from(selectedProductIds);
+    if (ids.length === 0) return;
+
     try {
-        await fetch("/api/admin/products/bulk", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "PRICE", ids, payload: bulkPriceChange })
-        });
-        showToast(`Bulk price updated`, "success");
-        setIsBulkModalOpen(false);
-        setSelectedIds(new Set());
-        fetchProducts(); // Refresh
-    } catch(e) {
-        showToast("Bulk price failed", "error");
+      showToast("Generating CSV export...", "success");
+      const res = await fetch("/api/admin/products/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "EXPORT_CSV", productIds: ids }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to export CSV");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `AI_Haat_Products_Export_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showToast(`Exported ${ids.length} product(s) to CSV`, "success");
+    } catch (e: any) {
+      showToast(e.message || "Export CSV failed", "error");
+    }
+  };
+
+  const requestBulkDeleteOrArchive = () => {
+    const count = selectedProductIds.size;
+    if (count === 0) return;
+
+    setBulkConfirmModal({
+      isOpen: true,
+      action: "DELETE",
+      title: `Delete or Archive ${count} Selected Product${count > 1 ? "s" : ""}?`,
+      message: `Products without purchase history will be permanently deleted. Products with orders, inventory, or financial records will be safely archived to protect audit and historical records.`,
+      confirmText: `Yes, Delete / Archive (${count})`,
+      variant: "danger",
+    });
+  };
+
+  const executeBulkDeleteOrArchive = async () => {
+    const ids = Array.from(selectedProductIds);
+    if (ids.length === 0) return;
+
+    try {
+      setIsBulkLoading(true);
+      const res = await fetch("/api/admin/products/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "DELETE", productIds: ids }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Bulk delete/archive operation failed");
+      }
+
+      const msg = [
+        data.deletedCount ? `${data.deletedCount} permanently deleted` : "",
+        data.archivedCount ? `${data.archivedCount} archived` : "",
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      showToast(`Operation completed: ${msg || "Processed successfully"}`, "success");
+      setBulkConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      clearSelection();
+      fetchProducts();
+    } catch (e: any) {
+      showToast(e.message || "Failed to execute bulk delete/archive", "error");
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
+  const executeBulkPrice = async () => {
+    const ids = Array.from(selectedProductIds);
+    if (ids.length === 0) return;
+    try {
+      const res = await fetch("/api/admin/products/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "PRICE",
+          productIds: ids,
+          adjustment: {
+            type: bulkPriceChange.type === "fixed" ? "FIXED" : "PERCENT",
+            value: Math.abs(bulkPriceChange.value),
+            direction: bulkPriceChange.value >= 0 ? "INCREASE" : "DECREASE",
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Bulk price failed");
+      }
+      showToast(`Bulk price updated for ${ids.length} product(s)`, "success");
+      setIsBulkModalOpen(false);
+      clearSelection();
+      fetchProducts();
+    } catch (e: any) {
+      showToast(e.message || "Bulk price failed", "error");
     }
   };
 
@@ -391,16 +516,51 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Floating Bulk Actions Bar */}
-      {selectedIds.size > 0 && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1A1D26] text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
-              <span className="text-sm font-bold bg-white/10 px-3 py-1 rounded-full">{selectedIds.size} Selected</span>
-              <div className="h-6 w-px bg-white/20"></div>
-              <button onClick={() => handleBulkAction("ACTIVATE")} className="text-sm font-medium hover:text-emerald-400 transition-colors cursor-pointer">Activate</button>
-              <button onClick={() => handleBulkAction("DEACTIVATE")} className="text-sm font-medium hover:text-amber-400 transition-colors cursor-pointer">Deactivate</button>
-              <button onClick={() => handleBulkAction("ARCHIVE")} className="text-sm font-medium hover:text-slate-400 transition-colors cursor-pointer">Archive</button>
-              <button onClick={() => handleBulkAction("PRICE")} className="text-sm font-medium hover:text-[#FC5C03] transition-colors cursor-pointer">Adjust Price</button>
-          </div>
-      )}
+      <BulkActionBar
+        selectedCount={selectedProductIds.size}
+        totalCount={filtered.length}
+        itemName="product"
+        isAllSelected={selectedProductIds.size === filtered.length && filtered.length > 0}
+        onClearSelection={clearSelection}
+        onSelectAll={selectAllProducts}
+        actions={[
+          {
+            id: "activate",
+            label: "Activate",
+            icon: CheckCircle2,
+            variant: "success",
+            onClick: () => handleBulkStatusChange("ACTIVE"),
+          },
+          {
+            id: "deactivate",
+            label: "Deactivate",
+            icon: XCircle,
+            variant: "warning",
+            onClick: () => handleBulkStatusChange("INACTIVE"),
+          },
+          {
+            id: "adjust-price",
+            label: "Adjust Price",
+            icon: DollarSign,
+            variant: "default",
+            onClick: () => setIsBulkModalOpen(true),
+          },
+          {
+            id: "export-csv",
+            label: "Export CSV",
+            icon: Download,
+            variant: "default",
+            onClick: handleBulkExportCSV,
+          },
+          {
+            id: "delete-archive",
+            label: "Delete / Archive",
+            icon: Trash2,
+            variant: "danger",
+            onClick: requestBulkDeleteOrArchive,
+          },
+        ]}
+      />
 
       {/* Product Data Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs">
@@ -411,9 +571,11 @@ export default function AdminProductsPage() {
                 <th className="py-4 px-4 w-10">
                     <input 
                         type="checkbox" 
-                        checked={selectedIds.size === filtered.length && filtered.length > 0} 
+                        checked={selectedProductIds.size === filtered.length && filtered.length > 0} 
                         onChange={toggleSelectAll}
                         className="rounded border-slate-300 text-[#FC5C03] focus:ring-[#FC5C03] cursor-pointer"
+                        title="Select all products"
+                        aria-label="Select all products"
                     />
                 </th>
                 <th className="py-4 px-2 w-16">Image</th>
@@ -439,13 +601,14 @@ export default function AdminProductsPage() {
                 if (prod.status === "ARCHIVED") statusColor = "bg-slate-200 text-slate-500";
 
                 return (
-                <tr key={prod.id} className={`hover:bg-slate-50/70 transition-colors ${selectedIds.has(prod.id) ? "bg-indigo-50/30" : ""}`}>
+                <tr key={prod.id} className={`hover:bg-slate-50/70 transition-colors ${selectedProductIds.has(prod.id) ? "bg-orange-50/40" : ""}`}>
                   <td className="py-4 px-4">
                       <input 
                         type="checkbox" 
-                        checked={selectedIds.has(prod.id)} 
+                        checked={selectedProductIds.has(prod.id)} 
                         onChange={() => toggleSelect(prod.id)}
                         className="rounded border-slate-300 text-[#FC5C03] focus:ring-[#FC5C03] cursor-pointer"
+                        aria-label={`Select ${prod.name}`}
                       />
                   </td>
                   {/* Image */}
@@ -538,6 +701,7 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
+      {/* Individual Single-product Delete Modal */}
       <ConfirmModal
         isOpen={Boolean(deletingProductId)}
         onClose={() => setDeletingProductId(null)}
@@ -549,13 +713,26 @@ export default function AdminProductsPage() {
         variant="danger"
         isLoading={isDeleting}
       />
+
+      {/* Bulk Delete / Archive Modal */}
+      <ConfirmModal
+        isOpen={bulkConfirmModal.isOpen}
+        onClose={() => setBulkConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={executeBulkDeleteOrArchive}
+        title={bulkConfirmModal.title}
+        message={bulkConfirmModal.message}
+        confirmText={bulkConfirmModal.confirmText}
+        cancelText="Cancel"
+        variant={bulkConfirmModal.variant}
+        isLoading={isBulkLoading}
+      />
       
       {/* Bulk Price Modal */}
       {isBulkModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95">
                 <h3 className="text-lg font-bold mb-4">Bulk Price Adjustment</h3>
-                <p className="text-sm text-slate-500 mb-4">Adjust price for {selectedIds.size} selected products.</p>
+                <p className="text-sm text-slate-500 mb-4">Adjust price for {selectedProductIds.size} selected products.</p>
                 <div className="space-y-4">
                     <div>
                         <label className="block text-sm font-semibold mb-1">Adjustment Type</label>

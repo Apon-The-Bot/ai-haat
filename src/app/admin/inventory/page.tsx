@@ -24,7 +24,12 @@ import {
   Filter,
   MessageSquare,
   Sparkles,
+  Download,
+  AlertTriangle,
 } from "lucide-react";
+import { BulkActionBar, BulkActionItem } from "@/components/admin/BulkActionBar";
+import { ConfirmModal } from "@/components/ConfirmModal";
+import { useToast } from "@/context/ToastContext";
 
 interface StockSummary {
   productId: string;
@@ -122,6 +127,24 @@ function AdminInventoryContent() {
   // Bulk Import Form State
   const [bulkLines, setBulkLines] = useState("");
   const [bulkResult, setBulkResult] = useState<any>(null);
+
+  // Bulk Selection State
+  const [selectedStockIds, setSelectedStockIds] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [confirmModalConfig, setConfirmModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    variant?: "danger" | "warning" | "primary";
+    actionType?: "AVAILABLE" | "EXPIRED" | "INVALID" | "DELETE";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (productParam) {
@@ -306,6 +329,236 @@ function AdminInventoryContent() {
     );
   });
 
+  // Bulk Selection Handlers
+  const toggleSelectStock = (id: string) => {
+    setSelectedStockIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAllStocks = () => {
+    if (selectedStockIds.size === filteredStocks.length && filteredStocks.length > 0) {
+      setSelectedStockIds(new Set());
+    } else {
+      setSelectedStockIds(new Set(filteredStocks.map((s) => s.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedStockIds(new Set());
+  };
+
+  // CSV Exporter for Selected Stock
+  const exportSelectedCSV = async () => {
+    const stockIds = Array.from(selectedStockIds);
+    if (stockIds.length === 0) return;
+
+    try {
+      setBulkActionLoading(true);
+      const res = await fetch("/api/admin/inventory/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "EXPORT", stockIds }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        showToast(data.error || "Failed to export stock items", "error");
+        return;
+      }
+
+      const rows: any[] = data.items || [];
+      if (rows.length === 0) {
+        showToast("No data to export", "info");
+        return;
+      }
+
+      // Convert rows to CSV
+      const headers = [
+        "Stock ID",
+        "Product Name",
+        "Variation",
+        "Type",
+        "Status",
+        "Batch Ref",
+        "Cost Price (BDT)",
+        "Credential / Key",
+        "Assigned Order",
+        "Customer Email",
+        "Delivered At",
+        "Created At",
+      ];
+
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((r) =>
+          [
+            `"${r.id}"`,
+            `"${(r.productName || "").replace(/"/g, '""')}"`,
+            `"${(r.variationName || "").replace(/"/g, '""')}"`,
+            `"${r.type || ""}"`,
+            `"${r.status || ""}"`,
+            `"${(r.batchRef || "").replace(/"/g, '""')}"`,
+            `"${r.costPriceBDT !== undefined && r.costPriceBDT !== null ? r.costPriceBDT : ""}"`,
+            `"${(r.credentialOrPayload || "").replace(/"/g, '""')}"`,
+            `"${r.assignedOrder || ""}"`,
+            `"${(r.customerEmail || "").replace(/"/g, '""')}"`,
+            `"${r.deliveredAt || ""}"`,
+            `"${r.createdAt || ""}"`,
+          ].join(",")
+        ),
+      ].join("\r\n");
+
+      // Trigger download in browser
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `digital-vault-export-${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast(`Exported ${rows.length} stock item(s) to CSV!`, "success");
+    } catch (err: any) {
+      console.error("Export error:", err);
+      showToast(err.message || "Export error occurred", "error");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  // Open confirmation modal for destructive or batch status actions
+  const triggerBulkActionConfirm = (actionType: "AVAILABLE" | "EXPIRED" | "INVALID" | "DELETE") => {
+    const count = selectedStockIds.size;
+    if (count === 0) return;
+
+    if (actionType === "AVAILABLE") {
+      setConfirmModalConfig({
+        isOpen: true,
+        actionType,
+        title: "চিহ্নিত স্টক AVAILABLE করুন",
+        message: `আপনি কি নিশ্চিত যে সিলেক্ট করা ${count} টি অব্যবহৃত স্টক আইটেমকে AVAILABLE স্ট্যাটাসে পরিবর্তন করতে চান?`,
+        confirmText: "হ্যাঁ, AVAILABLE করুন",
+        variant: "primary",
+      });
+    } else if (actionType === "EXPIRED") {
+      setConfirmModalConfig({
+        isOpen: true,
+        actionType,
+        title: "চিহ্নিত স্টক EXPIRED হিসেবে চিহ্নিত করুন",
+        message: `আপনি কি সিলেক্ট করা ${count} টি স্টক আইটেমকে EXPIRED হিসেবে মার্ক করতে চান? এগুলো কাস্টমার অর্ডারে ইস্যু করা হবে না।`,
+        confirmText: "হ্যাঁ, EXPIRED করুন",
+        variant: "warning",
+      });
+    } else if (actionType === "INVALID") {
+      setConfirmModalConfig({
+        isOpen: true,
+        actionType,
+        title: "চিহ্নিত স্টক INVALID হিসেবে চিহ্নিত করুন",
+        message: `আপনি কি সিলেক্ট করা ${count} টি স্টক আইটেমকে INVALID হিসেবে মার্ক করতে চান?`,
+        confirmText: "হ্যাঁ, INVALID করুন",
+        variant: "danger",
+      });
+    } else if (actionType === "DELETE") {
+      setConfirmModalConfig({
+        isOpen: true,
+        actionType,
+        title: "অব্যবহৃত স্টক ডিলিট করুন",
+        message: `আপনি কি সিলেক্ট করা ${count} টি অব্যবহৃত স্টক সম্পূর্ণ মুছে ফেলতে চান? ডেলিভারিকৃত স্টক আইটেমগুলো বাদ দিয়ে বাকিগুলো ডিলিট হবে। এই অ্যাকশনটি ফিরিয়ে আনা সম্ভব নয়।`,
+        confirmText: "হ্যাঁ, ডিলিট করুন",
+        variant: "danger",
+      });
+    }
+  };
+
+  const handleConfirmBulkAction = async () => {
+    const { actionType } = confirmModalConfig;
+    if (!actionType) return;
+
+    const stockIds = Array.from(selectedStockIds);
+    setBulkActionLoading(true);
+
+    try {
+      if (actionType === "DELETE") {
+        const res = await fetch("/api/admin/inventory/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "DELETE", stockIds }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(data.message || "Stock items deleted successfully", "success");
+          clearSelection();
+          fetchInventory();
+        } else {
+          showToast(data.error || "Failed to delete stock items", "error");
+        }
+      } else {
+        const res = await fetch("/api/admin/inventory/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "STATUS", stockIds, status: actionType }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(data.message || "Stock status updated successfully", "success");
+          clearSelection();
+          fetchInventory();
+        } else {
+          showToast(data.error || "Failed to update stock status", "error");
+        }
+      }
+    } catch (err: any) {
+      showToast(err.message || "Failed to execute bulk action", "error");
+    } finally {
+      setBulkActionLoading(false);
+      setConfirmModalConfig((prev) => ({ ...prev, isOpen: false }));
+    }
+  };
+
+  const bulkActionsList: BulkActionItem[] = [
+    {
+      id: "mark-available",
+      label: "Mark Available",
+      icon: CheckCircle,
+      variant: "success",
+      onClick: () => triggerBulkActionConfirm("AVAILABLE"),
+      disabled: bulkActionLoading,
+    },
+    {
+      id: "mark-expired",
+      label: "Mark Expired",
+      icon: Clock,
+      variant: "warning",
+      onClick: () => triggerBulkActionConfirm("EXPIRED"),
+      disabled: bulkActionLoading,
+    },
+    {
+      id: "export-csv",
+      label: "Export CSV",
+      icon: Download,
+      variant: "default",
+      onClick: exportSelectedCSV,
+      disabled: bulkActionLoading,
+    },
+    {
+      id: "delete-selected",
+      label: "Delete Selected",
+      icon: Trash2,
+      variant: "danger",
+      onClick: () => triggerBulkActionConfirm("DELETE"),
+      disabled: bulkActionLoading,
+    },
+  ];
+
   return (
     <div className="space-y-6 max-w-7xl">
       {/* Header & Controls */}
@@ -485,6 +738,18 @@ function AdminInventoryContent() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
                   <tr>
+                    <th className="py-3.5 px-4 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={
+                          filteredStocks.length > 0 &&
+                          selectedStockIds.size === filteredStocks.length
+                        }
+                        onChange={toggleSelectAllStocks}
+                        className="w-4 h-4 rounded border-slate-300 text-[#FC5C03] focus:ring-[#FC5C03] cursor-pointer"
+                        aria-label="Select all stocks"
+                      />
+                    </th>
                     <th className="py-3.5 px-4">Stock ID</th>
                     <th className="py-3.5 px-4">প্রোডাক্ট ও ভ্যারিয়েশন</th>
                     <th className="py-3.5 px-4">টাইপ</th>
@@ -496,61 +761,78 @@ function AdminInventoryContent() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                   {filteredStocks.length > 0 ? (
-                    filteredStocks.map((s) => (
-                      <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500">
-                          {s.id.slice(0, 10)}...
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="font-bold text-slate-900">{s.productName}</div>
-                          <div className="text-[11px] text-slate-400">{s.variationName}</div>
-                        </td>
-                        <td className="py-3.5 px-4 font-semibold text-slate-600">
-                          {s.type}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                              s.status === "AVAILABLE"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : s.status === "DELIVERED"
-                                ? "bg-blue-100 text-blue-800"
-                                : s.status === "RESERVED"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {s.status}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          {s.assignedOrder ? (
-                            <div>
-                              <span className="font-mono font-bold text-slate-900">
-                                #{s.assignedOrder}
-                              </span>
-                              <div className="text-[10px] text-slate-400">{s.customerEmail}</div>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400">—</span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-500">{s.createdAt}</td>
-                        <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => handleRevealStock(s.id)}
-                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-[#FFF2E8] hover:text-[#FC5C03] text-slate-700 rounded-lg text-[11px] font-bold transition-all inline-flex items-center gap-1 cursor-pointer"
-                            title="Reveal Decrypted Key"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>ভিউ কি</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                    filteredStocks.map((s) => {
+                      const isSelected = selectedStockIds.has(s.id);
+                      return (
+                        <tr
+                          key={s.id}
+                          className={`transition-colors ${
+                            isSelected ? "bg-orange-50/70" : "hover:bg-slate-50/80"
+                          }`}
+                        >
+                          <td className="py-3.5 px-4 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectStock(s.id)}
+                              className="w-4 h-4 rounded border-slate-300 text-[#FC5C03] focus:ring-[#FC5C03] cursor-pointer"
+                              aria-label={`Select stock ${s.id}`}
+                            />
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500">
+                            {s.id.slice(0, 10)}...
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-slate-900">{s.productName}</div>
+                            <div className="text-[11px] text-slate-400">{s.variationName}</div>
+                          </td>
+                          <td className="py-3.5 px-4 font-semibold text-slate-600">
+                            {s.type}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                s.status === "AVAILABLE"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : s.status === "DELIVERED"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : s.status === "RESERVED"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {s.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            {s.assignedOrder ? (
+                              <div>
+                                <span className="font-mono font-bold text-slate-900">
+                                  #{s.assignedOrder}
+                                </span>
+                                <div className="text-[10px] text-slate-400">{s.customerEmail}</div>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-500">{s.createdAt}</td>
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              onClick={() => handleRevealStock(s.id)}
+                              className="px-2.5 py-1.5 bg-slate-100 hover:bg-[#FFF2E8] hover:text-[#FC5C03] text-slate-700 rounded-lg text-[11px] font-bold transition-all inline-flex items-center gap-1 cursor-pointer"
+                              title="Reveal Decrypted Key"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>ভিউ কি</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-400">
+                      <td colSpan={8} className="py-12 text-center text-slate-400">
                         কোন স্টক আইটেম পাওয়া যায়নি।
                       </td>
                     </tr>
@@ -930,6 +1212,35 @@ function AdminInventoryContent() {
           </div>
         </div>
       )}
+
+      {/* Bulk Action Bar */}
+      <BulkActionBar
+        selectedCount={selectedStockIds.size}
+        totalCount={filteredStocks.length}
+        onClearSelection={clearSelection}
+        onSelectAll={toggleSelectAllStocks}
+        isAllSelected={
+          filteredStocks.length > 0 && selectedStockIds.size === filteredStocks.length
+        }
+        actions={bulkActionsList}
+        itemName="stock"
+      />
+
+      {/* Confirmation Modal for Bulk Actions */}
+      <ConfirmModal
+        isOpen={confirmModalConfig.isOpen}
+        onClose={() =>
+          !bulkActionLoading &&
+          setConfirmModalConfig((prev) => ({ ...prev, isOpen: false }))
+        }
+        onConfirm={handleConfirmBulkAction}
+        title={confirmModalConfig.title}
+        message={confirmModalConfig.message}
+        confirmText={confirmModalConfig.confirmText}
+        cancelText="বাতিল"
+        variant={confirmModalConfig.variant || "danger"}
+        isLoading={bulkActionLoading}
+      />
     </div>
   );
 }

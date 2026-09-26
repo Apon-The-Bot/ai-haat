@@ -24,6 +24,8 @@ import {
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { BulkActionBar, BulkActionItem } from "@/components/admin/BulkActionBar";
+import { Download, UserMinus } from "lucide-react";
 
 interface AdminUserItem {
   id: string;
@@ -98,6 +100,162 @@ export default function AdminUsersPage() {
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Bulk Selection State
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [bulkModalConfirm, setBulkModalConfirm] = useState<{
+    targetRole: "ADMIN" | "USER";
+    title: string;
+    message: string;
+  } | null>(null);
+  const [isBulkExecuting, setIsBulkExecuting] = useState(false);
+
+  // Toggle selection for single user
+  const toggleSelectUser = (id: string) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Toggle select all users on current page
+  const isAllCurrentSelected = users.length > 0 && users.every((u) => selectedUserIds.has(u.id));
+  const toggleSelectAll = () => {
+    if (isAllCurrentSelected) {
+      setSelectedUserIds((prev) => {
+        const next = new Set(prev);
+        users.forEach((u) => next.delete(u.id));
+        return next;
+      });
+    } else {
+      setSelectedUserIds((prev) => {
+        const next = new Set(prev);
+        users.forEach((u) => next.add(u.id));
+        return next;
+      });
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedUserIds(new Set());
+  };
+
+  // Bulk Export to CSV
+  const handleBulkExportCSV = async () => {
+    const ids = Array.from(selectedUserIds);
+    if (ids.length === 0) return;
+
+    try {
+      showToast("Generating CSV export...", "info");
+      const res = await fetch("/api/admin/users/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "EXPORT_CSV", userIds: ids }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || "Failed to export customers to CSV", "error");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `AI_Haat_Customers_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      showToast(`Exported ${ids.length} customers to CSV successfully!`, "success");
+    } catch (err) {
+      console.error(err);
+      showToast("Error downloading CSV", "error");
+    }
+  };
+
+  // Confirm and Execute Bulk Role Change
+  const confirmBulkRoleChange = async () => {
+    if (!bulkModalConfirm) return;
+    const ids = Array.from(selectedUserIds);
+    if (ids.length === 0) return;
+
+    setIsBulkExecuting(true);
+    try {
+      const res = await fetch("/api/admin/users/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "UPDATE_ROLE",
+          userIds: ids,
+          role: bulkModalConfirm.targetRole,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message || `Users updated to ${bulkModalConfirm.targetRole}`, "success");
+        // Update local users
+        setUsers((prev) =>
+          prev.map((u) => (ids.includes(u.id) ? { ...u, role: bulkModalConfirm.targetRole } : u))
+        );
+        if (customerDetail && ids.includes(customerDetail.id)) {
+          setCustomerDetail({ ...customerDetail, role: bulkModalConfirm.targetRole });
+        }
+        setBulkModalConfirm(null);
+        setSelectedUserIds(new Set());
+      } else {
+        showToast(data.error || "Failed to update user roles", "error");
+      }
+    } catch {
+      showToast("Server error updating roles", "error");
+    } finally {
+      setIsBulkExecuting(false);
+    }
+  };
+
+  // Bulk Action Bar actions list
+  const bulkActions: BulkActionItem[] = [
+    {
+      id: "export-csv",
+      label: "Export CSV",
+      icon: Download,
+      variant: "default",
+      onClick: handleBulkExportCSV,
+    },
+    {
+      id: "make-admin",
+      label: "Make Admin",
+      icon: ShieldCheck,
+      variant: "warning",
+      onClick: () => {
+        setBulkModalConfirm({
+          targetRole: "ADMIN",
+          title: "বাল্ক এডমিন রোল পরিবর্তন নিশ্চিতকরণ",
+          message: `আপনি নির্বাচিত ${selectedUserIds.size} জন ব্যবহারকারীকে ADMIN রোল প্রদান করতে যাচ্ছেন। সতর্কবার্তা: এডমিন রোল দিলে উক্ত ব্যবহারকারীগণ সম্পূর্ণ এডমিন প্যানেল এক্সেস করতে পারবেন। আপনি কি নিশ্চিত?`,
+        });
+      },
+    },
+    {
+      id: "revoke-admin",
+      label: "Revoke Admin",
+      icon: UserMinus,
+      variant: "danger",
+      onClick: () => {
+        setBulkModalConfirm({
+          targetRole: "USER",
+          title: "বাল্ক কাস্টমার রোল পরিবর্তন নিশ্চিতকরণ",
+          message: `আপনি নির্বাচিত ${selectedUserIds.size} জন ব্যবহারকারীর এডমিন ক্ষমতা বাতিল করে সাধারণ USER (Customer) করতে যাচ্ছেন। আপনি কি নিশ্চিত?`,
+        });
+      },
+    },
+  ];
 
   const fetchUsers = useCallback(
     async (silent = false) => {
@@ -276,81 +434,114 @@ export default function AdminUsersPage() {
         
         {/* Mobile View: Responsive Stacked Cards (< md) */}
         <div className="block md:hidden divide-y divide-slate-100">
+          {/* Mobile Master Select Header */}
+          {users.length > 0 && (
+            <div className="p-3 bg-slate-50 flex items-center justify-between border-b border-slate-100">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isAllCurrentSelected}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded-sm border-slate-300 text-[#FC5C03] focus:ring-[#FC5C03] cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-700">Select All on Page</span>
+              </label>
+              {selectedUserIds.size > 0 && (
+                <span className="text-xs text-[#FC5C03] font-bold">
+                  {selectedUserIds.size} selected
+                </span>
+              )}
+            </div>
+          )}
+
           {users.length > 0 ? (
-            users.map((u) => (
-              <div
-                key={u.id}
-                className="p-4 space-y-3 hover:bg-slate-50 transition-colors cursor-pointer"
-                onClick={() => openCustomerDetail(u.id)}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 shrink-0">
-                      {u.name ? u.name.charAt(0).toUpperCase() : "C"}
+            users.map((u) => {
+              const isSelected = selectedUserIds.has(u.id);
+              return (
+                <div
+                  key={u.id}
+                  className={`p-4 space-y-3 transition-colors cursor-pointer ${
+                    isSelected ? "bg-orange-50/40" : "hover:bg-slate-50"
+                  }`}
+                  onClick={() => openCustomerDetail(u.id)}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectUser(u.id)}
+                          className="w-4 h-4 rounded-sm border-slate-300 text-[#FC5C03] focus:ring-[#FC5C03] cursor-pointer"
+                        />
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 shrink-0">
+                        {u.name ? u.name.charAt(0).toUpperCase() : "C"}
+                      </div>
+                      <div>
+                        <strong className="text-slate-900 font-bold text-sm block">{u.name}</strong>
+                        <span className="text-slate-400 text-[11px] block">{u.email}</span>
+                      </div>
                     </div>
-                    <div>
-                      <strong className="text-slate-900 font-bold text-sm block">{u.name}</strong>
-                      <span className="text-slate-400 text-[11px] block">{u.email}</span>
+
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                        u.role === "ADMIN"
+                          ? "bg-purple-100 text-purple-800 border border-purple-200"
+                          : u.role === "RESELLER"
+                          ? "bg-blue-100 text-blue-800 border border-blue-200"
+                          : "bg-slate-100 text-slate-700"
+                      }`}
+                    >
+                      <span>{u.role}</span>
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 bg-slate-50 rounded-xl space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600">
+                        Wallet: <strong className="text-slate-900 font-bold">{formatPrice(u.walletBalanceBDT)}</strong>
+                      </span>
+                      <span className="text-slate-600">
+                        Spent: <strong className="text-slate-900 font-black">{formatPrice(u.totalSpent)}</strong>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+                      <span>{u.totalOrders} total order(s)</span>
+                      <span>Joined: {u.joinDate}</span>
                     </div>
                   </div>
 
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                      u.role === "ADMIN"
-                        ? "bg-purple-100 text-purple-800 border border-purple-200"
-                        : u.role === "RESELLER"
-                        ? "bg-blue-100 text-blue-800 border border-blue-200"
-                        : "bg-slate-100 text-slate-700"
-                    }`}
-                  >
-                    <span>{u.role}</span>
-                  </span>
-                </div>
+                  <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
+                    <select
+                      value={u.role}
+                      onChange={(e) =>
+                        setRoleModalUser({
+                          id: u.id,
+                          name: u.name,
+                          currentRole: u.role,
+                          targetRole: e.target.value,
+                        })
+                      }
+                      className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-hidden"
+                    >
+                      <option value="USER">USER</option>
+                      <option value="RESELLER">RESELLER</option>
+                      <option value="ADMIN">ADMIN</option>
+                    </select>
 
-                <div className="p-2.5 bg-slate-50 rounded-xl space-y-1 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-600">
-                      Wallet: <strong className="text-slate-900 font-bold">{formatPrice(u.walletBalanceBDT)}</strong>
-                    </span>
-                    <span className="text-slate-600">
-                      Spent: <strong className="text-slate-900 font-black">{formatPrice(u.totalSpent)}</strong>
-                    </span>
+                    <button
+                      onClick={() => openCustomerDetail(u.id)}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View Profile</span>
+                    </button>
                   </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
-                    <span>{u.totalOrders} total order(s)</span>
-                    <span>Joined: {u.joinDate}</span>
-                  </div>
                 </div>
-
-                <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
-                  <select
-                    value={u.role}
-                    onChange={(e) =>
-                      setRoleModalUser({
-                        id: u.id,
-                        name: u.name,
-                        currentRole: u.role,
-                        targetRole: e.target.value,
-                      })
-                    }
-                    className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-hidden"
-                  >
-                    <option value="USER">USER</option>
-                    <option value="RESELLER">RESELLER</option>
-                    <option value="ADMIN">ADMIN</option>
-                  </select>
-
-                  <button
-                    onClick={() => openCustomerDetail(u.id)}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>View Profile</span>
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="py-12 text-center text-slate-400">
               <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
@@ -364,6 +555,15 @@ export default function AdminUsersPage() {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200 uppercase tracking-wider text-[11px] font-bold">
               <tr>
+                <th className="py-4 px-4 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isAllCurrentSelected}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all users on current page"
+                    className="w-4 h-4 rounded-sm border-slate-300 text-[#FC5C03] focus:ring-[#FC5C03] cursor-pointer"
+                  />
+                </th>
                 <th className="py-4 px-5">Customer Profile</th>
                 <th className="py-4 px-5">Email & Phone</th>
                 <th className="py-4 px-5">Role & Security</th>
@@ -377,28 +577,43 @@ export default function AdminUsersPage() {
 
             <tbody className="divide-y divide-slate-100 font-medium">
               {users.length > 0 ? (
-                users.map((u) => (
-                  <tr
-                    key={u.id}
-                    className="hover:bg-slate-50/80 transition-colors cursor-pointer"
-                    onClick={() => openCustomerDetail(u.id)}
-                  >
-                    {/* Name & Avatar */}
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 shrink-0">
-                          {u.name ? u.name.charAt(0).toUpperCase() : "C"}
+                users.map((u) => {
+                  const isSelected = selectedUserIds.has(u.id);
+                  return (
+                    <tr
+                      key={u.id}
+                      className={`transition-colors cursor-pointer ${
+                        isSelected ? "bg-orange-50/40 hover:bg-orange-50/70" : "hover:bg-slate-50/80"
+                      }`}
+                      onClick={() => openCustomerDetail(u.id)}
+                    >
+                      {/* Selection Checkbox */}
+                      <td className="py-4 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectUser(u.id)}
+                          aria-label={`Select ${u.name}`}
+                          className="w-4 h-4 rounded-sm border-slate-300 text-[#FC5C03] focus:ring-[#FC5C03] cursor-pointer"
+                        />
+                      </td>
+
+                      {/* Name & Avatar */}
+                      <td className="py-4 px-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 shrink-0">
+                            {u.name ? u.name.charAt(0).toUpperCase() : "C"}
+                          </div>
+                          <div>
+                            <span className="font-bold text-sm text-slate-900 block truncate max-w-[160px]">
+                              {u.name}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              ID: {u.id.slice(0, 10)}...
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="font-bold text-sm text-slate-900 block truncate max-w-[160px]">
-                            {u.name}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            ID: {u.id.slice(0, 10)}...
-                          </span>
-                        </div>
-                      </div>
-                    </td>
+                      </td>
 
                     {/* Email & Phone */}
                     <td className="py-4 px-5" onClick={(e) => e.stopPropagation()}>
@@ -493,10 +708,11 @@ export default function AdminUsersPage() {
                       </div>
                     </td>
                   </tr>
-                ))
-              ) : (
+                );
+              })
+            ) : (
                 <tr>
-                  <td colSpan={8} className="py-16 text-center text-slate-400">
+                  <td colSpan={9} className="py-16 text-center text-slate-400">
                     <div className="max-w-xs mx-auto space-y-2">
                       <Users className="w-10 h-10 text-slate-300 mx-auto" />
                       <p className="font-bold text-slate-700 text-sm">No customers found</p>
@@ -752,7 +968,7 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* CONFIRM ROLE CHANGE MODAL */}
+      {/* CONFIRM SINGLE ROLE CHANGE MODAL */}
       <ConfirmModal
         isOpen={Boolean(roleModalUser)}
         onClose={() => setRoleModalUser(null)}
@@ -771,6 +987,30 @@ export default function AdminUsersPage() {
         cancelText="বাতিল"
         variant={roleModalUser?.targetRole === "ADMIN" ? "warning" : "primary"}
         isLoading={isUpdatingRole}
+      />
+
+      {/* CONFIRM BULK ROLE CHANGE MODAL */}
+      <ConfirmModal
+        isOpen={Boolean(bulkModalConfirm)}
+        onClose={() => setBulkModalConfirm(null)}
+        onConfirm={confirmBulkRoleChange}
+        title={bulkModalConfirm?.title || "বাল্ক রোল পরিবর্তন"}
+        message={bulkModalConfirm?.message || ""}
+        confirmText="নিশ্চিত করুন"
+        cancelText="বাতিল"
+        variant={bulkModalConfirm?.targetRole === "ADMIN" ? "warning" : "danger"}
+        isLoading={isBulkExecuting}
+      />
+
+      {/* BULK ACTION BAR */}
+      <BulkActionBar
+        selectedCount={selectedUserIds.size}
+        totalCount={users.length}
+        onClearSelection={handleClearSelection}
+        onSelectAll={toggleSelectAll}
+        isAllSelected={isAllCurrentSelected}
+        actions={bulkActions}
+        itemName="customer"
       />
 
     </div>

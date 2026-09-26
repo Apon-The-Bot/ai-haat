@@ -929,9 +929,14 @@ export async function bulkUpdateProductStatus(
   status: ProductStatus,
   adminUser: { id: string; email: string }
 ) {
+  const updateData: { status: ProductStatus; archivedAt?: Date | null } = { status };
+  if (status === "ARCHIVED") {
+    updateData.archivedAt = new Date();
+  }
+
   const result = await prisma.product.updateMany({
     where: { id: { in: productIds } },
-    data: { status },
+    data: updateData,
   });
 
   await logAdminAudit({
@@ -944,6 +949,203 @@ export async function bulkUpdateProductStatus(
   }).catch((e) => console.error("Audit log error:", e));
 
   return { success: true, count: result.count };
+}
+
+export async function bulkUpdateProductVisibility(
+  productIds: string[],
+  visibility: ProductVisibility,
+  adminUser: { id: string; email: string }
+) {
+  const result = await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { visibility },
+  });
+
+  await logAdminAudit({
+    actorId: adminUser.id,
+    actorEmail: adminUser.email,
+    action: "PRODUCT_BULK_VISIBILITY_UPDATE",
+    targetType: "PRODUCT",
+    targetId: productIds.join(","),
+    details: { count: result.count, visibility, productIds },
+  }).catch((e) => console.error("Audit log error:", e));
+
+  return { success: true, count: result.count };
+}
+
+export async function bulkArchiveProducts(
+  productIds: string[],
+  adminUser: { id: string; email: string }
+) {
+  const result = await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { status: "ARCHIVED", archivedAt: new Date() },
+  });
+
+  await logAdminAudit({
+    actorId: adminUser.id,
+    actorEmail: adminUser.email,
+    action: "PRODUCT_BULK_ARCHIVE",
+    targetType: "PRODUCT",
+    targetId: productIds.join(","),
+    details: { count: result.count, productIds },
+  }).catch((e) => console.error("Audit log error:", e));
+
+  return { success: true, count: result.count };
+}
+
+export async function bulkDeleteProducts(
+  productIds: string[],
+  adminUser: { id: string; email: string }
+) {
+  // Check which products have historical records
+  const [ordersWithProducts, stockWithProducts, replacementsWithProducts, refundsWithProducts] = await Promise.all([
+    prisma.orderItem.findMany({
+      where: { productId: { in: productIds } },
+      select: { productId: true },
+      distinct: ["productId"],
+    }),
+    prisma.digitalStock.findMany({
+      where: { productId: { in: productIds } },
+      select: { productId: true },
+      distinct: ["productId"],
+    }),
+    prisma.replacementRequest.findMany({
+      where: { orderItem: { productId: { in: productIds } } },
+      select: { orderItem: { select: { productId: true } } },
+    }),
+    prisma.refund.findMany({
+      where: { orderItem: { productId: { in: productIds } } },
+      select: { orderItem: { select: { productId: true } } },
+    }),
+  ]);
+
+  const historicalProductIds = new Set<string>();
+  ordersWithProducts.forEach((o) => {
+    if (o.productId) historicalProductIds.add(o.productId);
+  });
+  stockWithProducts.forEach((s) => {
+    if (s.productId) historicalProductIds.add(s.productId);
+  });
+  replacementsWithProducts.forEach((r) => {
+    if (r.orderItem?.productId) historicalProductIds.add(r.orderItem.productId);
+  });
+  refundsWithProducts.forEach((rf) => {
+    if (rf.orderItem?.productId) historicalProductIds.add(rf.orderItem.productId);
+  });
+
+  const idsToArchive = productIds.filter((id) => historicalProductIds.has(id));
+  const idsToDelete = productIds.filter((id) => !historicalProductIds.has(id));
+
+  let deletedCount = 0;
+  let archivedCount = 0;
+
+  if (idsToArchive.length > 0) {
+    const archiveRes = await prisma.product.updateMany({
+      where: { id: { in: idsToArchive } },
+      data: { status: "ARCHIVED", archivedAt: new Date() },
+    });
+    archivedCount = archiveRes.count;
+  }
+
+  if (idsToDelete.length > 0) {
+    await prisma.$transaction(async (tx) => {
+      await tx.variation.deleteMany({ where: { productId: { in: idsToDelete } } });
+      const delRes = await tx.product.deleteMany({ where: { id: { in: idsToDelete } } });
+      deletedCount = delRes.count;
+    });
+  }
+
+  await logAdminAudit({
+    actorId: adminUser.id,
+    actorEmail: adminUser.email,
+    action: "PRODUCT_BULK_DELETE",
+    targetType: "PRODUCT",
+    targetId: productIds.join(","),
+    details: { totalRequested: productIds.length, deletedCount, archivedCount, idsToDelete, idsToArchive },
+  }).catch((e) => console.error("Audit log error:", e));
+
+  return { success: true, deletedCount, archivedCount, total: productIds.length };
+}
+
+function sanitizeProductCsvValue(val: any): string {
+  if (val === null || val === undefined) return '""';
+  let str = String(val).trim();
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  str = str.replace(/"/g, '""');
+  return `"${str}"`;
+}
+
+export async function exportProductsToCSV(productIds?: string[]): Promise<string> {
+  const where: any = {};
+  if (productIds && productIds.length > 0) {
+    where.id = { in: productIds };
+  }
+
+  const products = await prisma.product.findMany({
+    where,
+    include: {
+      variations: {
+        select: {
+          name: true,
+          sku: true,
+          priceBDT: true,
+          regularPriceBDT: true,
+          salePriceBDT: true,
+          inStock: true,
+        },
+      },
+      digitalStocks: {
+        where: { status: "AVAILABLE" },
+        select: { id: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const headers = [
+    "Product ID",
+    "Name",
+    "Slug",
+    "Category",
+    "Status",
+    "Visibility",
+    "Fulfillment Type",
+    "Min Price (BDT)",
+    "Max Price (BDT)",
+    "Regular Price (BDT)",
+    "Sale Price (BDT)",
+    "Available Stock Units",
+    "In Stock Flag",
+    "Featured",
+    "Best Seller",
+    "Variations Count",
+    "Created At",
+  ];
+
+  const rows = products.map((p) => [
+    sanitizeProductCsvValue(p.id),
+    sanitizeProductCsvValue(p.name),
+    sanitizeProductCsvValue(p.slug),
+    sanitizeProductCsvValue(p.category),
+    sanitizeProductCsvValue(p.status),
+    sanitizeProductCsvValue(p.visibility),
+    sanitizeProductCsvValue(p.fulfillmentType),
+    p.minPriceBDT,
+    p.maxPriceBDT,
+    p.regularPriceBDT ?? "",
+    p.salePriceBDT ?? "",
+    p.digitalStocks.length,
+    p.inStock ? "YES" : "NO",
+    p.isFeatured ? "YES" : "NO",
+    p.isBestSelling ? "YES" : "NO",
+    p.variations.length,
+    sanitizeProductCsvValue(p.createdAt.toISOString()),
+  ]);
+
+  return [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
 }
 
 export async function bulkUpdateProductPrice(
