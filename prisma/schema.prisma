@@ -252,6 +252,8 @@ model User {
   phone            String?
   role             Role                @default(USER)
   walletBalanceBDT Float               @default(0.0)
+  coinBalance      Int                 @default(0)
+  lifetimeCoinsEarned Int              @default(0)
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
@@ -275,6 +277,9 @@ model User {
   emailContact     EmailContact?
   campaignRecipients EmailCampaignRecipient[]
   stockWaitlists   StockWaitlist[]
+  coinTransactions CoinTransaction[]
+  purchasedGiftCards GiftCard[]        @relation("PurchasedGiftCards")
+  redeemedGiftCards  GiftCard[]        @relation("RedeemedGiftCards")
 
   @@map("users")
 }
@@ -355,6 +360,9 @@ model Product {
   seoTitle           String?
   seoDescription     String?           @db.Text
   seoKeywords        String?
+  isFlashSale        Boolean           @default(false)
+  flashSalePrice     Float?
+  flashSaleEndsAt    DateTime?
   archivedAt         DateTime?
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
@@ -366,6 +374,10 @@ model Product {
   productSuppliers   ProductSupplier[]
   supportTickets     SupportTicket[]
   stockWaitlists     StockWaitlist[]
+  bundlesAsPrimary   ProductBundle[]   @relation("PrimaryProductBundles")
+  bundleItems        BundleItem[]
+  tieredPricingRules TieredPricingRule[]
+  flashSaleItems     FlashSaleItem[]
 
   @@index([category])
   @@index([status, visibility])
@@ -394,11 +406,14 @@ model Variation {
   sortOrder          Int              @default(0)
   isDefault          Boolean          @default(false)
 
-  product       Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
-  digitalStocks DigitalStock[]
-  batches       InventoryBatch[]
-  productSuppliers ProductSupplier[]
-  stockWaitlists   StockWaitlist[]
+  product            Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  digitalStocks      DigitalStock[]
+  batches            InventoryBatch[]
+  productSuppliers   ProductSupplier[]
+  stockWaitlists     StockWaitlist[]
+  bundleItems        BundleItem[]
+  tieredPricingRules TieredPricingRule[]
+  flashSaleItems     FlashSaleItem[]
 
   @@map("variations")
 }
@@ -421,6 +436,13 @@ model Order {
   deliveryStatus DeliveryStatus @default(ORDER_PLACED)
   refundedBDT    Float          @default(0.0)
   refundStatus   String?
+  isRenewal      Boolean        @default(false)
+  renewedFromOrderId String?
+  costPriceTotalBDT  Float?     @default(0.0)
+  coinsEarned    Int            @default(0)
+  coinsSpent     Int            @default(0)
+  giftCardCodeUsed String?
+  giftCardDiscountBDT Float?   @default(0.0)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   // Marketing Attribution
@@ -460,6 +482,7 @@ model OrderItem {
   productName                   String
   variationName                 String
   priceBDT                      Float
+  costPriceBDT                  Float?          @default(0.0)
   quantity                      Int             @default(1)
   image                         String?
   deliveryStatus                DeliveryStatus  @default(ORDER_PLACED)
@@ -470,6 +493,8 @@ model OrderItem {
   refundWindowDaysAtPurchase    Int             @default(7)
   replacementAllowedAtPurchase  Boolean         @default(true)
   refundAllowedAtPurchase       Boolean         @default(true)
+  renewedFromKeyId              String?
+  renewalContext                String?         @db.Text
 
   order          Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
   deliveredKeys  DeliveredKey[]
@@ -1482,3 +1507,153 @@ model StockWaitlist {
   @@index([status])
   @@map("stock_waitlist")
 }
+
+model ProductBundle {
+  id                 String       @id @default(cuid())
+  title              String       @db.VarChar(191)
+  slug               String?      @unique @db.VarChar(191)
+  description        String?      @db.Text
+  discountPercentage Float        @default(10.0)
+  primaryProductId   String
+  isActive           Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  primaryProduct     Product      @relation("PrimaryProductBundles", fields: [primaryProductId], references: [id], onDelete: Cascade)
+  items              BundleItem[]
+
+  @@index([primaryProductId])
+  @@index([isActive])
+  @@map("product_bundles")
+}
+
+model BundleItem {
+  id           String        @id @default(cuid())
+  bundleId     String
+  productId    String
+  variationId  String?
+  isOptional   Boolean       @default(false)
+  sortOrder    Int           @default(0)
+
+  bundle       ProductBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product      Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variation    Variation?    @relation(fields: [variationId], references: [id], onDelete: SetNull)
+
+  @@index([bundleId])
+  @@index([productId])
+  @@map("bundle_items")
+}
+
+model TieredPricingRule {
+  id                 String     @id @default(cuid())
+  productId          String
+  variationId        String?
+  minQuantity        Int        @default(2)
+  discountPercentage Float      @default(5.0)
+  fixedPriceBDT      Float?
+  isActive           Boolean    @default(true)
+  createdAt          DateTime   @default(now())
+
+  product            Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variation          Variation? @relation(fields: [variationId], references: [id], onDelete: Cascade)
+
+  @@index([productId, variationId])
+  @@index([isActive])
+  @@map("tiered_pricing_rules")
+}
+
+model FlashSale {
+  id          String          @id @default(cuid())
+  title       String          @db.VarChar(191)
+  description String?         @db.Text
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean         @default(true)
+  badgeText   String?         @default("ফ্ল্যাশ ডিল")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  items       FlashSaleItem[]
+
+  @@index([isActive, startsAt, endsAt])
+  @@map("flash_sales")
+}
+
+model FlashSaleItem {
+  id            String     @id @default(cuid())
+  flashSaleId   String
+  productId     String
+  variationId   String?
+  salePriceBDT  Float
+  stockLimit    Int?       @default(10)
+  soldCount     Int        @default(0)
+
+  flashSale     FlashSale  @relation(fields: [flashSaleId], references: [id], onDelete: Cascade)
+  product       Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variation     Variation? @relation(fields: [variationId], references: [id], onDelete: SetNull)
+
+  @@unique([flashSaleId, productId, variationId])
+  @@index([flashSaleId])
+  @@map("flash_sale_items")
+}
+
+enum CoinTransactionType {
+  EARNED_ORDER
+  REDEEMED_COUPON
+  BONUS
+  REFUND_DEDUCT
+  ADMIN_ADJUST
+}
+
+model CoinTransaction {
+  id          String              @id @default(cuid())
+  userId      String
+  amount      Int                 // positive for earn, negative for spend
+  type        CoinTransactionType @default(EARNED_ORDER)
+  orderId     String?
+  couponId    String?
+  description String              @db.VarChar(255)
+  createdAt   DateTime            @default(now())
+
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("coin_transactions")
+}
+
+enum GiftCardStatus {
+  ACTIVE
+  REDEEMED
+  EXPIRED
+  CANCELLED
+}
+
+model GiftCard {
+  id                 String         @id @default(cuid())
+  code               String         @unique @db.VarChar(50)
+  initialAmountBDT   Float
+  currentBalanceBDT  Float
+  status             GiftCardStatus @default(ACTIVE)
+  senderName         String?
+  senderEmail        String?
+  recipientName      String?
+  recipientEmail     String?
+  customMessage      String?        @db.Text
+  purchasedByUserId  String?
+  redeemedByUserId   String?
+  orderId            String?
+  expiresAt          DateTime?
+  redeemedAt         DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  purchasedByUser    User?          @relation("PurchasedGiftCards", fields: [purchasedByUserId], references: [id], onDelete: SetNull)
+  redeemedByUser     User?          @relation("RedeemedGiftCards", fields: [redeemedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([code])
+  @@index([status])
+  @@index([purchasedByUserId])
+  @@index([redeemedByUserId])
+  @@map("gift_cards")
+}
+

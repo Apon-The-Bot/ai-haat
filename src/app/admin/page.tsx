@@ -26,6 +26,10 @@ import { useToast } from "@/context/ToastContext";
 interface DashboardStats {
   period: string;
   revenue: number;
+  netRevenue?: number;
+  cogs?: number;
+  grossProfit?: number;
+  grossMarginPct?: number;
   totalOrders: number;
   verifiedOrdersCount: number;
   averageOrderValue: number;
@@ -238,6 +242,52 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
+      </div>
+
+      {/* Financial Intelligence: COGS & Net Profit Margin Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Delivered COGS */}
+        <div className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl border border-amber-200/80 p-5 shadow-2xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-900">Delivered COGS</span>
+            <span className="p-1.5 bg-amber-100 text-amber-800 rounded-lg text-xs font-bold">Cost of Sales</span>
+          </div>
+          <div className="text-2xl font-black text-slate-900">
+            {formatPrice(stats?.cogs || 0)}
+          </div>
+          <p className="text-xs text-slate-500 mt-1">Acquisition cost of keys delivered to customers</p>
+        </div>
+
+        {/* Realized Gross / Net Profit */}
+        <div className="bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent rounded-2xl border border-emerald-200/80 p-5 shadow-2xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">Net Gross Profit</span>
+            <span className="p-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold">
+              {stats?.grossMarginPct ?? 0}% Margin
+            </span>
+          </div>
+          <div className={`text-2xl font-black ${(stats?.grossProfit || 0) >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+            {formatPrice(stats?.grossProfit || 0)}
+          </div>
+          <p className="text-xs text-slate-500 mt-1">Net revenue minus recognized COGS</p>
+        </div>
+
+        {/* Financial Truth Audit Link */}
+        <div className="bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent rounded-2xl border border-blue-200/80 p-5 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-900">Financial Reports</span>
+              <span className="p-1.5 bg-blue-100 text-blue-800 rounded-lg text-xs font-bold">BI Audit</span>
+            </div>
+            <div className="text-sm font-bold text-slate-800">
+              In-depth Batches & Inventory Costing
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Breakdown by suppliers, batches & CSV export</p>
+          </div>
+          <Link href="/admin/reports" className="text-xs font-bold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 mt-3">
+            Open Financial Reports →
+          </Link>
+        </div>
       </div>
 
       {/* Visual Analytics & Gateway Velocity Row */}

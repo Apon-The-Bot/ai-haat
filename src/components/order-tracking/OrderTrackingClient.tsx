@@ -21,6 +21,7 @@ import {
   CreditCard,
   XCircle,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -419,6 +420,18 @@ function OrderTrackingContent() {
                         )}
                         <span>{currentOrder.deliveryStatus}</span>
                       </div>
+
+                      {/* Download Invoice Button */}
+                      <a
+                        href={`/api/orders/${currentOrder.orderNumber || currentOrder.id}/invoice`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-1.5 bg-slate-900 hover:bg-[#FC5C03] text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                        title="Download PDF Invoice"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>{isBn ? "ইনভয়েস (PDF)" : "Invoice (PDF)"}</span>
+                      </a>
                     </div>
                   </div>
 

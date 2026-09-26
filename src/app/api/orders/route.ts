@@ -840,6 +840,16 @@ export async function PATCH(req: NextRequest) {
       return ord;
     });
 
+    // Award Loyalty Coins if payment verified and user exists
+    if (updateData.paymentStatus === "VERIFIED") {
+      try {
+        const { awardCoinsForOrder } = await import("@/lib/loyalty/coins");
+        await awardCoinsForOrder(existing.id);
+      } catch (coinErr) {
+        console.warn("[Loyalty Coins Warning]:", coinErr);
+      }
+    }
+
     // Log admin audit event
     await logAdminAudit({
       actorId: user.id,

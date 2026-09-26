@@ -179,6 +179,14 @@ export async function POST(req: NextRequest) {
         console.warn("[Affiliate Commission Process Warning]:", affErr);
       }
 
+      // Award Loyalty Coins if user is registered (non-blocking)
+      try {
+        const { awardCoinsForOrder } = await import("@/lib/loyalty/coins");
+        await awardCoinsForOrder(txResult.orderRecord.id);
+      } catch (coinErr) {
+        console.warn("[Loyalty Coins Warning]:", coinErr);
+      }
+
       // Analytics: Fire server-side Purchase (non-blocking)
       try {
         const cookieHeader = req.headers.get("cookie") || "";

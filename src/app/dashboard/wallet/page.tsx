@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, X, Zap, RefreshCw, Clock } from "lucide-react";
+import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, X, Zap, RefreshCw, Clock, Gift } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -20,6 +20,10 @@ function WalletContent() {
   const [amount, setAmount] = useState("500");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Gift Card Redeem State
+  const [giftCardCodeInput, setGiftCardCodeInput] = useState("");
+  const [isRedeemingGiftCard, setIsRedeemingGiftCard] = useState(false);
 
   const presetAmounts = ["100", "200", "500", "1000", "2000"];
 
@@ -142,6 +146,39 @@ function WalletContent() {
     }
   };
 
+  // Redeem Gift Card into Wallet Balance
+  const handleRedeemGiftCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!giftCardCodeInput.trim()) return;
+
+    setIsRedeemingGiftCard(true);
+    try {
+      const res = await fetch("/api/gift-cards/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: giftCardCodeInput.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(
+          isBn
+            ? `🎉 অভিনন্দন! ${data.creditedBDT} ৳ আপনার ওয়ালেটে যোগ হয়েছে!`
+            : `🎉 Success! ${data.creditedBDT} BDT credited to your wallet!`,
+          "success"
+        );
+        setGiftCardCodeInput("");
+        refreshUser();
+        fetchTransactions();
+      } else {
+        showToast(data.error || "গিফট কার্ড রিডিম করা সম্ভব হয়নি।", "error");
+      }
+    } catch (err: any) {
+      showToast("সার্ভার সংযোগ সমস্যা। আবার চেষ্টা করুন।", "error");
+    } finally {
+      setIsRedeemingGiftCard(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-5xl">
       
@@ -183,6 +220,40 @@ function WalletContent() {
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
+      </div>
+
+      {/* 2. GIFT CARD 1-CLICK REDEEM CARD */}
+      <div className="p-5 sm:p-6 bg-gradient-to-r from-amber-50 via-orange-50/60 to-white rounded-3xl border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Gift className="w-5 h-5 text-[#FC5C03]" />
+            <h3 className="text-sm sm:text-base font-black text-slate-900">
+              {isBn ? "গিফট কার্ড বা ভাউচার রিডিম করুন" : "Redeem Gift Card or Voucher"}
+            </h3>
+          </div>
+          <p className="text-xs text-slate-600">
+            {isBn
+              ? "আপনার কাছে কি ১৬ ডিজিটের এআই হাট গিফট কার্ড কোড আছে? কোডটি প্রবেশ করিয়ে সাথে সাথে ওয়ালেটে ব্যালেন্স যোগ করুন।"
+              : "Have a 16-character AI Haat gift card? Enter your code below to instantly deposit funds into your wallet."}
+          </p>
+        </div>
+
+        <form onSubmit={handleRedeemGiftCard} className="flex items-center gap-2 w-full md:w-auto">
+          <input
+            type="text"
+            placeholder="AIHT-XXXX-XXXX-XXXX"
+            value={giftCardCodeInput}
+            onChange={(e) => setGiftCardCodeInput(e.target.value.toUpperCase())}
+            className="px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold tracking-wider uppercase focus:outline-none focus:border-[#FC5C03] w-full md:w-64"
+          />
+          <button
+            type="submit"
+            disabled={isRedeemingGiftCard || !giftCardCodeInput.trim()}
+            className="px-4 py-2.5 bg-slate-900 hover:bg-[#FC5C03] text-white text-xs font-bold rounded-xl transition-all shrink-0 cursor-pointer disabled:opacity-50"
+          >
+            {isRedeemingGiftCard ? (isBn ? "যাচাই হচ্ছে..." : "Redeeming...") : (isBn ? "রিডিম করুন" : "Redeem")}
+          </button>
+        </form>
       </div>
 
       {/* Transactions History Table */}

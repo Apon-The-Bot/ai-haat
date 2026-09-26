@@ -63,6 +63,9 @@ export async function GET(req: NextRequest) {
         pendingDeposits: overview.operational.pendingPaymentReviews,
         totalCustomers,
         availableStockCount: overview.operational.availableStockCount,
+        cogs: overview.kpis.cogs.current,
+        grossProfit: overview.kpis.grossProfit.current,
+        grossMarginPct: overview.kpis.grossMarginPct,
         gatewayDistribution: gatewayMap,
         dailyTrend: salesTrend.map((s) => ({
           date: s.date,

@@ -61,3 +61,5 @@ scratch/
 *.backup.sql
 *.meta.json
 !prisma/migrations/**/*.sql
+.agents/
+

@@ -18,6 +18,7 @@ import {
   MessageSquare,
   ShieldCheck,
   RefreshCw,
+  Download,
 } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -292,6 +293,16 @@ function OrdersContent() {
                       <Eye className="w-3.5 h-3.5" />
                       <span>{isBn ? "অর্ডার ডিটেইলস" : "Order Details"}</span>
                     </button>
+                    <a
+                      href={`/api/orders/${order.orderNumber || order.id}/invoice`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 bg-slate-900 hover:bg-[#FC5C03] text-white font-bold rounded-xl transition-all inline-flex items-center gap-1.5 shadow-2xs"
+                      title="Download Invoice PDF"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>{isBn ? "ইনভয়েস" : "Invoice"}</span>
+                    </a>
                   </div>
 
                   <Link

@@ -40,11 +40,16 @@ export interface OrderQuote {
   items: NormalizedOrderItem[];
   subtotalBDT: number;
   discountBDT: number;
+  volumeDiscountBDT?: number;
+  bundleDiscountBDT?: number;
+  couponDiscountBDT?: number;
   totalBDT: number;
+  costPriceTotalBDT?: number;
   couponCode: string | null;
   couponId: string | null;
   couponDiscountType?: string;
   couponDiscountValue?: number;
+  appliedBundleName?: string | null;
 }
 
 export interface PricingResult {
@@ -239,7 +244,81 @@ export async function calculateOrderQuote(
     });
   }
 
-  // 2. Server-Side Coupon Verification
+  // 2. Volume / Tiered Pricing Calculations
+  let volumeDiscountBDT = 0;
+  const productIds = normalizedItems.map((it) => it.productId);
+
+  try {
+    const tieredRules = await prisma.tieredPricingRule.findMany({
+      where: {
+        productId: { in: productIds },
+        isActive: true,
+      },
+      orderBy: { minQuantity: "desc" },
+    });
+
+    if (tieredRules.length > 0) {
+      for (const it of normalizedItems) {
+        const matchingRule = tieredRules.find(
+          (r) =>
+            r.productId === it.productId &&
+            (!r.variationId || r.variationId === it.variationId) &&
+            it.quantity >= r.minQuantity
+        );
+
+        if (matchingRule) {
+          if (matchingRule.fixedPriceBDT && matchingRule.fixedPriceBDT < it.priceBDT) {
+            const savingsPerUnit = it.priceBDT - matchingRule.fixedPriceBDT;
+            volumeDiscountBDT = safeAddBDT(volumeDiscountBDT, safeMulBDT(savingsPerUnit, it.quantity));
+          } else if (matchingRule.discountPercentage > 0) {
+            const disc = calculatePercentageDiscount(it.priceBDT, matchingRule.discountPercentage);
+            volumeDiscountBDT = safeAddBDT(volumeDiscountBDT, safeMulBDT(disc, it.quantity));
+          }
+        }
+      }
+    }
+  } catch (tierErr) {
+    console.warn("[Pricing Engine] Tiered pricing check warning:", tierErr);
+  }
+
+  // 3. Companion Product Bundle Calculations ("Frequently Bought Together")
+  let bundleDiscountBDT = 0;
+  let appliedBundleName: string | null = null;
+
+  try {
+    const activeBundles = await prisma.productBundle.findMany({
+      where: {
+        primaryProductId: { in: productIds },
+        isActive: true,
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    for (const bundle of activeBundles) {
+      // Check if all non-optional bundle items are present in cart
+      const requiredProductIds = bundle.items.filter((bi) => !bi.isOptional).map((bi) => bi.productId);
+      const allPresent = requiredProductIds.every((rId) => productIds.includes(rId));
+
+      if (allPresent && bundle.discountPercentage > 0) {
+        appliedBundleName = bundle.title;
+        // Calculate bundle discount on participating items
+        const bundleProductIds = [bundle.primaryProductId, ...requiredProductIds];
+        const participatingItemsSubtotal = normalizedItems
+          .filter((it) => bundleProductIds.includes(it.productId))
+          .reduce((sum, it) => safeAddBDT(sum, safeMulBDT(it.priceBDT, it.quantity)), 0);
+
+        const currentBundleDisc = calculatePercentageDiscount(participatingItemsSubtotal, bundle.discountPercentage);
+        bundleDiscountBDT = safeAddBDT(bundleDiscountBDT, currentBundleDisc);
+        break; // Apply best matching bundle
+      }
+    }
+  } catch (bundleErr) {
+    console.warn("[Pricing Engine] Bundle check warning:", bundleErr);
+  }
+
+  // 4. Server-Side Coupon Verification
   let calculatedDiscount = 0;
   let validatedCouponCode: string | null = null;
   let validatedCouponId: string | null = null;
@@ -296,19 +375,94 @@ export async function calculateOrderQuote(
     }
   }
 
-  const finalTotal = safeSubBDT(calculatedSubtotal, calculatedDiscount);
+  // 5. Total Discount & Cost Calculation
+  const totalDiscountBDT = Math.min(
+    calculatedSubtotal,
+    safeAddBDT(safeAddBDT(calculatedDiscount, volumeDiscountBDT), bundleDiscountBDT)
+  );
+  const finalTotal = safeSubBDT(calculatedSubtotal, totalDiscountBDT);
+
+  const costPriceTotalBDT = normalizedItems.reduce(
+    (sum, it) => safeAddBDT(sum, safeMulBDT(it.costPriceBDT || 0, it.quantity)),
+    0
+  );
 
   return {
     isValid: true,
     quote: {
       items: normalizedItems,
       subtotalBDT: calculatedSubtotal,
-      discountBDT: calculatedDiscount,
+      discountBDT: totalDiscountBDT,
+      volumeDiscountBDT,
+      bundleDiscountBDT,
+      couponDiscountBDT: calculatedDiscount,
       totalBDT: finalTotal,
+      costPriceTotalBDT,
       couponCode: validatedCouponCode,
       couponId: validatedCouponId,
       couponDiscountType,
       couponDiscountValue,
+      appliedBundleName,
     },
   };
 }
+
+export interface CartItemSummary {
+  productId: string;
+  productName: string;
+  priceBDT: number;
+  quantity: number;
+  costPriceBDT?: number;
+}
+
+/**
+ * Pure calculation helper for cart & checkout previews (synchronous / client safe)
+ */
+export function calculateCartTotals(
+  items: CartItemSummary[],
+  options?: {
+    volumeDiscountRules?: Array<{ minQuantity: number; discountPercentage: number }>;
+    bundleDiscountPercent?: number;
+    couponDiscountBDT?: number;
+  }
+) {
+  const subtotalBDT = items.reduce((sum, item) => sum + item.priceBDT * item.quantity, 0);
+
+  // Default tiered volume rules: 10+ items => 15%, 5+ items => 10%, 3+ items => 5%
+  const volumeRules = options?.volumeDiscountRules || [
+    { minQuantity: 10, discountPercentage: 15 },
+    { minQuantity: 5, discountPercentage: 10 },
+    { minQuantity: 3, discountPercentage: 5 },
+  ];
+
+  let volumeDiscountBDT = 0;
+  for (const item of items) {
+    const matchedRule = volumeRules.find((r) => item.quantity >= r.minQuantity);
+    if (matchedRule) {
+      const discount = Math.round(item.priceBDT * item.quantity * (matchedRule.discountPercentage / 100));
+      volumeDiscountBDT += discount;
+    }
+  }
+
+  let bundleDiscountBDT = 0;
+  if (options?.bundleDiscountPercent && items.length > 1) {
+    bundleDiscountBDT = Math.round(subtotalBDT * (options.bundleDiscountPercent / 100));
+  }
+
+  const couponDiscountBDT = options?.couponDiscountBDT || 0;
+  const totalDiscountBDT = Math.min(subtotalBDT, volumeDiscountBDT + bundleDiscountBDT + couponDiscountBDT);
+  const totalBDT = Math.max(0, subtotalBDT - totalDiscountBDT);
+
+  const costPriceTotalBDT = items.reduce((sum, item) => sum + (item.costPriceBDT || 0) * item.quantity, 0);
+
+  return {
+    subtotalBDT,
+    volumeDiscountBDT,
+    bundleDiscountBDT,
+    couponDiscountBDT,
+    totalDiscountBDT,
+    totalBDT,
+    costPriceTotalBDT,
+  };
+}
+

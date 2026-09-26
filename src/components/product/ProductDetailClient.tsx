@@ -39,6 +39,9 @@ import { useAuth } from "@/context/AuthContext";
 import { HowToOrder } from "@/components/home/HowToOrder";
 import { SafeImage } from "@/components/SafeImage";
 import { PaymentLogo } from "@/components/PaymentLogo";
+import { FrequentlyBoughtTogether } from "@/components/cro/FrequentlyBoughtTogether";
+import { TieredPricingTable } from "@/components/cro/TieredPricingTable";
+import { FlashSaleBanner } from "@/components/cro/FlashSaleBanner";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -468,6 +471,11 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               </div>
             </div>
 
+            {/* FLASH SALE URGENCY & COUNTDOWN BANNER */}
+            {product.inStock && (
+              <FlashSaleBanner />
+            )}
+
             {/* 4. Large Price Box */}
             <div className="w-full p-4.5 bg-gradient-to-r from-[#FFF2E8] via-[#FFF6EE] to-[#FFF9F5] rounded-2xl border border-[#FFE0CC] flex items-center justify-between shadow-2xs">
               <div>
@@ -692,7 +700,13 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 </div>
               </div>
             ) : (
-              <div className="space-y-2.5 pt-2">
+              <div className="space-y-3 pt-2">
+                {/* TIERED VOLUME PRICING FOR TEAMS & RESELLERS */}
+                <TieredPricingTable
+                  basePriceBDT={selectedVariation.priceBDT}
+                  currentQuantity={quantity}
+                />
+
                 <button
                   type="button"
                   onClick={handleBuyNow}
@@ -929,6 +943,16 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             )}
           </div>
         </div>
+
+        {/* FREQUENTLY BOUGHT TOGETHER BUNDLE COMBO WIDGET */}
+        {product.inStock && (
+          <div className="mt-8">
+            <FrequentlyBoughtTogether
+              primaryProduct={product}
+              selectedVariation={selectedVariation}
+            />
+          </div>
+        )}
 
         {/* 4. WHY CHOOSE US? (4 Cards Grid) */}
         <div className="mt-12 text-center">

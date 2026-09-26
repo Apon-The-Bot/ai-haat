@@ -681,7 +681,13 @@ Support WhatsApp: +8801700000000
                         </div>
 
                         <h2 className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
-                          {item.productName}
+                          {item.productSlug ? (
+                            <Link href={`/product/${item.productSlug}`} className="hover:text-[#FC5C03] transition-colors">
+                              {item.productName}
+                            </Link>
+                          ) : (
+                            item.productName
+                          )}
                         </h2>
 
                         <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
@@ -745,14 +751,27 @@ Support WhatsApp: +8801700000000
                         </div>
                       )}
 
-                      {/* Renew CTA Button if Expiring or Expired */}
-                      {(item.isExpiringSoon || !item.isWarrantyActive) && (
+                      {/* 1-Click Renewal CTA Button for Subscriptions & Licenses */}
+                      {item.productType !== "TEXT_INSTRUCTIONS" && (
                         <Link
-                          href={item.productSlug ? `/products/${item.productSlug}` : `/shop?search=${encodeURIComponent(item.productName)}`}
-                          className="w-full mt-1 px-3 py-1.5 bg-[#FC5C03] hover:bg-[#E04F00] text-white text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+                          href={item.productSlug 
+                            ? `/checkout?renewal=true&orderId=${item.orderId}&renewKeyId=${item.id}&productId=${item.productId || ''}&slug=${item.productSlug}`
+                            : item.productId 
+                            ? `/checkout?renewal=true&orderId=${item.orderId}&renewKeyId=${item.id}&productId=${item.productId}`
+                            : `/shop?search=${encodeURIComponent(item.productName)}`
+                          }
+                          className={`w-full mt-1.5 px-3 py-1.5 text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-2xs ${
+                            item.isExpiringSoon || !item.isWarrantyActive
+                              ? "bg-[#FC5C03] hover:bg-[#E04F00] text-white animate-pulse"
+                              : "bg-slate-900 hover:bg-slate-800 text-white"
+                          }`}
                         >
-                          <ShoppingCart className="w-3 h-3" />
-                          <span>{isBn ? "সাবস্ক্রিপশন রিনিউ করুন" : "Renew Subscription"}</span>
+                          <RotateCcw className="w-3 h-3" />
+                          <span>
+                            {item.isExpiringSoon
+                              ? isBn ? "🚨 ১-ক্লিক রিনিউ করুন" : "🚨 1-Click Renew Now"
+                              : isBn ? "সাবস্ক্রিপশন রিনিউ করুন" : "1-Click Renew"}
+                          </span>
                         </Link>
                       )}
                     </div>

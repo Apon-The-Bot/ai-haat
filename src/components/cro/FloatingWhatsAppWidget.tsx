@@ -12,7 +12,7 @@ interface QuickActionChip {
   message: string;
 }
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "8801712345678";
 
 const QUICK_CHIPS: QuickActionChip[] = [
   {

@@ -7,6 +7,7 @@ import { HowToOrder } from "@/components/home/HowToOrder";
 import { Partners } from "@/components/home/Partners";
 import { HOMEPAGE_SECTIONS } from "@/data/products";
 import { useProducts } from "@/context/ProductsContext";
+import { RecentPurchasePopup } from "@/components/cro/RecentPurchasePopup";
 
 export function HomePageClient() {
   const { getProductsByCategory } = useProducts();
@@ -38,6 +39,9 @@ export function HomePageClient() {
 
       {/* 4. PARTNERS SECTION */}
       <Partners />
+
+      {/* 5. HOMEPAGE-ONLY SOCIAL PROOF LIVE RECENT SALES POPUP */}
+      <RecentPurchasePopup />
     </div>
   );
 }
