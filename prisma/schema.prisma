@@ -456,6 +456,18 @@ model Order {
   // Analytics deduplication
   analyticsPurchaseSentAt DateTime?
 
+  // Direct Product Gifting ("Gift to a Friend")
+  isGift              Boolean        @default(false)
+  recipientName       String?        @db.VarChar(191)
+  recipientEmail      String?        @db.VarChar(191)
+  recipientPhone      String?        @db.VarChar(50)
+  giftMessage         String?        @db.Text
+  giftTheme           String?        @default("neon") @db.VarChar(50)
+  giftWrapOpened      Boolean        @default(false)
+  giftOpenedAt        DateTime?
+  hidePriceOnGift     Boolean        @default(true)
+  giftClaimToken      String?        @unique @db.VarChar(100)
+
   user           User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
   items          OrderItem[]
   deliveredKeys  DeliveredKey[]
@@ -471,6 +483,7 @@ model Order {
   @@index([createdAt])
   @@index([paymentStatus, deliveryStatus])
   @@index([trxId])
+  @@index([giftClaimToken])
   @@map("orders")
 }
 

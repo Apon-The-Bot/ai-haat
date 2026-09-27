@@ -20,6 +20,8 @@ import {
   Lock,
   Mail,
   MessageCircle,
+  Gift,
+  Copy,
 } from "lucide-react";
 import { useQuickCheckout } from "@/context/QuickCheckoutContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -28,6 +30,7 @@ import { useToast } from "@/context/ToastContext";
 import { SafeImage } from "@/components/SafeImage";
 import { Variation } from "@/types";
 import { getAttribution } from "@/lib/analytics/attribution";
+import { DigitalGiftingSection, GiftFormData } from "@/components/checkout/DigitalGiftingSection";
 
 export function QuickCheckoutModal() {
   const router = useRouter();
@@ -63,10 +66,22 @@ export function QuickCheckoutModal() {
 
   // States
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [giftData, setGiftData] = useState<GiftFormData>({
+    isGift: false,
+    recipientName: "",
+    recipientEmail: "",
+    recipientPhone: "",
+    giftMessage: "",
+    giftTheme: "neon",
+    hidePriceOnGift: true,
+  });
   const [successOrder, setSuccessOrder] = useState<{
     orderId: string;
     orderNumber: string;
     paidViaWallet: boolean;
+    giftClaimToken?: string | null;
+    recipientName?: string | null;
+    recipientPhone?: string | null;
   } | null>(null);
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -202,6 +217,11 @@ export function QuickCheckoutModal() {
       return;
     }
 
+    if (giftData.isGift && !giftData.recipientName.trim()) {
+      showToast("দয়া করে উপহার প্রাপক বন্ধুর নাম লিখুন।", "error");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -209,6 +229,7 @@ export function QuickCheckoutModal() {
       const combinedNotes = [
         notes.trim() ? `Note: ${notes.trim()}` : "",
         `[1-Click Express Buy] Preferred Delivery: ${deliveryMethod} (${effectiveHandle})`,
+        giftData.isGift ? `[GIFT ORDER for ${giftData.recipientName.trim()}]` : "",
       ]
         .filter(Boolean)
         .join(" | ");
@@ -241,6 +262,14 @@ export function QuickCheckoutModal() {
           senderNumber: paymentMethod === "wallet" ? "WALLET" : "GATEWAY",
           trxId: paymentMethod === "wallet" ? "WAL_QUICK_PENDING" : "GATEWAY_QUICK_PENDING",
           notes: combinedNotes,
+          // Direct Product Gifting
+          isGift: giftData.isGift,
+          recipientName: giftData.isGift ? giftData.recipientName.trim() : null,
+          recipientEmail: giftData.isGift ? giftData.recipientEmail.trim() : null,
+          recipientPhone: giftData.isGift ? giftData.recipientPhone.trim() : null,
+          giftMessage: giftData.isGift ? giftData.giftMessage.trim() : null,
+          giftTheme: giftData.isGift ? giftData.giftTheme : "neon",
+          hidePriceOnGift: giftData.isGift ? giftData.hidePriceOnGift : true,
           ...getAttribution(),
         }),
       });
@@ -277,6 +306,9 @@ export function QuickCheckoutModal() {
           orderId: createdId,
           orderNumber: createdId,
           paidViaWallet: true,
+          giftClaimToken: orderData.giftClaimToken,
+          recipientName: giftData.recipientName,
+          recipientPhone: giftData.recipientPhone,
         });
         showToast("অর্ডার সফলভাবে সম্পন্ন ও ভল্টে যুক্ত হয়েছে!", "success");
       } else {
@@ -362,6 +394,58 @@ export function QuickCheckoutModal() {
                   যুক্ত হয়েছে।
                 </p>
               </div>
+
+              {/* Gift Share Box if gift claim token exists */}
+              {successOrder.giftClaimToken && (
+                <div className="p-4 bg-gradient-to-br from-purple-50 via-pink-50 to-amber-50 rounded-2xl border border-purple-200 text-left space-y-3 max-w-md mx-auto">
+                  <div className="flex items-center gap-2 text-purple-700 font-bold text-xs">
+                    <Gift className="w-4 h-4 text-purple-600" />
+                    <span>🎁 উপহারের লিঙ্ক প্রস্তুত!</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    {successOrder.recipientName ? `${successOrder.recipientName}-এর জন্য` : "বন্ধুর জন্য"} উপহারটি প্রস্তুত। নিচের লিঙ্কটি কপি করে অথবা হোয়াটসঅ্যাপে সরাসরি পাঠিয়ে দিন:
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={typeof window !== "undefined" ? `${window.location.origin}/gift/${successOrder.giftClaimToken}` : `/gift/${successOrder.giftClaimToken}`}
+                      className="flex-1 bg-white border border-purple-200 rounded-xl px-3 py-2 text-[11px] font-mono text-purple-900 select-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${window.location.origin}/gift/${successOrder.giftClaimToken}`;
+                        navigator.clipboard.writeText(url);
+                        showToast("উপহারের লিঙ্ক কপি করা হয়েছে!", "success");
+                      }}
+                      className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>কপি</span>
+                    </button>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <a
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`🎁 আপনার জন্য একটি বিশেষ উপহার পাঠানো হয়েছে! উপহারটি আনবক্স করুন: ${typeof window !== "undefined" ? window.location.origin : "https://aihaat.shop"}/gift/${successOrder.giftClaimToken}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>WhatsApp-এ শেয়ার করুন</span>
+                    </a>
+                    <Link
+                      href={`/gift/${successOrder.giftClaimToken}`}
+                      onClick={closeQuickCheckout}
+                      target="_blank"
+                      className="py-2 px-3 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <span>প্রিভিউ</span>
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-2.5 max-w-xs mx-auto pt-2">
                 <Link
@@ -582,6 +666,13 @@ export function QuickCheckoutModal() {
                   )}
                 </div>
               </div>
+
+              {/* Digital Gifting Section */}
+              <DigitalGiftingSection
+                compact
+                formData={giftData}
+                onChange={(updates) => setGiftData((prev) => ({ ...prev, ...updates }))}
+              />
 
               {/* 5. Payment Method Selector */}
               <div className="space-y-2 pt-1">

@@ -7,6 +7,7 @@ import { calculateOrderQuote } from "@/lib/commerce/pricing";
 import { logAdminAudit } from "@/lib/audit-logger";
 import { getClientIp, checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { isSameOriginMutation } from "@/lib/security/csrf";
+import { generateGiftToken } from "@/lib/gifting/product-gifting";
 
 export const dynamic = "force-dynamic";
 
@@ -131,6 +132,9 @@ export async function GET(req: NextRequest) {
                   : "Order Placed",
               rawDeliveryStatus: rawDelivery,
               timelineEvents: tracked.timelineEvents || [],
+              isGift: tracked.isGift || false,
+              recipientName: tracked.recipientName || null,
+              giftClaimToken: tracked.giftClaimToken || null,
               date: tracked.createdAt.toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
@@ -410,6 +414,15 @@ export async function GET(req: NextRequest) {
         rawPaymentStatus: o.paymentStatus,
         notes: o.notes,
         hasDeliveredKeys: o.deliveredKeys.length > 0,
+        isGift: o.isGift || false,
+        recipientName: o.recipientName || null,
+        recipientEmail: o.recipientEmail || null,
+        recipientPhone: o.recipientPhone || null,
+        giftMessage: o.giftMessage || null,
+        giftTheme: o.giftTheme || "neon",
+        giftWrapOpened: o.giftWrapOpened || false,
+        giftOpenedAt: o.giftOpenedAt ? o.giftOpenedAt.toISOString() : null,
+        giftClaimToken: o.giftClaimToken || null,
         date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Today",
         createdAt: o.createdAt.toISOString(),
         updatedAt: o.updatedAt.toISOString(),
@@ -494,7 +507,15 @@ export async function POST(req: NextRequest) {
       renewedFromOrderId,
       renewedFromKeyId,
       renewalContext,
-      utmSource, utmMedium, utmCampaign, utmContent, utmTerm, landingPage, referrer
+      utmSource, utmMedium, utmCampaign, utmContent, utmTerm, landingPage, referrer,
+      // Direct Product Gifting Fields
+      isGift,
+      recipientName,
+      recipientEmail,
+      recipientPhone,
+      giftMessage,
+      giftTheme,
+      hidePriceOnGift,
     } = body;
 
     if (!customerName || !customerPhone || !items || !Array.isArray(items) || items.length === 0) {
@@ -522,6 +543,7 @@ export async function POST(req: NextRequest) {
     // SECURITY FIX: Use crypto-grade random bytes for order ID (4B+ possibilities vs 90K)
     const { randomBytes } = require("crypto");
     const generatedNumber = `AH-${randomBytes(4).toString("hex").toUpperCase()}`;
+    const generatedGiftToken = isGift ? generateGiftToken() : null;
     const now = new Date();
     const dateFormatted = now.toLocaleDateString("en-US", {
       month: "short",
@@ -546,6 +568,15 @@ export async function POST(req: NextRequest) {
       paymentStatus: "Pending" as any,
       deliveryStatus: "Order Placed" as any,
       notes: notes || "",
+      isGift: Boolean(isGift),
+      recipientName: recipientName ? String(recipientName).trim() : undefined,
+      recipientEmail: recipientEmail ? String(recipientEmail).trim().toLowerCase() : undefined,
+      recipientPhone: recipientPhone ? String(recipientPhone).trim() : undefined,
+      giftMessage: giftMessage ? String(giftMessage).trim() : undefined,
+      giftTheme: giftTheme ? String(giftTheme).trim() : "neon",
+      hidePriceOnGift: hidePriceOnGift !== undefined ? Boolean(hidePriceOnGift) : true,
+      giftClaimToken: generatedGiftToken || undefined,
+      giftClaimUrl: generatedGiftToken ? `/gift/${generatedGiftToken}` : undefined,
       date: dateFormatted,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
@@ -587,6 +618,15 @@ export async function POST(req: NextRequest) {
             isRenewal: Boolean(isRenewal),
             renewedFromOrderId: renewedFromOrderId || null,
             costPriceTotalBDT: quote.costPriceTotalBDT || null,
+            // Direct Product Gifting
+            isGift: Boolean(isGift),
+            recipientName: recipientName ? String(recipientName).trim() : null,
+            recipientEmail: recipientEmail ? String(recipientEmail).trim().toLowerCase() : null,
+            recipientPhone: recipientPhone ? String(recipientPhone).trim() : null,
+            giftMessage: giftMessage ? String(giftMessage).trim() : null,
+            giftTheme: giftTheme ? String(giftTheme).trim() : "neon",
+            hidePriceOnGift: hidePriceOnGift !== undefined ? Boolean(hidePriceOnGift) : true,
+            giftClaimToken: generatedGiftToken,
             // Marketing Attribution (truncated for safety)
             utmSource: typeof utmSource === 'string' ? utmSource.slice(0, 200) : undefined,
             utmMedium: typeof utmMedium === 'string' ? utmMedium.slice(0, 200) : undefined,
@@ -731,6 +771,9 @@ export async function POST(req: NextRequest) {
       success: true,
       message: "Order placed successfully",
       order: newOrder,
+      isGift: Boolean(isGift),
+      giftClaimToken: generatedGiftToken,
+      giftClaimUrl: generatedGiftToken ? `/gift/${generatedGiftToken}` : null,
     });
   } catch (error: any) {
     console.error("[Orders POST Error]:", error);

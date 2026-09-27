@@ -19,10 +19,14 @@ import {
   ShieldCheck,
   RefreshCw,
   Download,
+  Gift,
+  Copy,
+  MessageCircle,
 } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { SafeImage } from "@/components/SafeImage";
 
 interface OrderItemSummary {
@@ -53,11 +57,21 @@ interface CustomerOrder {
   hasDeliveredKeys: boolean;
   date: string;
   createdAt: string;
+  isGift?: boolean;
+  recipientName?: string | null;
+  recipientEmail?: string | null;
+  recipientPhone?: string | null;
+  giftMessage?: string | null;
+  giftTheme?: string | null;
+  giftClaimToken?: string | null;
+  giftWrapOpened?: boolean;
+  giftOpenedAt?: string | null;
 }
 
 function OrdersContent() {
   const searchParams = useSearchParams();
   const directOrderId = searchParams?.get("orderId") || null;
+  const { showToast } = useToast();
 
   const { formatPrice } = useCurrency();
   const { language } = useLanguage();
@@ -100,6 +114,15 @@ function OrdersContent() {
               rawDeliveryStatus: o.rawDeliveryStatus || "PROCESSING",
               notes: o.notes,
               hasDeliveredKeys: Boolean(o.hasDeliveredKeys),
+              isGift: Boolean(o.isGift),
+              recipientName: o.recipientName || null,
+              recipientEmail: o.recipientEmail || null,
+              recipientPhone: o.recipientPhone || null,
+              giftMessage: o.giftMessage || null,
+              giftTheme: o.giftTheme || "neon",
+              giftClaimToken: o.giftClaimToken || null,
+              giftWrapOpened: Boolean(o.giftWrapOpened),
+              giftOpenedAt: o.giftOpenedAt || null,
               date: o.date || "Recently",
               createdAt: o.createdAt || new Date().toISOString(),
             };
@@ -230,6 +253,12 @@ function OrdersContent() {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {order.isGift && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                        <Gift className="w-3 h-3 text-purple-600" />
+                        <span>{isBn ? `উপহার (${order.recipientName || "বন্ধু"})` : `Gift for ${order.recipientName || "Friend"}`}</span>
+                      </span>
+                    )}
                     <span
                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase ${
                         isDelivered
@@ -276,7 +305,22 @@ function OrdersContent() {
 
                 {/* Actions row */}
                 <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {order.isGift && order.giftClaimToken && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = `${window.location.origin}/gift/${order.giftClaimToken}`;
+                          navigator.clipboard.writeText(url);
+                          showToast(isBn ? "উপহারের লিঙ্ক কপি করা হয়েছে!" : "Gift link copied!", "success");
+                        }}
+                        className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-xl border border-purple-200 inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title={isBn ? "উপহার আনবক্স করার লিঙ্ক কপি করুন" : "Copy gift claim link"}
+                      >
+                        <Gift className="w-3.5 h-3.5 text-purple-600" />
+                        <span>{isBn ? "গিফট লিঙ্ক কপি" : "Copy Gift Link"}</span>
+                      </button>
+                    )}
                     {isDelivered && (
                       <Link
                         href="/dashboard/keys"
@@ -427,6 +471,106 @@ function OrdersContent() {
                 <span className="text-[#FC5C03]">{formatPrice(selectedOrder.totalBDT)}</span>
               </div>
             </div>
+
+            {/* Direct Digital Gifting Details */}
+            {selectedOrder.isGift && (
+              <div className="p-4 bg-gradient-to-br from-purple-50 via-pink-50 to-amber-50 rounded-2xl border border-purple-200 space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-purple-800 font-bold">
+                    <Gift className="w-4 h-4 text-purple-600" />
+                    <span>{isBn ? "ডিজিটাল গিফট বিবরণ" : "Digital Gift Details"}</span>
+                  </div>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      selectedOrder.giftWrapOpened
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                        : "bg-purple-100 text-purple-800 border border-purple-200"
+                    }`}
+                  >
+                    {selectedOrder.giftWrapOpened
+                      ? isBn
+                        ? "🎁 আনবক্স সম্পন্ন হয়েছে"
+                        : "🎁 Unboxed"
+                      : isBn
+                      ? "⏳ আনবক্সের অপেক্ষায়"
+                      : "⏳ Awaiting Unboxing"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 bg-white/70 p-3 rounded-xl border border-purple-100">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">প্রাপকের নাম:</span>
+                    <span className="font-bold text-slate-900">{selectedOrder.recipientName || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">যোগাযোগ:</span>
+                    <span className="font-semibold text-slate-900">
+                      {selectedOrder.recipientEmail || selectedOrder.recipientPhone || "—"}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedOrder.giftMessage && (
+                  <div className="p-2.5 bg-white/90 rounded-xl border border-purple-100 italic text-slate-700">
+                    "{selectedOrder.giftMessage}"
+                  </div>
+                )}
+
+                {selectedOrder.giftClaimToken && (
+                  <div className="space-y-2 pt-1">
+                    <span className="text-[11px] font-bold text-purple-900 block">উপহারের আনবক্স লিঙ্ক:</span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={
+                          typeof window !== "undefined"
+                            ? `${window.location.origin}/gift/${selectedOrder.giftClaimToken}`
+                            : `/gift/${selectedOrder.giftClaimToken}`
+                        }
+                        className="flex-1 bg-white border border-purple-200 rounded-xl px-3 py-1.5 text-xs font-mono text-purple-900 select-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = `${window.location.origin}/gift/${selectedOrder.giftClaimToken}`;
+                          navigator.clipboard.writeText(url);
+                          showToast(isBn ? "গিফট লিঙ্ক কপি হয়েছে!" : "Gift link copied!", "success");
+                        }}
+                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>কপি</span>
+                      </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <a
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                          `🎁 আপনার জন্য একটি বিশেষ উপহার পাঠানো হয়েছে! উপহারটি আনবক্স করুন: ${
+                            typeof window !== "undefined" ? window.location.origin : "https://aihaat.shop"
+                          }/gift/${selectedOrder.giftClaimToken}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>WhatsApp-এ পাঠান</span>
+                      </a>
+                      <Link
+                        href={`/gift/${selectedOrder.giftClaimToken}`}
+                        target="_blank"
+                        className="py-2 px-3 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-xl font-bold flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>আনবক্স প্রিভিউ</span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Delivery & Vault Shortcuts */}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">

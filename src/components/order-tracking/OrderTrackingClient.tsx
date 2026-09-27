@@ -22,6 +22,7 @@ import {
   XCircle,
   ChevronRight,
   Download,
+  Gift,
 } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -65,6 +66,9 @@ interface TrackedOrder {
   deliveryStatus: string;
   rawDeliveryStatus?: string;
   timelineEvents?: TimelineEvent[];
+  isGift?: boolean;
+  recipientName?: string | null;
+  giftClaimToken?: string | null;
   date: string;
   createdAt?: string;
   updatedAt?: string;
@@ -434,6 +438,68 @@ function OrderTrackingContent() {
                       </a>
                     </div>
                   </div>
+
+                  {/* Digital Gift Banner & 1-Click Share */}
+                  {currentOrder.isGift && currentOrder.giftClaimToken && (
+                    <div className="p-4 sm:p-5 bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 border border-purple-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-purple-700 font-bold text-xs uppercase tracking-wider">
+                          <Gift className="w-4 h-4 text-purple-600" />
+                          <span>{isBn ? "ডিজিটাল গিফট অর্ডার" : "Digital Gift Order"}</span>
+                        </div>
+                        <h4 className="text-sm font-black text-slate-900">
+                          {currentOrder.recipientName
+                            ? isBn
+                              ? `${currentOrder.recipientName}-এর জন্য বিশেষ উপহার!`
+                              : `Special Gift for ${currentOrder.recipientName}!`
+                            : isBn
+                            ? "আপনার বন্ধুর জন্য উপহারের লিঙ্ক প্রস্তুত!"
+                            : "Gift Link Ready for Your Friend!"}
+                        </h4>
+                        <p className="text-xs text-slate-600">
+                          {isBn
+                            ? "প্রাপক এই লিঙ্কে ক্লিক করলেই ইন্টারেক্টিভ গিফট বক্স ও কনফেটি অ্যানিমেশনের সাথে প্রোডাক্টটি আনবক্স করতে পারবেন।"
+                            : "Your recipient can unwrap the gift with 3D animation, celebratory confetti, and access credentials."}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `${window.location.origin}/gift/${currentOrder.giftClaimToken}`;
+                            navigator.clipboard.writeText(url);
+                            showToast(isBn ? "গিফট লিঙ্ক কপি করা হয়েছে!" : "Gift link copied!", "success");
+                          }}
+                          className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>{isBn ? "লিঙ্ক কপি" : "Copy Link"}</span>
+                        </button>
+                        <a
+                          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                            `🎁 আপনার জন্য একটি বিশেষ উপহার পাঠানো হয়েছে! উপহারটি আনবক্স করুন: ${
+                              typeof window !== "undefined" ? window.location.origin : "https://aihaat.shop"
+                            }/gift/${currentOrder.giftClaimToken}`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>WhatsApp</span>
+                        </a>
+                        <Link
+                          href={`/gift/${currentOrder.giftClaimToken}`}
+                          target="_blank"
+                          className="px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>{isBn ? "প্রিভিউ" : "Preview"}</span>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Cancelled Banner (If order was cancelled) */}
                   {isCancelled && (

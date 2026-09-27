@@ -21,6 +21,8 @@ import {
   AlertCircle,
   PlusCircle,
   Sparkles,
+  Gift,
+  Copy,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -32,6 +34,7 @@ import { Coupon } from "@/types";
 import { trackBeginCheckout, trackAddPaymentInfo } from "@/lib/analytics/client";
 import { sanitizeItem } from "@/lib/analytics/sanitize";
 import { getAttribution } from "@/lib/analytics/attribution";
+import { DigitalGiftingSection, GiftFormData } from "@/components/checkout/DigitalGiftingSection";
 
 function CheckoutContent() {
   const router = useRouter();
@@ -76,6 +79,18 @@ function CheckoutContent() {
   // Success Modal State
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState("");
+  const [createdGiftToken, setCreatedGiftToken] = useState<string | null>(null);
+
+  // Digital Gifting State
+  const [giftData, setGiftData] = useState<GiftFormData>({
+    isGift: false,
+    recipientName: "",
+    recipientEmail: "",
+    recipientPhone: "",
+    giftMessage: "",
+    giftTheme: "neon",
+    hidePriceOnGift: true,
+  });
 
   // Coupon State
   const [couponCodeInput, setCouponCodeInput] = useState("");
@@ -384,6 +399,11 @@ function CheckoutContent() {
     // Clear previous errors if validation passes
     setFormErrors({});
 
+    if (giftData.isGift && !giftData.recipientName.trim()) {
+      showToast("দয়া করে উপহার প্রাপক বন্ধুর নাম লিখুন।", "error");
+      return;
+    }
+
     if (isSubmitting) return;
     setIsSubmitting(true);
 
@@ -397,6 +417,7 @@ function CheckoutContent() {
     const fullOrderNotes = [
       notes.trim() ? `Note: ${notes.trim()}` : "",
       `Preferred Delivery: ${deliveryMethod} (${effectiveDeliveryHandle})`,
+      giftData.isGift ? `[GIFT ORDER for ${giftData.recipientName.trim()}]` : "",
     ]
       .filter(Boolean)
       .join(" | ");
@@ -434,6 +455,14 @@ function CheckoutContent() {
           renewedFromOrderId: renewOrderId || null,
           renewedFromKeyId: renewKeyId || null,
           renewalContext: isRenewalMode ? `Renewal of Order #${renewOrderId}` : null,
+          // Direct Product Gifting
+          isGift: giftData.isGift,
+          recipientName: giftData.isGift ? giftData.recipientName.trim() : null,
+          recipientEmail: giftData.isGift ? giftData.recipientEmail.trim() : null,
+          recipientPhone: giftData.isGift ? giftData.recipientPhone.trim() : null,
+          giftMessage: giftData.isGift ? giftData.giftMessage.trim() : null,
+          giftTheme: giftData.isGift ? giftData.giftTheme : "neon",
+          hidePriceOnGift: giftData.isGift ? giftData.hidePriceOnGift : true,
           // Marketing Attribution
           ...getAttribution(),
         }),
@@ -444,6 +473,10 @@ function CheckoutContent() {
         showToast(orderData.error || "অর্ডার তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", "error");
         setIsSubmitting(false);
         return;
+      }
+
+      if (orderData.giftClaimToken) {
+        setCreatedGiftToken(orderData.giftClaimToken);
       }
 
       realOrderId = orderData.order?.orderNumber || orderData.order?.id;
@@ -922,6 +955,12 @@ function CheckoutContent() {
                   </div>
                 </div>
 
+                {/* Direct Digital Gifting to a Friend */}
+                <DigitalGiftingSection
+                  formData={giftData}
+                  onChange={(updates) => setGiftData((prev) => ({ ...prev, ...updates }))}
+                />
+
                 {/* 3. Payment Method: Express Wallet vs Automated Gateway */}
                 <div ref={walletSectionRef} className="bg-white rounded-3xl border border-[#E8E8EE] p-5 sm:p-7 shadow-2xs space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-gray-100">
@@ -1296,6 +1335,45 @@ function CheckoutContent() {
             <p className="text-xs text-gray-600 leading-relaxed">
               আপনার অর্ডারটি সিস্টেমে যুক্ত হয়েছে। ৫ থেকে ১৫ মিনিটের মধ্যে আপনার ডিজিটাল ভল্ট ও {deliveryMethod === "EMAIL" ? "ইমেইলে" : deliveryMethod === "WHATSAPP" ? "হোয়াটসঅ্যাপে" : "মেসেঞ্জারে"} ডেলিভারি করা হবে।
             </p>
+
+            {createdGiftToken && (
+              <div className="p-4 bg-orange-50/90 rounded-2xl border border-orange-200 text-left space-y-2.5 animate-in fade-in">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#FC5C03]">
+                  <Gift className="w-4 h-4" />
+                  <span>🎁 বন্ধুকে দেওয়ার জন্য সরাসরি গিফট লিঙ্ক:</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`https://aihaat.shop/gift/${createdGiftToken}`}
+                    className="flex-1 font-mono text-[11px] bg-white p-2 rounded-xl border border-orange-200 text-slate-800 select-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`https://aihaat.shop/gift/${createdGiftToken}`);
+                      showToast("গিফট লিঙ্ক কপি করা হয়েছে!", "success");
+                    }}
+                    className="px-3 py-2 bg-[#FC5C03] hover:bg-orange-600 text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>কপি</span>
+                  </button>
+                </div>
+                <a
+                  href={`https://wa.me/${giftData.recipientPhone ? giftData.recipientPhone.replace(/\D/g, "") : ""}?text=${encodeURIComponent(
+                    `Hey ${giftData.recipientName}! I just sent you a digital gift from AI Haat: https://aihaat.shop/gift/${createdGiftToken} 🎁✨`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>হোয়াটসঅ্যাপে বন্ধুকে লিঙ্কটি পাঠান</span>
+                </a>
+              </div>
+            )}
             <div className="pt-2 flex flex-col gap-2.5">
               <Link
                 href="/dashboard/keys"

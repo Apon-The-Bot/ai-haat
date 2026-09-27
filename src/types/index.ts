@@ -125,6 +125,31 @@ export interface Order {
   credentialsDelivered?: string;
   customerPhone: string;
   customerEmail: string;
+  isGift?: boolean;
+  recipientName?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  giftMessage?: string;
+  giftTheme?: string;
+  hidePriceOnGift?: boolean;
+  giftClaimToken?: string;
+  giftWrapOpened?: boolean;
+  giftOpenedAt?: string;
+}
+
+export type GiftTheme = "neon" | "birthday" | "festive" | "friendship" | "midnight";
+
+export interface GiftDetails {
+  isGift: boolean;
+  recipientName?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  giftMessage?: string;
+  giftTheme?: GiftTheme;
+  hidePriceOnGift?: boolean;
+  giftClaimToken?: string;
+  giftWrapOpened?: boolean;
+  giftOpenedAt?: string;
 }
 
 export interface Partner {
