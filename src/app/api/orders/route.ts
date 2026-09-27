@@ -191,6 +191,9 @@ export async function GET(req: NextRequest) {
               ? "PROCESSING"
               : "ORDER_PLACED",
           timelineEvents: [],
+          isGift: Boolean(o.isGift),
+          recipientName: o.recipientName || null,
+          giftClaimToken: o.giftClaimToken || null,
           date: o.date || "Recently",
           createdAt: o.createdAt || new Date().toISOString(),
           updatedAt: o.updatedAt || new Date().toISOString(),

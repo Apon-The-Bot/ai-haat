@@ -1346,14 +1346,30 @@ function CheckoutContent() {
                   <input
                     type="text"
                     readOnly
-                    value={`https://aihaat.shop/gift/${createdGiftToken}`}
+                    value={`${typeof window !== "undefined" ? window.location.origin : "https://aihaat.shop"}/gift/${createdGiftToken}`}
                     className="flex-1 font-mono text-[11px] bg-white p-2 rounded-xl border border-orange-200 text-slate-800 select-all"
                   />
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText(`https://aihaat.shop/gift/${createdGiftToken}`);
-                      showToast("গিফট লিঙ্ক কপি করা হয়েছে!", "success");
+                      const url = `${window.location.origin}/gift/${createdGiftToken}`;
+                      try {
+                        if (navigator.clipboard?.writeText) {
+                          navigator.clipboard.writeText(url);
+                        } else {
+                          const textarea = document.createElement("textarea");
+                          textarea.value = url;
+                          textarea.style.position = "fixed";
+                          textarea.style.opacity = "0";
+                          document.body.appendChild(textarea);
+                          textarea.select();
+                          document.execCommand("copy");
+                          document.body.removeChild(textarea);
+                        }
+                        showToast("গিফট লিঙ্ক কপি করা হয়েছে!", "success");
+                      } catch {
+                        showToast("গিফট লিঙ্ক কপি করা হয়েছে!", "success");
+                      }
                     }}
                     className="px-3 py-2 bg-[#FC5C03] hover:bg-orange-600 text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
                   >
@@ -1362,8 +1378,12 @@ function CheckoutContent() {
                   </button>
                 </div>
                 <a
-                  href={`https://wa.me/${giftData.recipientPhone ? giftData.recipientPhone.replace(/\D/g, "") : ""}?text=${encodeURIComponent(
-                    `Hey ${giftData.recipientName}! I just sent you a digital gift from AI Haat: https://aihaat.shop/gift/${createdGiftToken} 🎁✨`
+                  href={`https://api.whatsapp.com/send?${
+                    giftData.recipientPhone ? `phone=${giftData.recipientPhone.replace(/\D/g, "")}&` : ""
+                  }text=${encodeURIComponent(
+                    `Hey ${giftData.recipientName || "friend"}! 🎁 আপনার জন্য একটি বিশেষ উপহার পাঠানো হয়েছে: ${
+                      typeof window !== "undefined" ? window.location.origin : "https://aihaat.shop"
+                    }/gift/${createdGiftToken} ✨`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"

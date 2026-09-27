@@ -110,8 +110,9 @@ async function runE2ETest() {
   console.log(`  - Item Price Hidden?: ${publicGift.items[0].priceBDT === undefined ? "YES (Secure)" : "NO"}`);
   console.log(`  - Credentials Revealed: ${publicGift.deliveredCredentials.length} item(s)`);
   if (publicGift.deliveredCredentials.length > 0) {
-    console.log(`    * Email: ${publicGift.deliveredCredentials[0].accountEmail}`);
-    console.log(`    * Password: ${publicGift.deliveredCredentials[0].accountPassword}`);
+    const cred = publicGift.deliveredCredentials[0] as any;
+    console.log(`    * Email: ${cred.accountEmail || 'N/A'}`);
+    console.log(`    * Password: ${cred.accountPassword || 'N/A'}`);
   }
   console.log(`  - Wrap Status: ${publicGift.giftWrapOpened ? "Opened" : "Unopened / Wrapped"}`);
 

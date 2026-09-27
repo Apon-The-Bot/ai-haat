@@ -468,8 +468,23 @@ function OrderTrackingContent() {
                           type="button"
                           onClick={() => {
                             const url = `${window.location.origin}/gift/${currentOrder.giftClaimToken}`;
-                            navigator.clipboard.writeText(url);
-                            showToast(isBn ? "গিফট লিঙ্ক কপি করা হয়েছে!" : "Gift link copied!", "success");
+                            try {
+                              if (navigator.clipboard?.writeText) {
+                                navigator.clipboard.writeText(url);
+                              } else {
+                                const textarea = document.createElement("textarea");
+                                textarea.value = url;
+                                textarea.style.position = "fixed";
+                                textarea.style.opacity = "0";
+                                document.body.appendChild(textarea);
+                                textarea.select();
+                                document.execCommand("copy");
+                                document.body.removeChild(textarea);
+                              }
+                              showToast(isBn ? "গিফট লিঙ্ক কপি করা হয়েছে!" : "Gift link copied!", "success");
+                            } catch {
+                              showToast(isBn ? "গিফট লিঙ্ক কপি করা হয়েছে!" : "Gift link copied!", "success");
+                            }
                           }}
                           className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
                         >

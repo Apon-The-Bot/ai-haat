@@ -86,6 +86,27 @@ function OrdersContent() {
   // Selected Order for Detail Modal
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
 
+  const handleCopyGiftLink = (token: string) => {
+    const url = `${window.location.origin}/gift/${token}`;
+    try {
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(url);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = url;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      showToast(isBn ? "গিফট লিঙ্ক কপি করা হয়েছে!" : "Gift link copied!", "success");
+    } catch {
+      showToast(isBn ? "গিফট লিঙ্ক কপি করা হয়েছে!" : "Gift link copied!", "success");
+    }
+  };
+
   const fetchUserOrders = useCallback(async () => {
     try {
       setLoading(true);
@@ -309,11 +330,7 @@ function OrdersContent() {
                     {order.isGift && order.giftClaimToken && (
                       <button
                         type="button"
-                        onClick={() => {
-                          const url = `${window.location.origin}/gift/${order.giftClaimToken}`;
-                          navigator.clipboard.writeText(url);
-                          showToast(isBn ? "উপহারের লিঙ্ক কপি করা হয়েছে!" : "Gift link copied!", "success");
-                        }}
+                        onClick={() => handleCopyGiftLink(order.giftClaimToken!)}
                         className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-xl border border-purple-200 inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                         title={isBn ? "উপহার আনবক্স করার লিঙ্ক কপি করুন" : "Copy gift claim link"}
                       >
@@ -532,11 +549,7 @@ function OrdersContent() {
                       />
                       <button
                         type="button"
-                        onClick={() => {
-                          const url = `${window.location.origin}/gift/${selectedOrder.giftClaimToken}`;
-                          navigator.clipboard.writeText(url);
-                          showToast(isBn ? "গিফট লিঙ্ক কপি হয়েছে!" : "Gift link copied!", "success");
-                        }}
+                        onClick={() => handleCopyGiftLink(selectedOrder.giftClaimToken!)}
                         className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
                       >
                         <Copy className="w-3.5 h-3.5" />

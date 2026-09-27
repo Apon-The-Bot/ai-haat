@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import confetti from "canvas-confetti";
 import {
   Gift,
   Sparkles,
@@ -21,9 +20,11 @@ import {
   ArrowRight,
   Bookmark,
   Share2,
+  RefreshCw,
 } from "lucide-react";
-import { GIFT_THEMES, GiftThemeConfig } from "@/lib/gifting/product-gifting";
+import { GIFT_THEMES, GiftThemeConfig } from "@/lib/gifting/gift-themes";
 import { GiftTheme } from "@/types";
+import { SafeImage } from "@/components/SafeImage";
 
 interface DeliveredCredential {
   id: string;
@@ -52,6 +53,7 @@ interface GiftItem {
 export interface GiftClaimData {
   orderNumber: string;
   senderName: string;
+  senderPhone?: string | null;
   recipientName: string;
   recipientEmail?: string | null;
   recipientPhone?: string | null;
@@ -77,35 +79,73 @@ export function GiftClaimClient({ initialGift, token }: GiftClaimClientProps) {
   const [gift, setGift] = useState<GiftClaimData>(initialGift);
   const [isUnwrapped, setIsUnwrapped] = useState<boolean>(initialGift.giftWrapOpened);
   const [isOpening, setIsOpening] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const themeConfig: GiftThemeConfig = GIFT_THEMES[gift.giftTheme] || GIFT_THEMES.neon;
 
-  const triggerConfettiExplosion = () => {
-    // 1. Center blast
-    confetti({
-      particleCount: 80,
-      spread: 90,
-      origin: { y: 0.6 },
-      colors: ["#FC5C03", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6", "#EC4899"],
-    });
+  // Poll for delivery if still preparing/processing
+  const refreshGiftStatus = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await fetch(`/api/gift/claim/${token}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.gift) {
+          setGift(data.gift);
+          if (data.gift.giftWrapOpened) {
+            setIsUnwrapped(true);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to refresh gift:", e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [token]);
 
-    // 2. Side cannons
-    setTimeout(() => {
+  useEffect(() => {
+    if (gift.isDelivered) return;
+
+    const interval = setInterval(() => {
+      refreshGiftStatus();
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [gift.isDelivered, refreshGiftStatus]);
+
+  const triggerConfettiExplosion = async () => {
+    if (typeof window === "undefined") return;
+    try {
+      const confetti = (await import("canvas-confetti")).default;
+      // 1. Center blast
       confetti({
-        particleCount: 50,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
+        particleCount: 80,
+        spread: 90,
+        origin: { y: 0.6 },
+        colors: ["#FC5C03", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6", "#EC4899"],
       });
-      confetti({
-        particleCount: 50,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-      });
-    }, 250);
+
+      // 2. Side cannons
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+        });
+      }, 250);
+    } catch (e) {
+      console.warn("Confetti effect failed:", e);
+    }
   };
 
   const handleUnwrap = async () => {
@@ -129,7 +169,23 @@ export function GiftClaimClient({ initialGift, token }: GiftClaimClientProps) {
 
   const copyToClipboard = (text: string, keyId: string) => {
     if (!text) return;
-    navigator.clipboard.writeText(text);
+    try {
+      if (navigator?.clipboard?.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+    } catch {
+      // fallback
+    }
     setCopiedKey(keyId);
     setTimeout(() => setCopiedKey(null), 2500);
   };
@@ -138,9 +194,14 @@ export function GiftClaimClient({ initialGift, token }: GiftClaimClientProps) {
     setShowPassword((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const thankYouWhatsAppUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Hey ${gift.senderName}! I just unwrapped your digital gift from AI Haat (${gift.items[0]?.productName || "Digital Product"}). Thank you so much! ❤️🎁`
-  )}`;
+  const senderCleanPhone = gift.senderPhone ? gift.senderPhone.replace(/\D/g, "") : "";
+  const thankYouWhatsAppUrl = senderCleanPhone
+    ? `https://api.whatsapp.com/send?phone=${senderCleanPhone}&text=${encodeURIComponent(
+        `Hey ${gift.senderName}! I just unwrapped your digital gift from AI Haat (${gift.items[0]?.productName || "Digital Product"}). Thank you so much! ❤️🎁`
+      )}`
+    : `https://api.whatsapp.com/send?text=${encodeURIComponent(
+        `Hey ${gift.senderName}! I just unwrapped your digital gift from AI Haat (${gift.items[0]?.productName || "Digital Product"}). Thank you so much! ❤️🎁`
+      )}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0] py-8 sm:py-14 px-4 sm:px-6 flex flex-col items-center justify-center relative overflow-hidden">
@@ -335,12 +396,15 @@ export function GiftClaimClient({ initialGift, token }: GiftClaimClientProps) {
                       className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
                           {item.image ? (
-                            <img
+                            <SafeImage
                               src={item.image}
+                              fallbackSrc="/images/placeholders/aihaat-placeholder.svg"
                               alt={item.productName}
-                              className="w-full h-full object-contain"
+                              aspectRatio="1/1"
+                              objectFit="contain"
+                              className="w-full h-full"
                             />
                           ) : (
                             <Gift className="w-6 h-6 text-[#FC5C03]" />
@@ -544,6 +608,15 @@ export function GiftClaimClient({ initialGift, token }: GiftClaimClientProps) {
                       <p className="text-[11px] text-amber-700 leading-relaxed max-w-sm mx-auto">
                         আপনার উপহারের ডিজিটাল অ্যাক্সেস প্রস্তুত হচ্ছে। কিছুক্ষণের মধ্যে পেজটি অটো রিফ্রেশ হবে এবং লাইসেন্স কী শো করবে।
                       </p>
+                      <button
+                        type="button"
+                        onClick={refreshGiftStatus}
+                        disabled={isRefreshing}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-xl text-xs font-bold transition-colors cursor-pointer mt-1"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+                        <span>{isRefreshing ? "যাচাই করা হচ্ছে..." : "এখনই রিফ্রেশ করুন"}</span>
+                      </button>
                     </div>
                   )}
                 </div>

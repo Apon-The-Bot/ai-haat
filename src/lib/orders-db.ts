@@ -29,6 +29,16 @@ export interface StoredOrder {
   downloadUrl?: string | null;
   cancelReason?: string | null;
   notes?: string;
+  isGift?: boolean;
+  recipientName?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  giftMessage?: string;
+  giftTheme?: string;
+  hidePriceOnGift?: boolean;
+  giftClaimToken?: string;
+  giftWrapOpened?: boolean;
+  giftOpenedAt?: string;
   date: string;
   createdAt: string;
   updatedAt: string;

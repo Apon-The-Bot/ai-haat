@@ -318,13 +318,18 @@ export function QuickCheckoutModal() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             orderId: createdId,
+            amount: totalBDT,
+            customerName: cleanName,
+            customerEmail: cleanEmail,
+            customerPhone: cleanPhone,
             paymentMethod: "gateway",
           }),
         });
 
         const gatewayData = await gatewayRes.json();
-        if (gatewayRes.ok && gatewayData.paymentUrl) {
-          window.location.href = gatewayData.paymentUrl;
+        const paymentUrl = gatewayData.pp_url || gatewayData.url || gatewayData.paymentUrl;
+        if (gatewayRes.ok && paymentUrl) {
+          window.location.href = paymentUrl;
         } else {
           // Fallback to success page
           router.push(`/checkout/success?orderId=${encodeURIComponent(createdId)}`);

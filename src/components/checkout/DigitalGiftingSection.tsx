@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Gift, Sparkles, Heart, EyeOff, Check, PartyPopper, User, Mail, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GIFT_THEMES, QUICK_GREETINGS, GiftThemeConfig } from "@/lib/gifting/product-gifting";
+import { GIFT_THEMES, QUICK_GREETINGS, GiftThemeConfig } from "@/lib/gifting/gift-themes";
 import { GiftTheme } from "@/types";
 
 export interface GiftFormData {
@@ -27,10 +27,7 @@ export function DigitalGiftingSection({
   onChange,
   compact = false,
 }: DigitalGiftingSectionProps) {
-  const [isOpen, setIsOpen] = useState<boolean>(formData.isGift);
-
   const handleToggle = (checked: boolean) => {
-    setIsOpen(checked);
     onChange({ isGift: checked });
   };
 
@@ -74,21 +71,26 @@ export function DigitalGiftingSection({
           </div>
         </div>
 
-        {/* Custom Toggle Switch */}
-        <label
-          htmlFor="gift-mode-toggle"
-          onClick={(e) => e.stopPropagation()}
-          className="relative inline-flex items-center cursor-pointer shrink-0 ml-2"
+        {/* Custom Accessible Toggle Switch */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={formData.isGift}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleToggle(!formData.isGift);
+          }}
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+            formData.isGift ? "bg-[#FC5C03]" : "bg-slate-200"
+          }`}
         >
-          <input
-            id="gift-mode-toggle"
-            type="checkbox"
-            checked={formData.isGift}
-            onChange={(e) => handleToggle(e.target.checked)}
-            className="sr-only peer"
+          <span
+            aria-hidden="true"
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+              formData.isGift ? "translate-x-5" : "translate-x-0"
+            }`}
           />
-          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FC5C03]"></div>
-        </label>
+        </button>
       </div>
 
       {/* Expanded Gift Form Details */}
@@ -244,16 +246,22 @@ export function DigitalGiftingSection({
                   </div>
                 </div>
 
-                <label htmlFor="hide-price-toggle" className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    id="hide-price-toggle"
-                    type="checkbox"
-                    checked={formData.hidePriceOnGift}
-                    onChange={(e) => onChange({ hidePriceOnGift: e.target.checked })}
-                    className="sr-only peer"
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={formData.hidePriceOnGift}
+                  onClick={() => onChange({ hidePriceOnGift: !formData.hidePriceOnGift })}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    formData.hidePriceOnGift ? "bg-emerald-600" : "bg-slate-200"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      formData.hidePriceOnGift ? "translate-x-4" : "translate-x-0"
+                    }`}
                   />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                </label>
+                </button>
               </div>
 
             </div>
