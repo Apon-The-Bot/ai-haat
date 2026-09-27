@@ -67,12 +67,8 @@ export function Header() {
     { name: "HOME", href: "/" },
     { name: "SHOP", href: "/shop" },
     { name: "🎁 GIVE ৳৫০, GET ৳৫০", href: "/dashboard/referrals", highlight: true },
-    { name: "WALLET", href: "/wallet" },
-    { name: "PROOFS", href: "/proofs" },
-    { name: "BLOG", href: "/blog" },
     { name: "ORDER TRACKING", href: "/order-tracking" },
-    { name: "PRODUCT REQUEST", href: "/product-request" },
-    { name: "ABOUT US", href: "/about" },
+    { name: "PROOFS", href: "/proofs" },
   ];
 
   const filteredSearchResults = searchQuery.trim()

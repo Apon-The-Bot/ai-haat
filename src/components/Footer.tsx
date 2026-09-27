@@ -126,8 +126,18 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/blog" className="hover:text-[#FC5C03] transition-colors">
+                  ব্লগ ও গাইডলাইন (Blog)
+                </Link>
+              </li>
+              <li>
                 <Link href="/product-request" className="hover:text-[#FC5C03] transition-colors">
                   কাস্টম প্রোডাক্ট রিকোয়েস্ট
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-[#FC5C03] transition-colors">
+                  আমাদের সম্পর্কে (About Us)
                 </Link>
               </li>
             </ul>
