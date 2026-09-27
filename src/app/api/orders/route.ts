@@ -711,6 +711,9 @@ export async function POST(req: NextRequest) {
         const match = cookieHeader.match(/aihaat_ref=([^;]+)/);
         if (match) refCode = decodeURIComponent(match[1]);
       }
+      if (!refCode && quote.couponCode && (quote.couponCode.startsWith("REF-") || quote.couponCode.startsWith("AH-"))) {
+        refCode = quote.couponCode;
+      }
 
       if (refCode) {
         const { attributeOrderToAffiliate } = await import("@/lib/commerce/affiliates");

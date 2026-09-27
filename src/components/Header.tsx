@@ -66,6 +66,7 @@ export function Header() {
   const navLinks = [
     { name: "HOME", href: "/" },
     { name: "SHOP", href: "/shop" },
+    { name: "🎁 GIVE ৳৫০, GET ৳৫০", href: "/dashboard/referrals", highlight: true },
     { name: "WALLET", href: "/wallet" },
     { name: "PROOFS", href: "/proofs" },
     { name: "BLOG", href: "/blog" },
@@ -323,6 +324,8 @@ export function Header() {
                   className={`px-3.5 py-1 text-xs font-semibold uppercase tracking-wider rounded-full transition-all whitespace-nowrap ${
                     isActive
                       ? "bg-[#FFF2E8] text-[#FC5C03] font-bold shadow-2xs"
+                      : (link as any).highlight
+                      ? "bg-gradient-to-r from-amber-50 to-orange-50 text-[#FC5C03] font-bold border border-orange-200/80 hover:bg-orange-100 shadow-2xs"
                       : "text-[#7A8190] hover:text-[#FC5C03] hover:bg-[#FFF2E8]"
                   }`}
                 >

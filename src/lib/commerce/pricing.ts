@@ -369,6 +369,31 @@ export async function calculateOrderQuote(
             calculatedDiscount = Math.min(calculatedSubtotal, couponRecord.discountValue);
           }
         }
+      } else if (cleanCouponCode === "SHARE30" || cleanCouponCode === "VIRAL30") {
+        // Feature 2: Built-in Viral Social Share Discount (৳30 Flat off min order ৳100)
+        if (calculatedSubtotal >= 100) {
+          validatedCouponCode = cleanCouponCode;
+          couponDiscountType = "FLAT_BDT";
+          couponDiscountValue = 30;
+          calculatedDiscount = Math.min(calculatedSubtotal, 30);
+        }
+      } else if (cleanCouponCode.startsWith("REF-") || cleanCouponCode.startsWith("AH-")) {
+        // Feature 1: Built-in "Give ৳50, Get ৳50" Referral Coupon (৳50 Flat off min order ৳150)
+        const affProfile = await prisma.affiliateProfile.findFirst({
+          where: {
+            OR: [
+              { referralCode: cleanCouponCode },
+              { customSlug: cleanCouponCode.toLowerCase() },
+            ],
+            status: "ACTIVE",
+          },
+        });
+        if (affProfile && calculatedSubtotal >= 150) {
+          validatedCouponCode = affProfile.referralCode;
+          couponDiscountType = "FLAT_BDT";
+          couponDiscountValue = 50;
+          calculatedDiscount = Math.min(calculatedSubtotal, 50);
+        }
       }
     } catch (couponErr) {
       console.warn("[Pricing Engine] Coupon check DB warning:", couponErr);

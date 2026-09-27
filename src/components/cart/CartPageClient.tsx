@@ -28,6 +28,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { SafeImage } from "@/components/SafeImage";
 import { COUPONS } from "@/data/coupons";
+import { ShareToEarnBanner } from "@/components/viral/ShareToEarnBanner";
 
 export function CartPageClient() {
   const router = useRouter();
@@ -494,6 +495,16 @@ export function CartPageClient() {
                   )}
                 </div>
 
+                {/* Viral Share & Save Hint */}
+                {!appliedCoupon && (
+                  <div className="pt-2">
+                    <ShareToEarnBanner
+                      productName="AI Haat Cart"
+                      productSlug="shop"
+                      onApplyCoupon={(code) => handleApplyCouponCode(code)}
+                    />
+                  </div>
+                )}
               </div>
 
             </div>

@@ -26,6 +26,7 @@ import {
   Share2,
   MoreHorizontal,
   X,
+  Gift,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -113,6 +114,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
 
   // ──── "MORE" MENU ITEMS ────
   const moreItems: MoreMenuItem[] = [
+    { name: "Give ৳50, Get ৳50", nameBn: "রেফার ও রিওয়ার্ডস (৳৫০)", href: "/dashboard/referrals", icon: Gift },
     { name: "Warranty Claims", nameBn: "ওয়ারেন্টি ক্লেইমস", href: "/dashboard/replacements", icon: RotateCcw },
     { name: "Refund Requests", nameBn: "রিফান্ড রিকোয়েস্ট", href: "/dashboard/refunds", icon: Banknote },
     { name: "Notifications", nameBn: "নোটিফিকেশন", href: "/dashboard/notifications", icon: Bell },
@@ -127,6 +129,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
     { name: isBn ? "ওভারভিউ" : "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: isBn ? "আমার অর্ডার" : "My Orders", href: "/dashboard/orders", icon: ShoppingBag },
     { name: isBn ? "ডিজিটাল ভল্ট" : "Digital Vault", href: "/dashboard/keys", icon: KeyRound },
+    { name: isBn ? "রেফার ও রিওয়ার্ডস (৳৫০)" : "Give ৳50, Get ৳50", href: "/dashboard/referrals", icon: Gift },
     { name: isBn ? "ওয়ারেন্টি ক্লেইমস" : "Warranty Claims", href: "/dashboard/replacements", icon: RotateCcw },
     { name: isBn ? "রিফান্ড রিকোয়েস্ট" : "Refund Requests", href: "/dashboard/refunds", icon: Banknote },
     { name: isBn ? "ওয়ালেট" : "Wallet", href: "/dashboard/wallet", icon: Wallet },

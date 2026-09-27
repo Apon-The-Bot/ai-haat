@@ -43,6 +43,7 @@ import { PaymentLogo } from "@/components/PaymentLogo";
 import { FrequentlyBoughtTogether } from "@/components/cro/FrequentlyBoughtTogether";
 import { TieredPricingTable } from "@/components/cro/TieredPricingTable";
 import { FlashSaleBanner } from "@/components/cro/FlashSaleBanner";
+import { ShareToEarnBanner } from "@/components/viral/ShareToEarnBanner";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -723,6 +724,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 </button>
               </div>
             )}
+
+            {/* VIRAL SHARE & UNLOCK DISCOUNT BANNER */}
+            <ShareToEarnBanner
+              productName={product.name}
+              productSlug={product.slug}
+            />
 
             {/* 8. FEATURE HIGHLIGHTS MINI-GRID */}
             <div className="grid grid-cols-2 gap-2 pt-2">
