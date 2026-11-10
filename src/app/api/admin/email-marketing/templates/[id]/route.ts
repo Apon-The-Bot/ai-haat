@@ -32,6 +32,54 @@ export async function GET(
   }
 }
 
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireAdminMfa();
+  if (auth instanceof NextResponse) return auth;
+
+  try {
+    const { id } = await params;
+    const existing = await prisma.emailTemplate.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Template not found" }, { status: 404 });
+    }
+
+    const cloned = await prisma.emailTemplate.create({
+      data: {
+        name: `${existing.name} (Copy)`,
+        description: existing.description,
+        category: existing.category,
+        subject: existing.subject,
+        contentHtml: existing.contentHtml,
+        thumbnail: existing.thumbnail,
+        isDefault: false,
+      },
+    });
+
+    await logAdminAudit({
+      actorId: auth.user.id,
+      actorEmail: auth.user.email,
+      action: "TEMPLATE_DUPLICATE",
+      targetType: "EMAIL_TEMPLATE",
+      targetId: cloned.id,
+      details: { originalId: existing.id, newName: cloned.name },
+    });
+
+    return NextResponse.json({ success: true, template: cloned });
+  } catch (error: any) {
+    console.error("[Template Duplicate Error]:", error);
+    return NextResponse.json(
+      { success: false, error: error?.message || "Failed to duplicate template" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

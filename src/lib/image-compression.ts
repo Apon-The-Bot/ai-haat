@@ -27,6 +27,9 @@ export interface UploadResult {
   originalSizeKB: number;
   compressedSizeKB: number;
   savingsPercent: number;
+  assetId?: string;
+  manifestUrl?: string;
+  manifest?: any;
   error?: string;
 }
 
@@ -127,7 +130,8 @@ export async function compressImageToWebp(
 }
 
 /**
- * Compresses an image file to WebP and directly uploads it to /api/upload.
+ * Uploads an image file to the server-side Sharp optimization pipeline.
+ * The server automatically validates, converts to WebP, and generates multi-resolution quality variants.
  */
 export async function uploadCompressedImage(
   file: File,
@@ -135,12 +139,11 @@ export async function uploadCompressedImage(
   onStatusChange?: (status: string) => void
 ): Promise<UploadResult> {
   try {
-    onStatusChange?.("ইমেজ অপ্টিমাইজ ও WebP তে রূপান্তর হচ্ছে...");
-    const compressed = await compressImageToWebp(file, options);
+    const rawSizeKB = Math.round(file.size / 1024);
+    onStatusChange?.(`সার্ভার অপ্টিমাইজারে আপলোড হচ্ছে (${rawSizeKB} KB)...`);
 
-    onStatusChange?.(`সার্ভারে আপলোড হচ্ছে (${compressed.compressedSizeKB} KB)...`);
     const formData = new FormData();
-    formData.append("file", compressed.file);
+    formData.append("file", file);
 
     const res = await fetch("/api/upload", {
       method: "POST",
@@ -153,15 +156,18 @@ export async function uploadCompressedImage(
       throw new Error(data.error || "Failed to upload image.");
     }
 
-    onStatusChange?.("আপলোড সফল হয়েছে!");
+    onStatusChange?.("সার্ভারে WebP ও রেসপন্সিভ ভেরিয়েন্ট প্রস্তুত!");
 
     return {
       success: true,
       url: data.url,
       fileName: data.fileName,
-      originalSizeKB: compressed.originalSizeKB,
-      compressedSizeKB: compressed.compressedSizeKB,
-      savingsPercent: compressed.savingsPercent,
+      originalSizeKB: data.originalSizeKB || rawSizeKB,
+      compressedSizeKB: data.optimizedSizeKB || rawSizeKB,
+      savingsPercent: data.savingsPercent || 0,
+      assetId: data.assetId,
+      manifestUrl: data.manifestUrl,
+      manifest: data.manifest,
     };
   } catch (err: any) {
     onStatusChange?.("আপলোডে সমস্যা হয়েছে");

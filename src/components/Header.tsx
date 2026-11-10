@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, ShoppingBag, Menu, X, ChevronRight, Zap, User, ShieldCheck } from "lucide-react";
+import { Search, ShoppingBag, Menu, X, ChevronRight, Gift, User, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -66,7 +66,7 @@ export function Header() {
   const navLinks = [
     { name: "HOME", href: "/" },
     { name: "SHOP", href: "/shop" },
-    { name: "🎁 GIVE ৳৫০, GET ৳৫০", href: "/dashboard/referrals", highlight: true },
+    { name: "GIVE ৳৫০, GET ৳৫০", href: "/dashboard/referrals", highlight: true },
     { name: "ORDER TRACKING", href: "/order-tracking" },
     { name: "PROOFS", href: "/proofs" },
   ];
@@ -424,7 +424,7 @@ export function Header() {
                           : "text-[#1A1D26] hover:bg-[#FFF2E8] hover:text-[#FC5C03]"
                       }`}
                     >
-                      <span>{link.name}</span>
+                      <span className="flex min-w-0 items-center gap-2">{link.highlight && <Gift className="h-4 w-4 shrink-0" aria-hidden="true" />}<span className="truncate">{link.name}</span></span>
                       <ChevronRight className="w-4 h-4 text-gray-400" />
                     </Link>
                   );

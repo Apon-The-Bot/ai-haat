@@ -60,15 +60,8 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     "COMMERCE": true,
   });
 
-  const adminEmails = [
-    "mdamanullahsheikhapon@gmail.com",
-    "seratul.alim@gmail.com",
-    "seratulalimkhanrhythm@gmail.com",
-    "admin@aihaat.com",
-  ];
-  const userEmail = user?.email?.toLowerCase().trim() || "";
-  // Authoritative admin verification: strictly check role or admin email
-  const isAdmin = user?.role === "ADMIN" || (userEmail !== "" && adminEmails.includes(userEmail));
+  // Authoritative admin verification: strictly check role assigned by server session
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     setMounted(true);
@@ -338,6 +331,22 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
 
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-[#F8FAFC]">
+          {mfaStatus && !mfaStatus.totpEnabled && pathname !== "/admin/mfa-setup" && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3 text-amber-800">
+                <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+                <div className="text-xs">
+                  <span className="font-bold">2FA Setup Required:</span> Two-factor authentication is mandatory for administrators to modify products, process orders, and configure settings.
+                </div>
+              </div>
+              <Link
+                href="/admin/mfa-setup"
+                className="px-3.5 py-1.5 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-xs font-bold rounded-xl transition-all shadow-xs shrink-0 text-center"
+              >
+                Set Up MFA Now
+              </Link>
+            </div>
+          )}
           {children}
         </main>
 

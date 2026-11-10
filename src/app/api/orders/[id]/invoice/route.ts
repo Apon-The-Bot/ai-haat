@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth-guard";
+import { getServerSession } from "next-auth";
+import { authOptions, isUserAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateOrderInvoicePDF } from "@/lib/invoicing/pdf-generator";
+import { getClientIp, checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { generateInvoiceToken, safeTokenCompare } from "@/lib/invoicing/tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +13,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // 1. Rate limit invoice requests to prevent enumeration attacks (max 20 / minute per IP)
+    const clientIp = getClientIp(req);
+    const rl = checkRateLimit(`invoice:${clientIp}`, 20, 60 * 1000);
+    if (!rl.allowed) {
+      return rateLimitResponse(rl.retryAfterMs, "Too many invoice download attempts. Please wait a minute.");
+    }
+
     const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
@@ -29,20 +39,75 @@ export async function GET(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Ownership check: If order has userId, verify caller is owner or admin
-    if (order.userId) {
-      const auth = await requireAuth();
-      if (auth instanceof NextResponse) {
-        return auth;
+    // 2. Strict Authorization Verification
+    const session = await getServerSession(authOptions);
+    const sessionUser = session?.user as { id?: string; email?: string; role?: string } | undefined;
+    const isAdmin = sessionUser?.role === "ADMIN" || isUserAdmin(sessionUser?.email);
+
+    // If caller is an authenticated Admin, permit access
+    if (isAdmin) {
+      // Authorized admin access
+    } else if (order.userId) {
+      // Authenticated User Order: Caller MUST be signed in as the order owner
+      if (!sessionUser || !sessionUser.id) {
+        return NextResponse.json(
+          { error: "Authentication required to access this invoice." },
+          { status: 401 }
+        );
       }
-      if (auth.user.id !== order.userId && auth.user.role !== "ADMIN") {
-        return NextResponse.json({ error: "Unauthorized access to invoice" }, { status: 403 });
+
+      const isOwner = sessionUser.id === order.userId || 
+        (sessionUser.email && sessionUser.email.toLowerCase().trim() === order.customerEmail.toLowerCase().trim());
+
+      if (!isOwner) {
+        return NextResponse.json(
+          { error: "Unauthorized access: You do not own this order." },
+          { status: 403 }
+        );
       }
     } else {
-      // Guest order verification: verify caller email matches if provided
+      // Guest Order: Require either a signed HMAC token OR matching customer email
       const emailParam = req.nextUrl.searchParams.get("email");
-      if (emailParam && emailParam.toLowerCase().trim() !== order.customerEmail.toLowerCase().trim()) {
-        return NextResponse.json({ error: "Unauthorized access to invoice" }, { status: 403 });
+      const tokenParam = req.nextUrl.searchParams.get("token");
+
+      let isGuestAuthorized = false;
+
+      // Check token match
+      if (tokenParam) {
+        const expectedToken = generateInvoiceToken(order.id, order.customerEmail);
+        const expectedTokenByNumber = generateInvoiceToken(order.orderNumber, order.customerEmail);
+        if (
+          safeTokenCompare(tokenParam, expectedToken) ||
+          safeTokenCompare(tokenParam, expectedTokenByNumber)
+        ) {
+          isGuestAuthorized = true;
+        }
+      }
+
+      // Check email match
+      if (!isGuestAuthorized && emailParam) {
+        const cleanParam = emailParam.toLowerCase().trim();
+        const cleanOrderEmail = order.customerEmail.toLowerCase().trim();
+        if (cleanParam === cleanOrderEmail) {
+          isGuestAuthorized = true;
+        }
+      }
+
+      // If session user email matches guest order email, authorize
+      if (!isGuestAuthorized && sessionUser?.email) {
+        if (sessionUser.email.toLowerCase().trim() === order.customerEmail.toLowerCase().trim()) {
+          isGuestAuthorized = true;
+        }
+      }
+
+      if (!isGuestAuthorized) {
+        return NextResponse.json(
+          {
+            error: "Unauthorized access to guest invoice. Please provide the customer email (?email=) or a valid access token (?token=).",
+            code: "GUEST_VERIFICATION_REQUIRED"
+          },
+          { status: 403 }
+        );
       }
     }
 
@@ -73,7 +138,7 @@ export async function GET(
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="Invoice-${order.orderNumber}.pdf"`,
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "private, no-cache, no-store, must-revalidate",
       },
     });
   } catch (err: any) {

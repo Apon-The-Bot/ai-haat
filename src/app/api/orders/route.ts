@@ -8,6 +8,7 @@ import { logAdminAudit } from "@/lib/audit-logger";
 import { getClientIp, checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { isSameOriginMutation } from "@/lib/security/csrf";
 import { generateGiftToken } from "@/lib/gifting/product-gifting";
+import { checkFeatureEntitlement } from "@/lib/user-control/user-control-service";
 
 export const dynamic = "force-dynamic";
 
@@ -134,7 +135,7 @@ export async function GET(req: NextRequest) {
               timelineEvents: tracked.timelineEvents || [],
               isGift: tracked.isGift || false,
               recipientName: tracked.recipientName || null,
-              giftClaimToken: tracked.giftClaimToken || null,
+              giftClaimToken: null, // AUDIT-002: Never leak claim tokens in public tracking
               date: tracked.createdAt.toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
@@ -193,7 +194,7 @@ export async function GET(req: NextRequest) {
           timelineEvents: [],
           isGift: Boolean(o.isGift),
           recipientName: o.recipientName || null,
-          giftClaimToken: o.giftClaimToken || null,
+          giftClaimToken: null, // AUDIT-002: Never leak claim tokens in public tracking
           date: o.date || "Recently",
           createdAt: o.createdAt || new Date().toISOString(),
           updatedAt: o.updatedAt || new Date().toISOString(),
@@ -523,6 +524,32 @@ export async function POST(req: NextRequest) {
 
     if (!customerName || !customerPhone || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Missing required order fields." }, { status: 400 });
+    }
+
+    // 0. Server-Enforced Feature Entitlement & Account Restriction Check
+    if (customerEmail) {
+      const dbUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: customerEmail.trim() },
+            { email: customerEmail.trim().toLowerCase() },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (dbUser) {
+        const entitlement = await checkFeatureEntitlement(dbUser.id, "SHOPPING_PURCHASE", {
+          action: "PURCHASE",
+        });
+
+        if (!entitlement.allowed) {
+          return NextResponse.json(
+            { error: entitlement.reason || "Order placement is currently restricted for your account." },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     // 1. Server-Authoritative Price & Coupon Recalculation

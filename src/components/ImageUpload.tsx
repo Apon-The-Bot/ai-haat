@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import Image from "next/image";
 import { UploadCloud, X, CheckCircle, Loader2, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import { AdaptiveImage } from "@/components/common/AdaptiveImage";
 
 interface ImageUploadProps {
   value: string;
@@ -16,7 +16,7 @@ export function ImageUpload({
   value,
   onChange,
   label = "Product Image",
-  description = "Upload high quality PNG, JPG, WebP or SVG (Recommended: 800x800px)",
+  description = "Upload high quality PNG, JPG, WebP or GIF (Recommended: 800x800px)",
 }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -27,12 +27,12 @@ export function ImageUpload({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      showToast("দয়া করে শুধুমাত্র ইমেজ ফাইল (PNG, JPG, WebP, SVG) আপলোড করুন।", "error");
+      showToast("দয়া করে শুধুমাত্র ইমেজ ফাইল (PNG, JPG, WebP, GIF) আপলোড করুন।", "error");
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("ইমেজের সাইজ সর্বোচ্চ 5MB হতে পারে।", "error");
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("ইমেজের সাইজ সর্বোচ্চ 10MB হতে পারে।", "error");
       return;
     }
 
@@ -50,7 +50,7 @@ export function ImageUpload({
 
       if (res.ok && data.url) {
         onChange(data.url);
-        showToast("ইমেজ সফলভাবে আপলোড হয়েছে!", "success");
+        showToast("ইমেজ সফলভাবে অপ্টিমাইজ ও আপলোড হয়েছে!", "success");
       } else {
         throw new Error(data.error || "Failed to upload image");
       }
@@ -84,7 +84,7 @@ export function ImageUpload({
         {value && (
           <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
             <CheckCircle className="w-3 h-3" />
-            <span>Uploaded</span>
+            <span>Uploaded & Optimized</span>
           </span>
         )}
       </div>
@@ -92,7 +92,7 @@ export function ImageUpload({
       <input
         type="file"
         ref={fileInputRef}
-        accept="image/png, image/jpeg, image/webp, image/svg+xml"
+        accept="image/png, image/jpeg, image/webp, image/gif"
         className="hidden"
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
@@ -104,7 +104,7 @@ export function ImageUpload({
       {value ? (
         <div className="relative group rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-4 flex items-center gap-4">
           <div className="w-24 h-24 relative rounded-xl border border-gray-200 overflow-hidden bg-white shrink-0 shadow-2xs">
-            <Image
+            <AdaptiveImage
               src={value}
               alt="Uploaded Preview"
               fill
@@ -113,7 +113,7 @@ export function ImageUpload({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-[#1A1D26] truncate">{value.split("/").pop()}</p>
-            <p className="text-[11px] text-gray-500 mt-0.5">Image uploaded and ready to use.</p>
+            <p className="text-[11px] text-gray-500 mt-0.5">Image uploaded and optimized.</p>
             <div className="flex items-center gap-2 mt-3">
               <button
                 type="button"

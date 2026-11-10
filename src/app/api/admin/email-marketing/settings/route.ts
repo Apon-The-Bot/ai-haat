@@ -3,6 +3,7 @@ import { requireAdminMfa } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { logAdminAudit } from "@/lib/audit-logger";
 import { getMaskedEmailMarketingSettings } from "@/lib/email-marketing/provider";
+import { encryptCredential } from "@/lib/mfa/crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -58,9 +59,9 @@ export async function POST(req: NextRequest) {
     if (smtpHost !== undefined) updates.push({ key: "email_marketing_smtp_host", value: String(smtpHost).trim() });
     if (smtpPort !== undefined) updates.push({ key: "email_marketing_smtp_port", value: String(smtpPort) });
     if (smtpUser !== undefined) updates.push({ key: "email_marketing_smtp_user", value: String(smtpUser).trim() });
-    if (smtpPass && smtpPass.trim()) updates.push({ key: "email_marketing_smtp_pass", value: String(smtpPass).trim() });
+    if (smtpPass && smtpPass.trim()) updates.push({ key: "email_marketing_smtp_pass", value: encryptCredential(String(smtpPass).trim()) });
     if (smtpSecure !== undefined) updates.push({ key: "email_marketing_smtp_secure", value: String(Boolean(smtpSecure)) });
-    if (apiKey && apiKey.trim()) updates.push({ key: "email_marketing_api_key", value: String(apiKey).trim() });
+    if (apiKey && apiKey.trim()) updates.push({ key: "email_marketing_api_key", value: encryptCredential(String(apiKey).trim()) });
     if (batchSize !== undefined) updates.push({ key: "email_marketing_batch_size", value: String(batchSize) });
     if (rateLimitDelayMs !== undefined) updates.push({ key: "email_marketing_rate_delay", value: String(rateLimitDelayMs) });
     if (maxRetries !== undefined) updates.push({ key: "email_marketing_max_retries", value: String(maxRetries) });

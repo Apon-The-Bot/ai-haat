@@ -280,6 +280,14 @@ model User {
   coinTransactions CoinTransaction[]
   purchasedGiftCards GiftCard[]        @relation("PurchasedGiftCards")
   redeemedGiftCards  GiftCard[]        @relation("RedeemedGiftCards")
+  restrictions       UserRestriction[]
+  statusRecords      UserStatusRecord[]
+  adminNotes         UserAdminNote[]
+  activityLogs       UserActivityLog[]
+  userTags           UserTag[]
+  deviceInstances    UserDeviceInstance[]
+  technicalObservations UserTechnicalObservation[]
+  consentRecords     UserConsentRecord[]
 
   @@map("users")
 }
@@ -311,6 +319,7 @@ model Session {
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -415,6 +424,7 @@ model Variation {
   tieredPricingRules TieredPricingRule[]
   flashSaleItems     FlashSaleItem[]
 
+  @@index([productId])
   @@map("variations")
 }
 
@@ -550,6 +560,7 @@ model DeliveredKey {
   @@index([orderId])
   @@index([userId])
   @@index([orderItemId])
+  @@index([stockId])
   @@map("delivered_keys")
 }
 
@@ -1123,6 +1134,7 @@ model ProductRequest {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
+  @@index([status, createdAt])
   @@map("product_requests")
 }
 
@@ -1669,4 +1681,174 @@ model GiftCard {
   @@index([redeemedByUserId])
   @@map("gift_cards")
 }
+
+// ═════════════════════════════════════════════════════════════════
+// 👤 USER 360° MANAGEMENT & ADMIN CONTROL MODELS
+// ═════════════════════════════════════════════════════════════════
+
+model UserRestriction {
+  id                 String    @id @default(cuid())
+  userId             String
+  featureKey         String    @db.VarChar(100)
+  isRestricted       Boolean   @default(true)
+  actionRestrictions String?   @db.Text
+  spendingLimitBDT   Decimal?  @db.Decimal(12, 2)
+  dailyLimitBDT      Decimal?  @db.Decimal(12, 2)
+  reason             String    @db.VarChar(500)
+  adminNote          String?   @db.Text
+  expiresAt          DateTime?
+  createdById        String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, featureKey], map: "idx_user_feature")
+  @@index([expiresAt], map: "idx_expires")
+  @@map("user_restrictions")
+}
+
+model UserStatusRecord {
+  id            String    @id @default(cuid())
+  userId        String
+  status        String    @default("ACTIVE") @db.VarChar(50)
+  reason        String    @db.VarChar(500)
+  internalNote  String?   @db.Text
+  durationHours Int?
+  expiresAt     DateTime?
+  adminId       String
+  adminEmail    String
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive], map: "idx_user_status")
+  @@index([status], map: "idx_status")
+  @@map("user_status_records")
+}
+
+model UserAdminNote {
+  id         String   @id @default(cuid())
+  userId     String
+  adminId    String
+  adminEmail String
+  note       String   @db.Text
+  category   String   @default("GENERAL") @db.VarChar(50)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt], map: "idx_user_notes")
+  @@map("user_admin_notes")
+}
+
+model UserActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  eventType   String   @db.VarChar(100)
+  category    String   @db.VarChar(50)
+  description String   @db.VarChar(500)
+  metadata    String?  @db.Text
+  ipAddress   String?  @db.VarChar(45)
+  userAgent   String?  @db.VarChar(255)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt], map: "idx_user_activity")
+  @@index([category, eventType], map: "idx_event_category")
+  @@map("user_activity_logs")
+}
+
+model UserTag {
+  id           String   @id @default(cuid())
+  userId       String
+  tag          String   @db.VarChar(100)
+  assignedById String
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tag], map: "uk_user_tag")
+  @@index([tag], map: "idx_tag")
+  @@map("user_tags")
+}
+
+// ═════════════════════════════════════════════════════════════════
+// 🌐 USER INTELLIGENCE & TECHNICAL ENVIRONMENT MODELS
+// ═════════════════════════════════════════════════════════════════
+
+model UserDeviceInstance {
+  id               String   @id @default(cuid())
+  userId           String
+  deviceInstanceId String   @db.VarChar(191)
+  deviceType       String   @default("unknown") @db.VarChar(50)
+  browserName      String?  @db.VarChar(100)
+  browserVersion   String?  @db.VarChar(100)
+  osName           String?  @db.VarChar(100)
+  osVersion        String?  @db.VarChar(100)
+  screenResolution String?  @db.VarChar(50)
+  viewport         String?  @db.VarChar(50)
+  devicePixelRatio Float?
+  touchSupport     Boolean?
+  colorDepth       Int?
+  cpuCores         Int?
+  deviceMemoryGB   Float?
+  isTrusted        Boolean  @default(false)
+  label            String?  @db.VarChar(255)
+  firstSeenAt      DateTime @default(now())
+  lastSeenAt       DateTime @default(now()) @updatedAt
+  lastIpAddress    String?  @db.VarChar(100)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, deviceInstanceId], map: "idx_user_device")
+  @@index([userId, lastSeenAt], map: "idx_device_last_seen")
+  @@map("user_device_instances")
+}
+
+model UserTechnicalObservation {
+  id               String    @id @default(cuid())
+  userId           String
+  deviceInstanceId String?   @db.VarChar(191)
+  sessionReference String?   @db.VarChar(191)
+  observationType  String    @db.VarChar(100)
+  classification   String    @default("AUTOMATIC") @db.VarChar(50)
+  data             String    @db.Text
+  source           String    @db.VarChar(100)
+  confidence       String    @default("HIGH") @db.VarChar(50)
+  permissionStatus String?   @db.VarChar(50)
+  ipAddress        String?   @db.VarChar(100)
+  capturedAt       DateTime  @default(now())
+  retentionUntil   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, observationType, capturedAt], map: "idx_user_obs_type")
+  @@index([userId, capturedAt], map: "idx_user_obs_time")
+  @@index([retentionUntil], map: "idx_retention")
+  @@map("user_technical_observations")
+}
+
+model UserConsentRecord {
+  id            String    @id @default(cuid())
+  userId        String
+  consentType   String    @db.VarChar(100)
+  status        String    @default("GRANTED") @db.VarChar(50)
+  purpose       String    @db.VarChar(255)
+  ipAddress     String?   @db.VarChar(100)
+  userAgent     String?   @db.VarChar(500)
+  noticeVersion String    @default("2026.1") @db.VarChar(50)
+  grantedAt     DateTime  @default(now())
+  revokedAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consentType], map: "idx_user_consent")
+  @@index([status], map: "idx_consent_status")
+  @@map("user_consent_records")
+}
+
 

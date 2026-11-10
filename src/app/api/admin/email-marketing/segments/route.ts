@@ -87,3 +87,53 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const auth = await requireAdminMfa();
+  if (auth instanceof NextResponse) return auth;
+
+  try {
+    const { searchParams } = new URL(req.url);
+    let id = searchParams.get("id");
+
+    if (!id) {
+      try {
+        const body = await req.json();
+        id = body?.id;
+      } catch {}
+    }
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Segment ID is required." }, { status: 400 });
+    }
+
+    const existing = await prisma.emailSegment.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Segment not found." }, { status: 404 });
+    }
+
+    await prisma.emailSegment.delete({
+      where: { id },
+    });
+
+    await logAdminAudit({
+      actorId: auth.user.id,
+      actorEmail: auth.user.email,
+      action: "SEGMENT_DELETE",
+      targetType: "EMAIL_SEGMENT",
+      targetId: id,
+      details: { name: existing.name },
+    });
+
+    return NextResponse.json({ success: true, message: "Segment deleted successfully." });
+  } catch (error: any) {
+    console.error("[Segments DELETE Error]:", error);
+    return NextResponse.json(
+      { success: false, error: error?.message || "Failed to delete segment" },
+      { status: 500 }
+    );
+  }
+}

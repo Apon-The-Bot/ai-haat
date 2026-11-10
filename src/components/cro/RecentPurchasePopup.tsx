@@ -347,10 +347,6 @@ export function RecentPurchasePopup() {
 
   if (!mounted || !currentNotification) return null;
 
-  const locationText = currentNotification.area
-    ? `${currentNotification.city} (${currentNotification.area})`
-    : currentNotification.city;
-
   return (
     <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-40 pointer-events-none max-w-[calc(100vw-32px)] sm:max-w-[360px]">
       <AnimatePresence mode="wait">
@@ -386,9 +382,6 @@ export function RecentPurchasePopup() {
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-xs font-bold text-gray-900 truncate">
                   {currentNotification.customerName}
-                </span>
-                <span className="text-[11px] text-gray-500 font-medium truncate">
-                  {isBn ? `(${locationText} থেকে)` : `from ${locationText}`}
                 </span>
               </div>
 

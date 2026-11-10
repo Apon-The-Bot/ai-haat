@@ -48,36 +48,48 @@ const dataDir = path.join(process.cwd(), "data");
 const ordersFile = path.join(dataDir, "orders.json");
 
 function ensureDir() {
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-  if (!fs.existsSync(ordersFile)) {
-    fs.writeFileSync(ordersFile, JSON.stringify([], null, 2), "utf-8");
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    if (!fs.existsSync(ordersFile)) {
+      fs.writeFileSync(ordersFile, JSON.stringify([], null, 2), "utf-8");
+    }
+  } catch (err) {
+    console.warn("[Orders DB Directory Warning]:", err);
   }
 }
 
 export function getAllOrders(): StoredOrder[] {
   ensureDir();
   try {
+    if (!fs.existsSync(ordersFile)) return [];
     const raw = fs.readFileSync(ordersFile, "utf-8");
     return JSON.parse(raw) as StoredOrder[];
-  } catch {
+  } catch (err) {
+    console.warn("[Orders DB Read Warning]:", err);
     return [];
   }
 }
 
 export function saveOrder(order: StoredOrder): StoredOrder {
-  ensureDir();
-  const orders = getAllOrders();
-  const index = orders.findIndex((o) => o.id === order.id || o.orderNumber === order.orderNumber);
-  
-  if (index >= 0) {
-    orders[index] = { ...orders[index], ...order, updatedAt: new Date().toISOString() };
-  } else {
-    orders.unshift({ ...order, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-  }
+  try {
+    ensureDir();
+    const orders = getAllOrders();
+    const index = orders.findIndex((o) => o.id === order.id || o.orderNumber === order.orderNumber);
+    
+    if (index >= 0) {
+      orders[index] = { ...orders[index], ...order, updatedAt: new Date().toISOString() };
+    } else {
+      orders.unshift({ ...order, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    }
 
-  fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2), "utf-8");
+    // Keep memory-bounded to prevent disk exhaustion (last 1000 orders)
+    const boundedOrders = orders.slice(0, 1000);
+    fs.writeFileSync(ordersFile, JSON.stringify(boundedOrders, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("[Orders DB Save Warning - Non-blocking]:", err);
+  }
   return order;
 }
 
@@ -97,31 +109,41 @@ export function updateOrderStatus(
   orderId: string,
   updates: Partial<StoredOrder>
 ): StoredOrder | null {
-  ensureDir();
-  const orders = getAllOrders();
-  const index = orders.findIndex((o) => o.id === orderId || o.orderNumber === orderId);
-  
-  if (index === -1) return null;
+  try {
+    ensureDir();
+    const orders = getAllOrders();
+    const index = orders.findIndex((o) => o.id === orderId || o.orderNumber === orderId);
+    
+    if (index === -1) return null;
 
-  orders[index] = {
-    ...orders[index],
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  };
+    orders[index] = {
+      ...orders[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
 
-  fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2), "utf-8");
-  return orders[index];
+    fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2), "utf-8");
+    return orders[index];
+  } catch (err) {
+    console.warn("[Orders DB Update Warning]:", err);
+    return null;
+  }
 }
 
 export function deleteOrder(orderId: string): boolean {
-  ensureDir();
-  let orders = getAllOrders();
-  const initialLen = orders.length;
-  orders = orders.filter((o) => o.id !== orderId && o.orderNumber !== orderId);
+  try {
+    ensureDir();
+    let orders = getAllOrders();
+    const initialLen = orders.length;
+    orders = orders.filter((o) => o.id !== orderId && o.orderNumber !== orderId);
 
-  if (orders.length !== initialLen) {
-    fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2), "utf-8");
-    return true;
+    if (orders.length !== initialLen) {
+      fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2), "utf-8");
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn("[Orders DB Delete Warning]:", err);
+    return false;
   }
-  return false;
 }

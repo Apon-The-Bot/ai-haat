@@ -1,12 +1,13 @@
 import { requireAdminMfa } from '@/lib/auth-guard';
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
-import { validateImageBuffer } from "@/lib/security/upload-validator";
+import { optimizeAndStoreImage, getImageManifest } from "@/lib/media/optimizer";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Administrative Image Upload & Adaptive WebP Processing Pipeline
+ * Validates, optimizes, and generates multi-resolution, multi-quality WebP variants
+ */
 export async function POST(req: NextRequest) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
@@ -19,9 +20,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB limit
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "File size exceeds 20MB limit." }, { status: 400 });
+      return NextResponse.json({ error: "File size exceeds 10MB limit." }, { status: 400 });
     }
 
     if (file.size === 0) {
@@ -31,47 +32,47 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Deep Magic-Byte Validation
-    const magicCheck = validateImageBuffer(buffer);
-    if (!magicCheck.valid) {
-      return NextResponse.json({ error: magicCheck.error || "Invalid file content." }, { status: 400 });
-    }
-
-    // Determine normalized extension from verified format
-    const extensionMap: Record<string, string> = {
-      jpeg: ".jpg",
-      png: ".png",
-      webp: ".webp",
-      gif: ".gif",
-      svg: ".svg",
-    };
-    const safeExt = extensionMap[magicCheck.detectedFormat || ""] || ".webp";
-
-    // Create uploads directory if not exists
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    // Generate cryptographically random unguessable filename (No user-controlled name or path traversal)
-    const randomToken = crypto.randomBytes(16).toString("hex");
-    const uniqueName = `img_${Date.now()}_${randomToken}${safeExt}`;
-    const filePath = path.join(uploadsDir, uniqueName);
-
-    fs.writeFileSync(filePath, buffer);
-
-    const publicUrl = `/uploads/${uniqueName}`;
+    // Execute server-side optimization & multi-variant generation pipeline
+    const optimized = await optimizeAndStoreImage(buffer, file.name);
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
-      fileName: uniqueName,
+      url: optimized.url,
+      fileName: optimized.fileName,
+      assetId: optimized.assetId,
+      width: optimized.width,
+      height: optimized.height,
+      format: optimized.format,
+      originalSizeKB: optimized.originalSizeKB,
+      optimizedSizeKB: optimized.optimizedSizeKB,
+      savingsPercent: optimized.savingsPercent,
+      manifestUrl: optimized.manifestUrl,
+      manifest: optimized.manifest,
     });
   } catch (error: any) {
-    console.error("[Upload API Error]:", error);
+    console.error("[Upload API Optimization Error]:", error);
     return NextResponse.json(
-      { error: error?.message || "Failed to upload file" },
-      { status: 500 }
+      { error: error?.message || "Failed to process and optimize image" },
+      { status: error?.message?.includes("exceed") || error?.message?.includes("Invalid") ? 400 : 500 }
     );
   }
+}
+
+/**
+ * Manifest lookup endpoint for an uploaded asset
+ */
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const assetUrlOrId = searchParams.get("url") || searchParams.get("assetId");
+
+  if (!assetUrlOrId) {
+    return NextResponse.json({ error: "Missing asset url or id parameter" }, { status: 400 });
+  }
+
+  const manifest = await getImageManifest(assetUrlOrId);
+  if (!manifest) {
+    return NextResponse.json({ error: "Asset manifest not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true, manifest });
 }

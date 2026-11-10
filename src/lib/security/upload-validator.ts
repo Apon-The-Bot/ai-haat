@@ -49,11 +49,21 @@ export function validateImageBuffer(buffer: Buffer): { valid: boolean; detectedF
     return { valid: true, detectedFormat: "webp" };
   }
 
-  // 5. SVG
-  const headText = buffer.slice(0, 200).toString("utf-8").toLowerCase();
-  if (headText.includes("<svg") || headText.includes("<?xml") && headText.includes("svg")) {
-    return { valid: true, detectedFormat: "svg" };
+  // 5. SVG / XML / HTML scriptable vectors (Explicitly reject to prevent Stored XSS)
+  const headText = buffer.slice(0, 512).toString("utf-8").toLowerCase();
+  if (
+    headText.includes("<svg") ||
+    headText.includes("<?xml") ||
+    headText.includes("<html") ||
+    headText.includes("<script") ||
+    headText.includes("onload=") ||
+    headText.includes("onerror=")
+  ) {
+    return {
+      valid: false,
+      error: "SVG and scriptable image formats are not allowed for security reasons. Please upload PNG, JPG, or WEBP.",
+    };
   }
 
-  return { valid: false, error: "Invalid file content. Real image format signature required." };
+  return { valid: false, error: "Invalid file content. Real image format signature required (JPEG, PNG, WEBP, GIF)." };
 }

@@ -15,6 +15,7 @@ import {
   Layers,
 } from "lucide-react";
 import { uploadCompressedImage, CompressionOptions } from "@/lib/image-compression";
+import { AdaptiveImage } from "@/components/common/AdaptiveImage";
 
 interface ImageUploadDropzoneProps {
   value?: string;
@@ -139,8 +140,8 @@ export default function ImageUploadDropzone({
             className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#FC5C03]"
           />
           {value && (
-            <div className="w-10 h-10 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex-shrink-0">
-              <img src={value} alt="Preview" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex-shrink-0 relative">
+              <AdaptiveImage src={value} alt="Preview" fill objectFit="cover" imageRole="thumbnail" />
             </div>
           )}
         </div>
@@ -148,7 +149,7 @@ export default function ImageUploadDropzone({
         /* Preview State */
         <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl flex flex-col sm:flex-row items-center gap-4 transition-all">
           <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-white border border-slate-200 shadow-xs flex-shrink-0 group">
-            <img src={value} alt="Preview" className="w-full h-full object-contain p-1" />
+            <AdaptiveImage src={value} alt="Preview" fill objectFit="contain" imageRole="thumbnail" className="p-1" />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <a
                 href={value}

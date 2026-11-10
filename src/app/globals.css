@@ -29,9 +29,46 @@ body {
   color: #1A1D26;
   background: #FFFFFF;
   font-family: 'Plus Jakarta Sans', 'Inter', 'Hind Siliguri', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Keep focus visible across mouse, touch, and keyboard input. */
+:where(a, button, input, select, textarea, summary, [role="button"]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary-orange) 72%, white);
+  outline-offset: 3px;
+}
+
+/* Fluid content containers and intrinsic-size safeguards. */
+.responsive-container {
+  width: min(100% - 1.5rem, 1500px);
+  margin-inline: auto;
+}
+
+.min-content-safe {
+  min-width: 0;
+  max-width: 100%;
+}
+
+html {
+  scroll-padding-top: 5rem;
+}
+
+button,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+@media (min-width: 768px) {
+  .responsive-container {
+    width: min(100% - 2.5rem, 1500px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-container {
+    width: min(100% - 3rem, 1500px);
+  }
 }
 
 /* Safe Area Inset Support */
@@ -198,6 +235,15 @@ body {
 
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .page-enter,
   .mobile-card-interactive,
   .skeleton {

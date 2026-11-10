@@ -153,6 +153,26 @@ function OrderTrackingContent() {
 
   const currentOrder = orders[selectedOrderIndex] || null;
 
+  const handleDownloadInvoice = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!currentOrder) return;
+    const orderId = currentOrder.orderNumber || currentOrder.id;
+    
+    const promptMsg = isBn
+      ? "ইনভয়েস নিরাপত্তার জন্য অর্ডারে ব্যবহৃত সঠিক ইমেইল এড্রেস লিখুন:"
+      : "For invoice security, please enter the email address associated with this order:";
+    const inputEmail = window.prompt(promptMsg);
+    if (!inputEmail || !inputEmail.trim()) {
+      return;
+    }
+    
+    window.open(
+      `/api/orders/${orderId}/invoice?email=${encodeURIComponent(inputEmail.trim())}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
   // Calculate timeline step (1 to 4)
   const getTimelineStep = (order: TrackedOrder) => {
     const rawDelivery = (order.rawDeliveryStatus || order.deliveryStatus || "").toUpperCase();
@@ -426,16 +446,15 @@ function OrderTrackingContent() {
                       </div>
 
                       {/* Download Invoice Button */}
-                      <a
-                        href={`/api/orders/${currentOrder.orderNumber || currentOrder.id}/invoice`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={handleDownloadInvoice}
                         className="px-3.5 py-1.5 bg-slate-900 hover:bg-[#FC5C03] text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-xs cursor-pointer"
                         title="Download PDF Invoice"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>{isBn ? "ইনভয়েস (PDF)" : "Invoice (PDF)"}</span>
-                      </a>
+                      </button>
                     </div>
                   </div>
 

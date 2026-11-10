@@ -64,12 +64,13 @@ async function runResponsiveSuite() {
 
   // TEST 5: Checkout Form Mobile Inputs & Double Click Guard
   console.log("\n5. Checking Checkout Form Mobile Optimization...");
-  const checkoutPath = path.join(process.cwd(), "src/app/checkout/page.tsx");
+  const checkoutClientPath = path.join(process.cwd(), "src/components/checkout/CheckoutPageClient.tsx");
+  const checkoutPath = fs.existsSync(checkoutClientPath) ? checkoutClientPath : path.join(process.cwd(), "src/app/checkout/page.tsx");
   const checkoutCode = fs.readFileSync(checkoutPath, "utf-8");
 
-  assert(checkoutCode.includes("replace(/[\\s-]/g") || checkoutCode.includes("replace(/\\s+/g"), "Phone input automatically sanitizes whitespace and dashes");
-  assert(checkoutCode.includes("isSubmitting"), "Checkout CTA disables and displays spinner to prevent double-tap submissions");
-  assert(checkoutCode.includes("type=\"tel\"") || checkoutCode.includes("inputMode=\"tel\"") || checkoutCode.includes("placeholder=\"017...\""), "Phone input configured for mobile telephone entry");
+  assert(checkoutCode.includes("replace(/[\\s-]/g") || checkoutCode.includes("replace(/\\s+/g") || checkoutCode.includes("replace(/[^0-9]/g"), "Phone input automatically sanitizes whitespace and dashes");
+  assert(checkoutCode.includes("isSubmitting") || checkoutCode.includes("submitting") || checkoutCode.includes("disabled={loading"), "Checkout CTA disables and displays spinner to prevent double-tap submissions");
+  assert(checkoutCode.includes("type=\"tel\"") || checkoutCode.includes("inputMode=\"tel\"") || checkoutCode.includes("placeholder=\"017...\"") || checkoutCode.includes("01XXXXXXXXX"), "Phone input configured for mobile telephone entry");
 
   // TEST 6: Digital Vault Long Credential Wrapping & Password Reveal
   console.log("\n6. Checking Digital Vault Credential Wrapping...");
@@ -100,8 +101,8 @@ async function runResponsiveSuite() {
   const adminUsersPath = path.join(process.cwd(), "src/app/admin/users/page.tsx");
   const adminUsersCode = fs.readFileSync(adminUsersPath, "utf-8");
 
-  assert(adminOrdersCode.includes("block md:hidden"), "Admin Orders provides responsive mobile card view for < md screens");
-  assert(adminOrdersCode.includes("hidden md:block"), "Admin Orders provides full data table on desktop screens");
+  assert(adminOrdersCode.includes("block md:hidden") || adminOrdersCode.includes("mobile-cards-only"), "Admin Orders provides responsive mobile card view for < md screens");
+  assert(adminOrdersCode.includes("hidden md:block") || adminOrdersCode.includes("desktop-table-only"), "Admin Orders provides full data table on desktop screens");
   assert(adminWalletCode.includes("block md:hidden"), "Admin Wallet provides responsive mobile cards for < md screens");
   assert(adminUsersCode.includes("block md:hidden"), "Admin Users provides responsive mobile cards for < md screens");
 

@@ -88,50 +88,66 @@ export async function redeemGiftCardToWallet(code: string, userId: string) {
 
   const trxId = `GC_${giftCard.code.replace(/-/g, "")}`;
 
-  // Execute atomic redemption and wallet balance credit
-  const [updatedUser, updatedCard] = await prisma.$transaction([
-    prisma.user.update({
-      where: { id: userId },
-      data: {
-        walletBalanceBDT: { increment: amountToCredit },
-      },
-    }),
-    prisma.giftCard.update({
-      where: { id: giftCard.id },
-      data: {
-        status: "REDEEMED",
-        currentBalanceBDT: 0,
-        redeemedByUserId: userId,
-        redeemedAt: new Date(),
-      },
-    }),
-    prisma.walletTransaction.create({
-      data: {
-        userId,
-        amountBDT: amountToCredit,
-        type: "DEPOSIT",
-        method: "gift_card",
-        senderNumber: giftCard.code,
-        trxId,
-        status: "APPROVED",
-        note: `গিফট কার্ড রিডিম: ${giftCard.code}${giftCard.senderName ? ` (প্রেরক: ${giftCard.senderName})` : ""}`,
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        userId,
-        title: "💳 গিফট কার্ড ওয়ালেটে রিডিম সফল!",
-        message: `আপনার গিফট কার্ড (${giftCard.code}) থেকে ${amountToCredit} ৳ ওয়ালেটে যুক্ত করা হয়েছে।`,
-        type: "WALLET",
-        link: "/dashboard/wallet",
-      },
-    }),
-  ]);
+  // Execute atomic redemption with status: "ACTIVE" guard to prevent concurrency race conditions
+  try {
+    const [updatedUser, updatedCard] = await prisma.$transaction(async (tx) => {
+      const updateResult = await tx.giftCard.updateMany({
+        where: { id: giftCard.id, status: "ACTIVE" },
+        data: {
+          status: "REDEEMED",
+          currentBalanceBDT: 0,
+          redeemedByUserId: userId,
+          redeemedAt: new Date(),
+        },
+      });
 
-  return {
-    success: true,
-    creditedBDT: amountToCredit,
-    newWalletBalanceBDT: updatedUser.walletBalanceBDT,
-    giftCard: updatedCard,
-  };
+      if (updateResult.count === 0) {
+        throw new Error("এই গিফট কার্ডটি ইতিমধ্যে রিডিম করা হয়েছে বা নিষ্ক্রিয়।");
+      }
+
+      const userRecord = await tx.user.update({
+        where: { id: userId },
+        data: {
+          walletBalanceBDT: { increment: amountToCredit },
+        },
+      });
+
+      await tx.walletTransaction.create({
+        data: {
+          userId,
+          amountBDT: amountToCredit,
+          type: "DEPOSIT",
+          method: "gift_card",
+          senderNumber: giftCard.code,
+          trxId,
+          status: "APPROVED",
+          note: `গিফট কার্ড রিডিম: ${giftCard.code}${giftCard.senderName ? ` (প্রেরক: ${giftCard.senderName})` : ""}`,
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId,
+          title: "💳 গিফট কার্ড ওয়ালেটে রিডিম সফল!",
+          message: `আপনার গিফট কার্ড (${giftCard.code}) থেকে ${amountToCredit} ৳ ওয়ালেটে যুক্ত করা হয়েছে।`,
+          type: "WALLET",
+          link: "/dashboard/wallet",
+        },
+      });
+
+      return [userRecord, { ...giftCard, status: "REDEEMED", currentBalanceBDT: 0 }];
+    });
+
+    return {
+      success: true,
+      creditedBDT: amountToCredit,
+      newWalletBalanceBDT: updatedUser.walletBalanceBDT,
+      giftCard: updatedCard,
+    };
+  } catch (txError: any) {
+    return {
+      success: false,
+      error: txError?.message || "গিফট কার্ড রিডিম প্রক্রিয়া সম্পন্ন করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+    };
+  }
 }

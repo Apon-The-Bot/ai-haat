@@ -72,7 +72,7 @@ export default function EditCampaignPage() {
       try {
         const [prodRes, coupRes] = await Promise.all([
           fetch("/api/products"),
-          fetch("/api/coupons"),
+          fetch("/api/admin/coupons"),
         ]);
         if (prodRes.ok) {
           const d = await prodRes.json();

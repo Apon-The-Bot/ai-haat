@@ -12,6 +12,7 @@ import { sendTelegramMessage } from "@/utils/telegram";
 import { tryAutoFulfillOrder } from "@/lib/commerce/inventory";
 import { isSameOriginMutation } from "@/lib/security/csrf";
 import { getClientIp, checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { checkFeatureEntitlement } from "@/lib/user-control/user-control-service";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,17 @@ export async function POST(req: NextRequest) {
   const auth = await requireAuth();
   if (auth instanceof NextResponse) return auth;
   const { user } = auth;
+
+  // Server-Enforced Feature Entitlement & Account Restriction Check
+  const entitlement = await checkFeatureEntitlement(user.id, "WALLET_PAYMENT", {
+    action: "PURCHASE",
+  });
+  if (!entitlement.allowed) {
+    return NextResponse.json(
+      { error: entitlement.reason || "Wallet payments are currently restricted for your account." },
+      { status: 403 }
+    );
+  }
 
   const clientIp = getClientIp(req);
   const limiter = checkRateLimit(`wallet_purchase:${user.id || clientIp}`, 10, 5 * 60 * 1000);

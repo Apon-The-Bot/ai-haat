@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { authOptions, isUserAdmin } from './auth';
 import { getMfaSessionFromCookieStore } from './mfa/session';
 import { prisma } from './prisma';
+import { getUserEffectiveStatus } from './user-control/user-control-service';
 
 interface AuthResult {
   user: { id: string; email: string; role: string; name?: string };
@@ -55,6 +56,20 @@ export async function requireAuth(): Promise<AuthResult | NextResponse> {
   
   if (isAdmin) {
     user.role = 'ADMIN';
+  } else if (user.id) {
+    // Non-admin account status enforcement (BANNED / SUSPENDED)
+    try {
+      const effectiveStatus = await getUserEffectiveStatus(user.id);
+      if (effectiveStatus.status === "BANNED" || effectiveStatus.status === "SUSPENDED") {
+        return NextResponse.json({
+          error: effectiveStatus.status === "BANNED"
+            ? `Account is permanently suspended: ${effectiveStatus.reason || "Policy violation"}`
+            : `Account is temporarily suspended: ${effectiveStatus.reason || "Administrative review"}`
+        }, { status: 403 });
+      }
+    } catch (e) {
+      // Fail safely without blocking on non-critical status lookup error
+    }
   }
   
   return { user };
@@ -123,6 +138,28 @@ export async function requireAdminMfa(): Promise<MfaAuthResult | NextResponse> {
   const adminCheck = await requireAdmin();
   if (adminCheck instanceof NextResponse) return adminCheck;
   
+  // Check if TOTP is enrolled for this admin account
+  let isMfaEnabled = false;
+  try {
+    const userSecurity = await prisma.userSecurity.findUnique({
+      where: { userId: adminCheck.user.id }
+    });
+    isMfaEnabled = userSecurity?.totpEnabled ?? false;
+  } catch (err) {
+    console.warn("[Admin MFA Status Check Warning]:", err);
+  }
+
+  // AUDIT-005: Fail closed for un-enrolled administrator accounts
+  if (!isMfaEnabled) {
+    return NextResponse.json(
+      {
+        error: "Administrative two-factor authentication setup is required. Please enroll in MFA at /admin/mfa-setup.",
+        code: "MFA_ENROLLMENT_REQUIRED"
+      },
+      { status: 403 }
+    );
+  }
+
   return requireMfaVerified();
 }
 

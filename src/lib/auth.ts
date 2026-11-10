@@ -15,7 +15,12 @@ export function getAdminEmails(): string[] {
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  return Array.from(new Set([...DEFAULT_ADMIN_EMAILS, ...envAdmins]));
+  
+  // AUDIT-007: Prioritize ADMIN_EMAILS environment variable over hardcoded fallbacks
+  if (envAdmins.length > 0) {
+    return envAdmins;
+  }
+  return DEFAULT_ADMIN_EMAILS.map((e) => e.toLowerCase());
 }
 
 export function isUserAdmin(email?: string | null): boolean {

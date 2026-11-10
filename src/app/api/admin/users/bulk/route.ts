@@ -4,6 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAudit } from "@/lib/audit-logger";
 import { sanitizeCsvValue } from "@/lib/analytics/business-intelligence";
 import { Role } from "@prisma/client";
+import {
+  setUserStatus,
+  setFeatureRestriction,
+  setUserTags,
+  AccountStatus,
+} from "@/lib/user-control/user-control-service";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { action, userIds, role } = body;
+    const { action, userIds, role, status, reason, featureKey, tag, tags } = body;
 
     if (!Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json(
@@ -23,13 +29,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Deduplicate IDs
     const targetIds = Array.from(new Set(userIds.filter((id) => typeof id === "string" && id.trim().length > 0)));
     if (targetIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "No valid user IDs provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "No valid user IDs provided" }, { status: 400 });
     }
 
     // 1. UPDATE ROLE ACTION
@@ -42,46 +44,23 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Security check: Promoting users to ADMIN requires recent MFA verification (Step-Up)
       if (role === "ADMIN") {
         const stepUp = await requireRecentMfa(10);
         if (stepUp instanceof NextResponse) return stepUp;
       }
 
-      // If demoting (not ADMIN), check if current admin is in list and would leave no active admins
-      if (role !== "ADMIN" && targetIds.includes(currentAdmin.id)) {
-        const totalAdmins = await prisma.user.count({ where: { role: "ADMIN" } });
-        if (totalAdmins <= 1) {
-          return NextResponse.json(
-            { success: false, error: "Cannot demote yourself as the only active Administrator." },
-            { status: 400 }
-          );
-        }
-      }
-
-      // Fetch target users to log accurate audits
       const existingUsers = await prisma.user.findMany({
         where: { id: { in: targetIds } },
         select: { id: true, email: true, role: true },
       });
 
-      if (existingUsers.length === 0) {
-        return NextResponse.json(
-          { success: false, error: "No matching users found to update" },
-          { status: 404 }
-        );
-      }
-
-      // Filter to users whose roles actually change
       const usersToUpdate = existingUsers.filter((u) => u.role !== role);
-
       if (usersToUpdate.length > 0) {
         await prisma.user.updateMany({
           where: { id: { in: usersToUpdate.map((u) => u.id) } },
           data: { role: role as Role },
         });
 
-        // Audit log each role modification
         for (const u of usersToUpdate) {
           await logAdminAudit({
             actorId: currentAdmin.id,
@@ -89,12 +68,7 @@ export async function POST(req: NextRequest) {
             action: role === "ADMIN" ? "ROLE_PROMOTED" : "ROLE_DEMOTED",
             targetType: "USER",
             targetId: u.id,
-            details: {
-              targetEmail: u.email,
-              previousRole: u.role,
-              newRole: role,
-              bulk: true,
-            },
+            details: { previousRole: u.role, newRole: role, bulk: true },
           });
         }
       }
@@ -106,37 +80,162 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. EXPORT CSV ACTION
+    // 2. BULK SET STATUS (SUSPEND, BAN, RESTORE)
+    if (action === "SET_STATUS") {
+      const validStatuses: AccountStatus[] = ["ACTIVE", "SUSPENDED", "BANNED", "RESTRICTED"];
+      if (!status || !validStatuses.includes(status)) {
+        return NextResponse.json(
+          { success: false, error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` },
+          { status: 400 }
+        );
+      }
+
+      if (status === "BANNED") {
+        const stepUp = await requireRecentMfa(10);
+        if (stepUp instanceof NextResponse) return stepUp;
+      }
+
+      let successCount = 0;
+      for (const id of targetIds) {
+        try {
+          await setUserStatus({
+            userId: id,
+            status,
+            reason: reason || "Bulk administrative status change",
+            adminId: currentAdmin.id,
+            adminEmail: currentAdmin.email,
+          });
+          successCount++;
+        } catch (e) {}
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Successfully set status to ${status} for ${successCount} user(s).`,
+        affectedCount: successCount,
+      });
+    }
+
+    // 3. BULK APPLY FEATURE RESTRICTION
+    if (action === "APPLY_RESTRICTION") {
+      if (!featureKey) {
+        return NextResponse.json({ success: false, error: "featureKey is required" }, { status: 400 });
+      }
+
+      let count = 0;
+      for (const id of targetIds) {
+        try {
+          await setFeatureRestriction({
+            userId: id,
+            featureKey,
+            isRestricted: true,
+            reason: reason || "Bulk administrative restriction",
+            adminId: currentAdmin.id,
+            adminEmail: currentAdmin.email,
+          });
+          count++;
+        } catch (e) {}
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Successfully restricted ${featureKey} for ${count} user(s).`,
+        affectedCount: count,
+      });
+    }
+
+    // 4. BULK REMOVE FEATURE RESTRICTION
+    if (action === "REMOVE_RESTRICTION") {
+      if (!featureKey) {
+        return NextResponse.json({ success: false, error: "featureKey is required" }, { status: 400 });
+      }
+
+      await prisma.userRestriction.updateMany({
+        where: { userId: { in: targetIds }, featureKey },
+        data: { isRestricted: false },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Successfully removed restriction on ${featureKey} for selected user(s).`,
+      });
+    }
+
+    // 5. BULK ASSIGN TAGS
+    if (action === "ASSIGN_TAG") {
+      const tagToAssign = tag || (Array.isArray(tags) ? tags[0] : null);
+      if (!tagToAssign || typeof tagToAssign !== "string") {
+        return NextResponse.json({ success: false, error: "tag string is required" }, { status: 400 });
+      }
+
+      const cleanTag = tagToAssign.trim().toUpperCase();
+      let added = 0;
+      for (const id of targetIds) {
+        try {
+          await prisma.userTag.upsert({
+            where: { userId_tag: { userId: id, tag: cleanTag } },
+            create: { userId: id, tag: cleanTag, assignedById: currentAdmin.id },
+            update: {},
+          });
+          added++;
+        } catch (e) {}
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Successfully assigned tag '${cleanTag}' to ${added} user(s).`,
+        affectedCount: added,
+      });
+    }
+
+    // 6. EXPORT CSV ACTION
     if (action === "EXPORT_CSV") {
       const users = await prisma.user.findMany({
         where: { id: { in: targetIds } },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          walletBalanceBDT: true,
-          role: true,
-          createdAt: true,
-          orders: {
-            select: {
-              id: true,
-            },
-          },
+        include: {
+          orders: { select: { id: true, totalBDT: true, paymentStatus: true } },
+          statusRecords: { where: { isActive: true }, take: 1 },
+          restrictions: { where: { isRestricted: true }, select: { featureKey: true } },
+          userTags: { select: { tag: true } },
         },
         orderBy: { createdAt: "desc" },
       });
 
-      const headers = ["Name", "Email", "Phone", "Wallet Balance (BDT)", "Total Orders", "Role", "Join Date"];
-      const rows = users.map((u) => [
-        sanitizeCsvValue(u.name || "Customer"),
-        sanitizeCsvValue(u.email),
-        sanitizeCsvValue(u.phone || "N/A"),
-        u.walletBalanceBDT || 0,
-        u.orders.length,
-        sanitizeCsvValue(u.role),
-        sanitizeCsvValue(u.createdAt.toISOString().split("T")[0]),
-      ]);
+      const headers = [
+        "User ID",
+        "Name",
+        "Email",
+        "Phone",
+        "Role",
+        "Status",
+        "Wallet Balance (BDT)",
+        "Lifetime Spend (BDT)",
+        "Total Orders",
+        "Tags",
+        "Restrictions Count",
+        "Join Date",
+      ];
+
+      const rows = users.map((u) => {
+        const verifiedSpend = u.orders
+          .filter((o) => o.paymentStatus === "VERIFIED")
+          .reduce((sum, o) => sum + (o.totalBDT || 0), 0);
+
+        return [
+          sanitizeCsvValue(u.id),
+          sanitizeCsvValue(u.name || "Customer"),
+          sanitizeCsvValue(u.email),
+          sanitizeCsvValue(u.phone || "N/A"),
+          sanitizeCsvValue(u.role),
+          sanitizeCsvValue(u.statusRecords[0]?.status || "ACTIVE"),
+          u.walletBalanceBDT || 0,
+          verifiedSpend,
+          u.orders.length,
+          sanitizeCsvValue(u.userTags.map((t) => t.tag).join("; ")),
+          u.restrictions.length,
+          sanitizeCsvValue(u.createdAt.toISOString().split("T")[0]),
+        ];
+      });
 
       const csvData = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
       const filename = `AI_Haat_Customers_${new Date().toISOString().split("T")[0]}.csv`;
@@ -152,14 +251,14 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: false, error: "Invalid action. Supported actions: 'UPDATE_ROLE', 'EXPORT_CSV'" },
+      {
+        success: false,
+        error: "Invalid action. Supported: 'UPDATE_ROLE', 'SET_STATUS', 'APPLY_RESTRICTION', 'REMOVE_RESTRICTION', 'ASSIGN_TAG', 'EXPORT_CSV'",
+      },
       { status: 400 }
     );
   } catch (error: any) {
     console.error("[Admin Users Bulk Action Error]:", error);
-    return NextResponse.json(
-      { success: false, error: error?.message || "Failed to execute bulk action" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error?.message || "Failed to execute bulk action" }, { status: 500 });
   }
 }

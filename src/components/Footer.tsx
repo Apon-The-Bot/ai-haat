@@ -48,7 +48,7 @@ export function Footer() {
             <Logo variant="light" size="lg" showSubtitle={true} />
             
             <p className="text-xs text-gray-400 leading-relaxed max-w-sm">
-              এআই হাট বাংলাদেশের বিশ্বস্ত ডিজিটাল সাবস্ক্রিপশন ও সফটওয়্যার মার্কেটপ্লেস। ৫-১৫ মিনিটে অটোমেটেড ডেলিভারি ও ১০০% রিপ্লেসমেন্ট ওয়ারেন্টি।
+              এআই হাটের ডিজিটাল সাবস্ক্রিপশন ও সফটওয়্যার মার্কেটপ্লেস। ডেলিভারি, অ্যাক্সেস ও প্রতিকার পণ্যের নিজস্ব বিবরণ ও প্রযোজ্য নীতিমালা অনুযায়ী।
             </p>
 
             {/* Contact Info */}
@@ -89,8 +89,8 @@ export function Footer() {
               >
                 <MessageCircle className="w-4 h-4" />
               </a>
-              <a
-                href="mailto:support@aihaat.com"
+                <a
+                  href="mailto:support@aihaat.shop"
                 className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-[#FE7113] text-gray-300 hover:text-white flex items-center justify-center transition-all"
                 aria-label="Email Us"
               >
@@ -99,20 +99,20 @@ export function Footer() {
             </div>
           </div>
 
-          {/* MIDDLE COLUMN: Information Links (3 Cols) */}
-          <div className="md:col-span-3 lg:col-span-3 space-y-3">
+          {/* COLUMN 2: Services & Tools */}
+          <div className="md:col-span-3 lg:col-span-2 space-y-3">
             <h3 className="text-xs font-bold tracking-wider uppercase text-white border-l-2 border-[#FC5C03] pl-2">
-              প্রয়োজনীয় লিংক
+              সার্ভিস ও ফিচার
             </h3>
             <ul className="space-y-2 text-xs text-gray-400">
               <li>
-                <Link href="/privacy" className="hover:text-[#FC5C03] transition-colors">
-                  প্রাইভেসি পলিসি
+                <Link href="/wallet" className="hover:text-[#FC5C03] transition-colors">
+                  ডিজিটাল ওয়ালেট (Wallet)
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-[#FC5C03] transition-colors">
-                  শর্তাবলী (Terms &amp; Conditions)
+                <Link href="/product-request" className="hover:text-[#FC5C03] transition-colors">
+                  কাস্টম প্রোডাক্ট রিকোয়েস্ট
                 </Link>
               </li>
               <li>
@@ -127,17 +127,41 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/blog" className="hover:text-[#FC5C03] transition-colors">
-                  ব্লগ ও গাইডলাইন (Blog)
+                  ব্লগ ও টিউটোরিয়াল (Blog)
                 </Link>
               </li>
-              <li>
-                <Link href="/product-request" className="hover:text-[#FC5C03] transition-colors">
-                  কাস্টম প্রোডাক্ট রিকোয়েস্ট
-                </Link>
-              </li>
+            </ul>
+          </div>
+
+          {/* COLUMN 3: Company & Information */}
+          <div className="md:col-span-3 lg:col-span-2 space-y-3">
+            <h3 className="text-xs font-bold tracking-wider uppercase text-white border-l-2 border-[#FC5C03] pl-2">
+              কোম্পানি ও পলিসি
+            </h3>
+            <ul className="space-y-2 text-xs text-gray-400">
               <li>
                 <Link href="/about" className="hover:text-[#FC5C03] transition-colors">
                   আমাদের সম্পর্কে (About Us)
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-[#FC5C03] transition-colors">
+                  প্রাইভেসি পলিসি
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-[#FC5C03] transition-colors">
+                  শর্তাবলী (Terms &amp; Conditions)
+                </Link>
+              </li>
+              <li>
+                <Link href="/legal" className="hover:text-[#FC5C03] transition-colors">
+                  লিগ্যাল সেন্টার (Legal Center)
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/support" className="hover:text-[#FC5C03] transition-colors">
+                  ২৪/৭ হেল্প ও সাপোর্ট
                 </Link>
               </li>
             </ul>
@@ -179,8 +203,8 @@ export function Footer() {
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div className="text-[11px] text-gray-300">
-                <span className="font-bold text-white block">এআই হাট ভেরিফাইড ডিজিটাল স্টোর</span>
-                <span>এসএসএল এনক্রিপ্টেড ও সম্পূর্ণ নিরাপদ পেমেন্ট</span>
+                <span className="font-bold text-white block">এআই হাট ডিজিটাল স্টোর</span>
+                <span>পেমেন্ট প্রসেসরের নিরাপদ চ্যানেল ব্যবহার করা হয়</span>
               </div>
             </div>
 

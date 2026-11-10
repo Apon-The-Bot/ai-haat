@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminMfa } from "@/lib/auth-guard";
-import { getAdminProducts } from "@/lib/commerce/products";
+import { getAdminProducts, createProduct } from "@/lib/commerce/products";
 
 export const dynamic = "force-dynamic";
 
@@ -31,5 +31,26 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const authResult = await requireAdminMfa();
+    if (authResult instanceof NextResponse) return authResult;
+
+    const body = await req.json();
+    if (!body.name || !body.category) {
+      return NextResponse.json(
+        { success: false, error: "Product name and category are required." },
+        { status: 400 }
+      );
+    }
+
+    const product = await createProduct(body, authResult.user);
+    return NextResponse.json({ success: true, product }, { status: 201 });
+  } catch (error: any) {
+    console.error("[POST /api/admin/products Error]:", error);
+    return NextResponse.json({ success: false, error: error.message || "Failed to create product" }, { status: 500 });
   }
 }

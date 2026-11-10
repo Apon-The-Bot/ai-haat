@@ -94,7 +94,7 @@ registerTest("XSS Defense", "renderSafeMarkdownInline returns React elements wit
 registerTest("Rate Limiting", "getClientIp ignores spoofed X-Forwarded-For when TRUST_PROXY is disabled and returns unknown:direct", () => {
   const oldTrust = process.env.TRUST_PROXY;
   const oldCf = process.env.TRUST_CF_CONNECTING_IP;
-  delete process.env.TRUST_PROXY;
+  process.env.TRUST_PROXY = "false";
   delete process.env.TRUST_CF_CONNECTING_IP;
 
   const fakeReq = {

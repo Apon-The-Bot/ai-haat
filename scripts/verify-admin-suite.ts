@@ -80,10 +80,9 @@ async function runVerification() {
     console.log("\n--- Test 3: Commerce Pricing Engine ---");
     const quoteResult = await calculateOrderQuote([
       {
-        productId: "p-chatgpt-plus",
-        productName: "ChatGPT Plus",
-        variationName: "1 Month",
-        quantity: 2,
+        productId: "p-telegram-premium",
+        variationId: "tg1",
+        quantity: 1,
       },
     ]);
     assert(quoteResult.isValid, "Pricing engine validated order items");
@@ -111,9 +110,8 @@ async function runVerification() {
     const couponQuote = await calculateOrderQuote(
       [
         {
-          productId: "p-chatgpt-plus",
-          productName: "ChatGPT Plus",
-          variationName: "1 Month",
+          productId: "p-telegram-premium",
+          variationId: "tg1",
           quantity: 1,
         },
       ],

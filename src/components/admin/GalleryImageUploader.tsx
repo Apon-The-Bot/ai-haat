@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { uploadCompressedImage } from "@/lib/image-compression";
+import { AdaptiveImage } from "@/components/common/AdaptiveImage";
 
 interface GalleryImageUploaderProps {
   images: string[];
@@ -80,7 +81,7 @@ export default function GalleryImageUploader({
             key={idx}
             className="group relative aspect-square rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 shadow-2xs hover:border-[#FC5C03] transition-all"
           >
-            <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+            <AdaptiveImage src={url} alt={`Gallery ${idx + 1}`} fill objectFit="cover" imageRole="thumbnail" />
 
             <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2">
               <a

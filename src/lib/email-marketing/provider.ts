@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import { prisma } from "@/lib/prisma";
 import { EmailMarketingSettings, ProviderType } from "./types";
+import { decryptCredential } from "@/lib/mfa/crypto";
 
 let cachedTransporter: Transporter | null = null;
 let lastTransporterConfigKey = "";
@@ -56,9 +57,13 @@ export async function getEmailMarketingSettings(): Promise<EmailMarketingSetting
         ? parseInt(process.env.SMTP_PORT, 10)
         : DEFAULT_SETTINGS.smtpPort,
       smtpUser: map["email_marketing_smtp_user"] || process.env.SMTP_USER || DEFAULT_SETTINGS.smtpUser,
-      smtpPass: map["email_marketing_smtp_pass"] || process.env.SMTP_PASS || DEFAULT_SETTINGS.smtpPass,
+      smtpPass: map["email_marketing_smtp_pass"] 
+        ? decryptCredential(map["email_marketing_smtp_pass"]) 
+        : process.env.SMTP_PASS || DEFAULT_SETTINGS.smtpPass,
       smtpSecure: map["email_marketing_smtp_secure"] !== "false",
-      apiKey: map["email_marketing_api_key"] || "",
+      apiKey: map["email_marketing_api_key"]
+        ? decryptCredential(map["email_marketing_api_key"])
+        : process.env.RESEND_API_KEY || "",
       batchSize: map["email_marketing_batch_size"]
         ? parseInt(map["email_marketing_batch_size"], 10)
         : DEFAULT_SETTINGS.batchSize,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 
 interface RateLimitEntry {
   timestamps: number[];
@@ -35,41 +36,66 @@ function isValidIp(ip: string): boolean {
 }
 
 /**
- * Robust Client IP Resolver with explicit Trusted Proxy verification
- * Protects against IP spoofing via crafted X-Forwarded-For headers
+ * Robust Client IP Resolver with reverse proxy verification
+ * Supports Cloudflare, Nginx, Hostinger VPS, and local dev environments.
+ * Prevents collapsing all users into a single rate limit bucket.
  */
 export function getClientIp(req: Request | NextRequest): string {
   const headers = req.headers;
-  const trustProxy = process.env.TRUST_PROXY === "true";
-  const trustCf = process.env.TRUST_CF_CONNECTING_IP === "true" || trustProxy;
+  const trustCf = process.env.TRUST_CF_CONNECTING_IP === "true";
+  const proxyExplicitlyDisabled = process.env.TRUST_PROXY === "false";
 
-  // 1. Cloudflare connecting IP (if trusted proxy mode is enabled)
-  if (trustCf) {
+  // 1. Cloudflare connecting IP (Trusted if TRUST_CF_CONNECTING_IP === "true" or proxy trust is active)
+  if (trustCf || (!proxyExplicitlyDisabled && headers.get("cf-connecting-ip"))) {
     const cfIp = headers.get("cf-connecting-ip");
     if (cfIp && isValidIp(cfIp.trim())) {
       return cfIp.trim();
     }
   }
 
-  // 2. X-Forwarded-For (if trusted proxy mode is enabled)
-  if (trustProxy) {
-    const forwardedFor = headers.get("x-forwarded-for");
-    if (forwardedFor) {
-      const firstIp = forwardedFor.split(",")[0]?.trim();
-      if (firstIp && isValidIp(firstIp)) {
-        return firstIp;
-      }
-    }
+  // If proxy trust is explicitly disabled and not overridden by Cloudflare, untrusted proxy headers return unknown:direct
+  if (proxyExplicitlyDisabled) {
+    return "unknown:direct";
+  }
 
-    const realIp = headers.get("x-real-ip");
-    if (realIp && isValidIp(realIp.trim())) {
-      return realIp.trim();
+  // 2. X-Real-IP (Standard Nginx / reverse proxy header)
+  const realIp = headers.get("x-real-ip");
+  if (realIp && isValidIp(realIp.trim())) {
+    return realIp.trim();
+  }
+
+  // 3. X-Forwarded-For (First client IP in chain)
+  const forwardedFor = headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    const firstIp = forwardedFor.split(",")[0]?.trim();
+    if (firstIp && isValidIp(firstIp)) {
+      return firstIp;
     }
   }
 
-  // When proxy trust is disabled, do not treat client as localhost 127.0.0.1;
-  // return explicit "unknown:direct" to prevent collapsing all clients into one bucket
-  return "unknown:direct";
+  // 4. NextRequest.ip property if attached by Next.js runtime
+  if ("ip" in req && typeof (req as any).ip === "string" && (req as any).ip) {
+    const nextIp = (req as any).ip.trim();
+    if (isValidIp(nextIp)) {
+      return nextIp;
+    }
+  }
+
+  // 5. Development localhost fallback
+  if (process.env.NODE_ENV === "development") {
+    return "127.0.0.1";
+  }
+
+  // 6. Distinct client fingerprint fallback to avoid shared global bucket
+  const userAgent = headers.get("user-agent") || "unknown-ua";
+  const authCookie = headers.get("cookie") || "";
+  const clientHash = crypto
+    .createHash("sha256")
+    .update(`${userAgent}:${authCookie.slice(0, 40)}`)
+    .digest("hex")
+    .slice(0, 16);
+
+  return `client:${clientHash}`;
 }
 
 /**
