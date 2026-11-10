@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import {
@@ -735,37 +737,37 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
 
       {/* 2. Financial & Engagement KPI Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
+        <MetricCard label="Wallet Balance" onClick={() => setActiveTab("wallet")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Wallet Balance</p>
           <p className="text-lg font-black text-gray-900 mt-1">{formatPrice(user.walletBalanceBDT)}</p>
           <p className="text-[10px] text-gray-400 mt-0.5">Credits: {formatPrice(user.lifetimeCreditsBDT)}</p>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
+        <MetricCard label="Lifetime Spend" onClick={() => setActiveTab("orders")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Lifetime Spend</p>
           <p className="text-lg font-black text-[#FC5C03] mt-1">{formatPrice(user.lifetimeSpendBDT)}</p>
           <p className="text-[10px] text-gray-400 mt-0.5">Verified Gross Volume</p>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
+        <MetricCard label="Total Orders" onClick={() => setActiveTab("orders")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total Orders</p>
           <p className="text-lg font-black text-gray-900 mt-1">{user.totalOrdersCount}</p>
           <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">{user.verifiedOrdersCount} Verified</p>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
+        <MetricCard label="Total Refunds" onClick={() => setActiveTab("orders")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total Refunds</p>
           <p className="text-lg font-black text-rose-600 mt-1">{formatPrice(user.totalRefundsBDT)}</p>
           <p className="text-[10px] text-gray-400 mt-0.5">Completed Refunds</p>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
+        <MetricCard label="Loyalty Coins" onClick={() => setActiveTab("loyalty")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Loyalty Coins</p>
           <p className="text-lg font-black text-amber-600 mt-1">{user.coinBalance}</p>
           <p className="text-[10px] text-gray-400 mt-0.5">Lifetime: {user.lifetimeCoinsEarned}</p>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
+        <MetricCard label="Referral Program" onClick={() => setActiveTab("loyalty")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-2xs">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Referral Program</p>
           <p className="text-lg font-black text-purple-700 mt-1">
             {user.affiliate ? formatPrice(user.affiliate.totalEarnedBDT) : "0 BDT"}
@@ -773,7 +775,7 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
           <p className="text-[10px] text-gray-400 mt-0.5">
             {user.affiliate ? `${user.affiliate.totalOrdersCount} Referred` : "Not Enrolled"}
           </p>
-        </div>
+        </MetricCard>
       </div>
 
       {/* 3. Tabbed Navigation */}

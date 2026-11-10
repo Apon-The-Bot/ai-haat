@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Bell,
@@ -63,6 +65,11 @@ export default function AdminNotificationLogsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const showEventStatus = (status: string) => {
+    setSearchQuery("");
+    setStatusFilter(status);
+  };
   const [selectedEvent, setSelectedEvent] = useState<NotificationEventItem | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
 
@@ -155,7 +162,7 @@ export default function AdminNotificationLogsPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Total Events" onClick={() => showEventStatus("ALL")} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
             <Layers className="w-5 h-5" />
           </div>
@@ -163,9 +170,9 @@ export default function AdminNotificationLogsPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Events</p>
             <p className="text-xl font-bold text-gray-900">{kpi.total}</p>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Sent Successfully" onClick={() => showEventStatus("SENT")} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
             <CheckCircle className="w-5 h-5" />
           </div>
@@ -173,9 +180,9 @@ export default function AdminNotificationLogsPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sent Successfully</p>
             <p className="text-xl font-bold text-emerald-600">{kpi.sent}</p>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Pending / In-Flight" onClick={() => showEventStatus("PENDING")} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
             <Clock className="w-5 h-5" />
           </div>
@@ -183,9 +190,9 @@ export default function AdminNotificationLogsPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pending / In-Flight</p>
             <p className="text-xl font-bold text-amber-600">{kpi.pending}</p>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Failed Dispatches" onClick={() => showEventStatus("FAILED")} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-rose-50 text-rose-600 rounded-xl">
             <AlertTriangle className="w-5 h-5" />
           </div>
@@ -193,7 +200,7 @@ export default function AdminNotificationLogsPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Failed Dispatches</p>
             <p className="text-xl font-bold text-rose-600">{kpi.failed}</p>
           </div>
-        </div>
+        </MetricCard>
       </div>
 
       {/* Filters */}

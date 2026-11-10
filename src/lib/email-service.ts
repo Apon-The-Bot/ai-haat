@@ -115,10 +115,7 @@ export function getEmailTransporter(): Transporter | null {
         user,
         pass,
       },
-      tls: {
-        // Hostinger SSL cert resilience
-        rejectUnauthorized: false,
-      },
+      requireTLS: port !== 465,
     });
 
     return cachedTransporter;

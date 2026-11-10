@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -255,29 +257,29 @@ export default function AdminContactsPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+        <MetricCard label="Total Discovered Contacts" onClick={() => setFilterStatus("ALL")} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
           <span className="text-xs font-bold text-slate-400 block">Total Discovered Contacts</span>
           <span className="text-2xl font-black text-slate-900 font-mono block mt-1">{stats.total}</span>
           <span className="text-[11px] text-slate-400 font-medium">Registered users + imported</span>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+        <MetricCard label="Active Marketing Subscribers" onClick={() => setFilterStatus("SUBSCRIBED")} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
           <span className="text-xs font-bold text-slate-400 block">Active Marketing Subscribers</span>
           <span className="text-2xl font-black text-emerald-600 font-mono block mt-1">{stats.subscribed}</span>
           <span className="text-[11px] text-emerald-600 font-bold">Eligible for broadcasts</span>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+        <MetricCard label="Opted-Out / Unsubscribed" onClick={() => setFilterStatus("UNSUBSCRIBED")} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
           <span className="text-xs font-bold text-slate-400 block">Opted-Out / Unsubscribed</span>
           <span className="text-2xl font-black text-amber-600 font-mono block mt-1">{stats.unsubscribed}</span>
           <span className="text-[11px] text-slate-400 font-medium">Respecting preference</span>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+        <MetricCard label="Suppressed / Bounced" onClick={() => setFilterStatus("SUPPRESSED")} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
           <span className="text-xs font-bold text-slate-400 block">Suppressed / Bounced</span>
           <span className="text-2xl font-black text-red-600 font-mono block mt-1">{stats.suppressed}</span>
           <span className="text-[11px] text-red-600 font-medium">Hard blocked by rule</span>
-        </div>
+        </MetricCard>
       </div>
 
       {/* Filters & Search Bar */}

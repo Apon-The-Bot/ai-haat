@@ -8,7 +8,7 @@ export function requestCatalog() {
     .then(async (response) => {
       if (!response.ok) return undefined;
       const data = await response.json();
-      return Array.isArray(data.products) && data.products.length
+      return data.success && Array.isArray(data.products)
         ? (data.products as Product[])
         : undefined;
     })

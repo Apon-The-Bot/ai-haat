@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -296,7 +298,7 @@ export default function BatchExplorerPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Total Batches" href="#batch-filters" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
             <Layers className="w-5 h-5" />
           </div>
@@ -304,9 +306,9 @@ export default function BatchExplorerPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Batches</p>
             <p className="text-xl font-bold text-gray-900">{kpi.totalBatches}</p>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Procurement Value" href="#batch-filters" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
             <DollarSign className="w-5 h-5" />
           </div>
@@ -314,9 +316,9 @@ export default function BatchExplorerPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Procurement Value</p>
             <p className="text-xl font-bold text-gray-900">৳{kpi.totalIngestedValue.toLocaleString()}</p>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Available Stock Value" href="/admin/inventory?status=AVAILABLE" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
             <PackageCheck className="w-5 h-5" />
           </div>
@@ -324,9 +326,9 @@ export default function BatchExplorerPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Available Stock Value</p>
             <p className="text-xl font-bold text-gray-900">৳{kpi.availableStockValue.toLocaleString()}</p>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Delivered Stock Cost" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
             <Clock className="w-5 h-5" />
           </div>
@@ -334,11 +336,11 @@ export default function BatchExplorerPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivered Stock Cost</p>
             <p className="text-xl font-bold text-gray-900">৳{kpi.deliveredStockValue.toLocaleString()}</p>
           </div>
-        </div>
+        </MetricCard>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+      <div id="batch-filters" className="scroll-mt-24 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input

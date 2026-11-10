@@ -4,7 +4,8 @@ import crypto from "crypto";
  * Generates an HMAC-based token for guest order invoice downloads
  */
 export function generateInvoiceToken(orderId: string, email: string): string {
-  const secret = process.env.NEXTAUTH_SECRET || "ai-haat-invoice-signature-secret";
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("Invoice signing is not configured");
   return crypto.createHmac("sha256", secret).update(`${orderId}:${email.toLowerCase().trim()}`).digest("hex");
 }
 

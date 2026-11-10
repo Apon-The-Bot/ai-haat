@@ -4,7 +4,7 @@ import { parseEnv } from "node:util";
 const required = [
   "NODE_ENV", "NEXTAUTH_URL", "NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SITE_URL",
   "DATABASE_URL", "NEXTAUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET",
-  "ADMIN_EMAILS", "MFA_ENCRYPTION_KEY", "EMAIL_OTP_PEPPER",
+  "MFA_ENCRYPTION_KEY", "EMAIL_OTP_PEPPER",
   "MFA_RECOVERY_CODE_PEPPER", "CRON_SECRET", "BACKUP_ENCRYPTION_KEY",
   "SMTP_HOST", "SMTP_USER", "SMTP_PASS", "PIPRAPAY_BASE_URL", "PIPRAPAY_API_KEY",
 ];
@@ -83,9 +83,6 @@ if (env.NEXTAUTH_SECRET && env.NEXTAUTH_SECRET.length < 32) {
 }
 if (env.SMTP_PORT && (!/^\d{1,5}$/.test(env.SMTP_PORT) || Number(env.SMTP_PORT) < 1 || Number(env.SMTP_PORT) > 65535)) {
   errors.push("SMTP_PORT: invalid port");
-}
-if (env.ADMIN_EMAILS && env.ADMIN_EMAILS.split(",").some((email) => !/^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/.test(email.trim()))) {
-  errors.push("ADMIN_EMAILS: expected comma-separated email addresses");
 }
 
 if (errors.length) {

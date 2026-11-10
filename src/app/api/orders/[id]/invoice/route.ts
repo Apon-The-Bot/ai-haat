@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions, isUserAdmin } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateOrderInvoicePDF } from "@/lib/invoicing/pdf-generator";
 import { getClientIp, checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
@@ -42,7 +42,7 @@ export async function GET(
     // 2. Strict Authorization Verification
     const session = await getServerSession(authOptions);
     const sessionUser = session?.user as { id?: string; email?: string; role?: string } | undefined;
-    const isAdmin = sessionUser?.role === "ADMIN" || isUserAdmin(sessionUser?.email);
+    const isAdmin = sessionUser?.role === "ADMIN";
 
     // If caller is an authenticated Admin, permit access
     if (isAdmin) {
@@ -56,8 +56,7 @@ export async function GET(
         );
       }
 
-      const isOwner = sessionUser.id === order.userId || 
-        (sessionUser.email && sessionUser.email.toLowerCase().trim() === order.customerEmail.toLowerCase().trim());
+      const isOwner = sessionUser.id === order.userId;
 
       if (!isOwner) {
         return NextResponse.json(

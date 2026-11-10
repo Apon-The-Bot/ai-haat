@@ -11,7 +11,7 @@
 | # | Severity | Finding / Description | Affected File & Lines | Current Status | Evidence & Verification Note | Action Phase |
 |---|:---:|---|---|:---:|---|:---:|
 | 1 | **P0** | Double Wallet Top-up Race Condition | `src/app/api/payment/webhook/route.ts:128-171`<br>`src/app/api/payment/callback/route.ts:128-175`<br>`prisma/schema.prisma:523` | **VERIFIED** | `WalletTransaction.trxId` is only `@@index([trxId])` without `@unique`. Concurrent webhook + callback execute `findFirst` simultaneously and credit wallet 2x. | Phase 2 |
-| 2 | **P0** | Hardcoded Database Password in Source Code | `src/lib/prisma.ts:10-12` | **VERIFIED** | Plaintext password fragment `Rhythm#Aihaatdb01` hardcoded in `getDatabaseUrl()`. | Phase 2 |
+| 2 | **P0** | Historical database credential exposure | VERIFIED | Credential redacted. Rotate the affected database password and review repository history. | Phase 2 |
 | 3 | **P0** | Cron Auth Bypass when `CRON_SECRET` Unset | `src/app/api/cron/email-queue/route.ts:18-27` | **VERIFIED** | `if (cronSecret && authHeader !== ...)` condition evaluates to false when `CRON_SECRET` is unset, allowing unauthenticated public triggers. | Phase 2 |
 | 4 | **P0** | Supplier Webhook Secret Validation Bypass | `src/lib/commerce/suppliers.ts:26-40` | **VERIFIED** | `if (apiSecret && supplier.apiSecret !== apiSecret)` skips verification when header `x-supplier-secret` is omitted. | Phase 2 |
 | 5 | **P0** | Exposed Google OAuth Client Secret File | Root: `Ai Haat Client ID Secret.json` | **VERIFIED** | Plaintext Google OAuth credentials file exists in project workspace root. | Phase 2 |

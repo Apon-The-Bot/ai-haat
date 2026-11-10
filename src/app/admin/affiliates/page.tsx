@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback } from "react";
 import { 
   RefreshCw, 
@@ -336,7 +338,7 @@ export default function AdminAffiliatesPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Pending Payouts */}
-        <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+        <MetricCard label="Pending Payouts Queue" onClick={() => { setActiveTab("payouts"); setPayoutStatusFilter("REQUESTED"); }} className="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm flex flex-col gap-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <AlertCircle className="w-16 h-16 text-amber-500" />
           </div>
@@ -354,10 +356,10 @@ export default function AdminAffiliatesPage() {
               {summaryData?.pendingPayoutsCount || 0} requests awaiting review
             </div>
           </div>
-        </div>
+        </MetricCard>
 
         {/* Total Paid Out */}
-        <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+        <MetricCard label="Total Commissions Paid" onClick={() => { setActiveTab("payouts"); setPayoutStatusFilter("COMPLETED"); }} className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm flex flex-col gap-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <CheckCircle className="w-16 h-16 text-emerald-500" />
           </div>
@@ -375,10 +377,10 @@ export default function AdminAffiliatesPage() {
               Completed via Wallet / MFS / Bank
             </div>
           </div>
-        </div>
+        </MetricCard>
 
         {/* Total Referred GMV */}
-        <div className="bg-white p-5 rounded-2xl border border-indigo-200 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+        <MetricCard label="Total Referred GMV" onClick={() => setActiveTab("commissions")} className="bg-white p-5 rounded-2xl border border-indigo-200 shadow-sm flex flex-col gap-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <TrendingUp className="w-16 h-16 text-indigo-500" />
           </div>
@@ -396,10 +398,10 @@ export default function AdminAffiliatesPage() {
               Total Order Volume Generated
             </div>
           </div>
-        </div>
+        </MetricCard>
 
         {/* Active Partners */}
-        <div className="bg-white p-5 rounded-2xl border border-purple-200 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+        <MetricCard label="Active Partners" onClick={() => setActiveTab("partners")} className="bg-white p-5 rounded-2xl border border-purple-200 shadow-sm flex flex-col gap-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Users className="w-16 h-16 text-purple-500" />
           </div>
@@ -417,7 +419,7 @@ export default function AdminAffiliatesPage() {
               Across Bronze, Silver, Gold, Custom
             </div>
           </div>
-        </div>
+        </MetricCard>
       </div>
 
       {/* Tabs */}

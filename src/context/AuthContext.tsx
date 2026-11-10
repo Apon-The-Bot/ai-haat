@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const email = user?.email || session?.user?.email;
       if (!email) return;
 
-      const res = await fetch(`/api/auth/me?email=${encodeURIComponent(email)}`, {
+      const res = await fetch("/api/auth/me", {
         cache: "no-store",
       });
       if (res.ok) {

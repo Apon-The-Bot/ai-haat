@@ -140,14 +140,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
     { name: isBn ? "অ্যাফিলিয়েট প্রোগ্রাম" : "Affiliate Program", href: "/dashboard/affiliate", icon: Share2 },
   ];
 
-  const adminEmails = [
-    "mdamanullahsheikhapon@gmail.com",
-    "seratul.alim@gmail.com",
-    "seratulalimkhanrhythm@gmail.com",
-    "admin@aihaat.com",
-  ];
-  const userEmail = user?.email?.toLowerCase().trim() || "";
-  const isAdmin = user?.role === "ADMIN" || (userEmail !== "" && adminEmails.includes(userEmail));
+  const isAdmin = user?.role === "ADMIN";
 
   // Check if a tab is active (matches current path)
   const isTabActive = (tab: BottomNavTab) => {

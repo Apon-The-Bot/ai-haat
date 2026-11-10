@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient({
   datasources: {
-    db: { url: "mysql://u298980084_ai_haat_db:Rhythm%23Aihaatdb01@srv1497.hstgr.io:3306/u298980084_ai_haat?connection_limit=10&pool_timeout=20" }
+    db: { url: process.env.DATABASE_URL }
   }
 });
 
@@ -81,4 +81,4 @@ async function main() {
   console.log("Sample 1:", formatted[0].name, formatted[0].category, formatted[0].minPriceBDT);
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect());
+main().catch(() => { console.error("Database check failed"); process.exitCode = 1; }).finally(() => prisma.$disconnect());

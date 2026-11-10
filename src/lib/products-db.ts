@@ -50,7 +50,7 @@ export async function getAllProducts(includeHidden = false): Promise<Product[]> 
       },
     });
 
-    if (dbProducts && dbProducts.length > 0) {
+    if (dbProducts) {
       return dbProducts.map((p) => {
         let features: string[] = [];
         let categories: string[] = [p.category];
@@ -278,6 +278,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         })),
       };
     }
+    return null;
   } catch (err) {
     console.warn("[Prisma getProductBySlug fallback]:", err);
   }

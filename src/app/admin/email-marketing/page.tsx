@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -163,7 +165,7 @@ export default function EmailMarketingDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         
         {/* KPI 1: Active Subscribers */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Marketing Audience" href="/admin/email-marketing/contacts" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Marketing Audience</span>
             <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#FC5C03] flex items-center justify-center">
@@ -176,10 +178,10 @@ export default function EmailMarketingDashboardPage() {
           <span className="text-[11px] text-slate-400 font-semibold block truncate">
             {stats?.totalContacts || 0} total ({stats?.suppressedCount || 0} suppressed)
           </span>
-        </div>
+        </MetricCard>
 
         {/* KPI 2: Total Emails Sent */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Total Dispatched" href="/admin/email-marketing/logs" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Total Dispatched</span>
             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -192,10 +194,10 @@ export default function EmailMarketingDashboardPage() {
           <span className="text-[11px] text-blue-600 font-semibold block">
             {stats?.totalCampaigns || 0} total campaigns
           </span>
-        </div>
+        </MetricCard>
 
         {/* KPI 3: Delivery Rate */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Delivery Rate" href="/admin/email-marketing/logs" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Delivery Rate</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -208,10 +210,10 @@ export default function EmailMarketingDashboardPage() {
           <span className="text-[11px] text-slate-400 font-semibold block">
             {stats?.totalDelivered || 0} delivered
           </span>
-        </div>
+        </MetricCard>
 
         {/* KPI 4: Open Rate */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Open Rate" href="/admin/email-marketing/campaigns" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Open Rate</span>
             <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
@@ -224,10 +226,10 @@ export default function EmailMarketingDashboardPage() {
           <span className="text-[11px] text-slate-400 font-semibold block">
             {stats?.totalOpened || 0} unique opens
           </span>
-        </div>
+        </MetricCard>
 
         {/* KPI 5: Click-Through Rate */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Click Rate" href="/admin/email-marketing/campaigns" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Click Rate</span>
             <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -240,10 +242,10 @@ export default function EmailMarketingDashboardPage() {
           <span className="text-[11px] text-slate-400 font-semibold block">
             {stats?.totalClicked || 0} link clicks
           </span>
-        </div>
+        </MetricCard>
 
         {/* KPI 6: Scheduled & In-Flight */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Scheduled / Drafts" href="/admin/email-marketing/scheduled" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Scheduled / Drafts</span>
             <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
@@ -253,10 +255,10 @@ export default function EmailMarketingDashboardPage() {
           <span className="text-2xl font-black text-slate-900 block">
             {stats?.scheduledCampaigns || 0}
           </span>
-          <Link href="/admin/email-marketing/scheduled" className="text-[11px] text-[#FC5C03] font-bold hover:underline block">
+          <span className="text-[11px] text-[#FC5C03] font-bold hover:underline block">
             {stats?.draftCampaigns || 0} drafts in queue →
-          </Link>
-        </div>
+          </span>
+        </MetricCard>
 
       </div>
 

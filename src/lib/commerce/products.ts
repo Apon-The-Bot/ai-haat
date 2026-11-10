@@ -128,6 +128,10 @@ export async function getPublicProducts(filters: {
   if (status && status !== "ALL") {
     where.status = status;
   }
+  if (!status || status === "ACTIVE") {
+    where.status = "ACTIVE";
+    where.visibility = "PUBLIC";
+  }
 
   if (category && category !== "ALL") {
     where.category = category;
@@ -227,6 +231,7 @@ export async function getPublicProducts(filters: {
       id: p.id,
       name: p.name,
       slug: p.slug,
+      ...(status === "ALL" ? { status: p.status, visibility: p.visibility } : {}),
       category: p.category,
       categories: categoriesList,
       image: p.image,
@@ -305,7 +310,7 @@ export async function getPublicProductBySlug(slug: string, previewToken?: boolea
     return null;
   }
 
-  if (product.status === "DRAFT" && !previewToken) {
+  if (product.status !== "ACTIVE" && !previewToken) {
     return null;
   }
 

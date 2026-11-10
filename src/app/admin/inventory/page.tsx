@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -107,7 +109,7 @@ function AdminInventoryContent() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState(searchParams?.get("status") === "AVAILABLE" ? "AVAILABLE" : "ALL");
   const [productFilter, setProductFilter] = useState(productParam || "ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -682,8 +684,14 @@ function AdminInventoryContent() {
           {/* Stock KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {(Array.isArray(summary) ? summary : []).slice(0, 4).map((s, idx) => (
-              <div
-                key={idx}
+              <MetricCard
+                key={`${s.productId}:${s.variationId ?? idx}`}
+                label={`View stock for ${s.productName} — ${s.variationName}`}
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusFilter("ALL");
+                  setProductFilter(s.productId);
+                }}
                 className={`p-5 rounded-2xl border shadow-xs transition-all ${
                   s.lowStockAlert
                     ? "bg-amber-50/70 border-amber-300"
@@ -710,7 +718,7 @@ function AdminInventoryContent() {
                     {s.deliveredCount} Delivered
                   </span>
                 </div>
-              </div>
+              </MetricCard>
             ))}
           </div>
 

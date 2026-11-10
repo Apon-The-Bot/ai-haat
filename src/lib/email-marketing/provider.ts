@@ -142,9 +142,7 @@ function getMarketingTransporter(settings: EmailMarketingSettings): Transporter 
       port,
       secure: isSecure,
       auth: { user, pass },
-      tls: {
-        rejectUnauthorized: false,
-      },
+      requireTLS: !isSecure,
     });
     lastTransporterConfigKey = configKey;
     return cachedTransporter;

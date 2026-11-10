@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Tag,
@@ -24,6 +26,7 @@ export default function AdminCouponsPage() {
   const [dbProducts, setDbProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [metricFilter, setMetricFilter] = useState<"all" | "active" | "redeemed">("all");
   const [deletingCouponId, setDeletingCouponId] = useState<string | null>(null);
 
   // Modal states (Create & Edit)
@@ -242,8 +245,9 @@ export default function AdminCouponsPage() {
 
   const filteredCoupons = coupons.filter(
     (c) =>
-      c.code.toLowerCase().includes(search.toLowerCase()) ||
-      c.id.toLowerCase().includes(search.toLowerCase())
+      (metricFilter === "all" || (metricFilter === "active" ? c.isActive : (c.usedCount ?? 0) > 0)) &&
+      (c.code.toLowerCase().includes(search.toLowerCase()) ||
+        c.id.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -285,22 +289,22 @@ export default function AdminCouponsPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-2xs">
+        <MetricCard label="Total Campaigns" active={metricFilter === "all"} onClick={() => { setSearch(""); setMetricFilter("all"); }} className="bg-white border border-slate-200 p-5 rounded-2xl shadow-2xs">
           <span className="text-xs text-slate-500 font-bold block">Total Campaigns</span>
           <span className="text-2xl font-black text-slate-900 mt-1">{coupons.length}</span>
-        </div>
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-2xs">
+        </MetricCard>
+        <MetricCard label="Active Coupons" active={metricFilter === "active"} onClick={() => { setSearch(""); setMetricFilter("active"); }} className="bg-white border border-slate-200 p-5 rounded-2xl shadow-2xs">
           <span className="text-xs text-slate-500 font-bold block">Active Coupons</span>
           <span className="text-2xl font-black text-emerald-600 mt-1">
             {coupons.filter((c) => c.isActive).length}
           </span>
-        </div>
-        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-2xs">
+        </MetricCard>
+        <MetricCard label="Total Store Redemptions" active={metricFilter === "redeemed"} onClick={() => { setSearch(""); setMetricFilter("redeemed"); }} className="bg-white border border-slate-200 p-5 rounded-2xl shadow-2xs">
           <span className="text-xs text-slate-500 font-bold block">Total Store Redemptions</span>
           <span className="text-2xl font-black text-[#FC5C03] mt-1">
             {coupons.reduce((sum, c) => sum + (c.usedCount || 0), 0)} uses
           </span>
-        </div>
+        </MetricCard>
       </div>
 
       {/* Search Bar */}

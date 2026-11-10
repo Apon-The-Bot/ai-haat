@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -72,6 +74,12 @@ export default function CampaignAnalyticsDetailPage() {
   const [loading, setLoading] = useState(true);
   const [recipientSearch, setRecipientSearch] = useState("");
   const [recipientFilter, setRecipientFilter] = useState("ALL");
+
+  const showRecipientMetric = (status: string) => {
+    setRecipientSearch("");
+    setRecipientFilter(status);
+    document.getElementById("recipient-logs")?.scrollIntoView({ block: "start" });
+  };
   const [showHtmlPreview, setShowHtmlPreview] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
 
@@ -300,7 +308,7 @@ export default function CampaignAnalyticsDetailPage() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         
         {/* Metric 1: Total Queue / Sent */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
+        <MetricCard label="Total Dispatched" href="#recipient-logs" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
           <span className="text-xs font-bold text-slate-400 block">Total Dispatched</span>
           <span className="text-2xl font-black text-slate-900 block font-mono">
             {campaign.sentCount}
@@ -311,10 +319,10 @@ export default function CampaignAnalyticsDetailPage() {
           <span className="text-[11px] text-blue-600 font-bold block">
             Audience: {campaign.audienceType}
           </span>
-        </div>
+        </MetricCard>
 
         {/* Metric 2: Delivered */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
+        <MetricCard label="Delivery Rate" href="#recipient-logs" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
           <span className="text-xs font-bold text-slate-400 block">Delivery Rate</span>
           <span className="text-2xl font-black text-emerald-600 block font-mono">
             {deliveryRate}%
@@ -322,10 +330,10 @@ export default function CampaignAnalyticsDetailPage() {
           <span className="text-[11px] text-slate-400 font-medium block">
             {campaign.deliveredCount || campaign.sentCount} delivered
           </span>
-        </div>
+        </MetricCard>
 
         {/* Metric 3: Opens */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
+        <MetricCard label="Open Rate" onClick={() => showRecipientMetric("OPENED")} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
           <span className="text-xs font-bold text-slate-400 block">Open Rate</span>
           <span className="text-2xl font-black text-purple-600 block font-mono">
             {openRate}%
@@ -333,10 +341,10 @@ export default function CampaignAnalyticsDetailPage() {
           <span className="text-[11px] text-slate-400 font-medium block">
             {campaign.openedCount} unique opens
           </span>
-        </div>
+        </MetricCard>
 
         {/* Metric 4: Clicks */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
+        <MetricCard label="Click Rate (CTR)" onClick={() => showRecipientMetric("CLICKED")} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
           <span className="text-xs font-bold text-slate-400 block">Click Rate (CTR)</span>
           <span className="text-2xl font-black text-amber-600 block font-mono">
             {clickRate}%
@@ -344,10 +352,10 @@ export default function CampaignAnalyticsDetailPage() {
           <span className="text-[11px] text-slate-400 font-medium block">
             {campaign.clickedCount} link clicks
           </span>
-        </div>
+        </MetricCard>
 
         {/* Metric 5: Unsubscribes / Bounces */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
+        <MetricCard label="Unsubscribes / Fails" onClick={() => showRecipientMetric("FAILED")} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-1">
           <span className="text-xs font-bold text-slate-400 block">Unsubscribes / Fails</span>
           <span className="text-2xl font-black text-red-600 block font-mono">
             {campaign.unsubscribedCount || 0}
@@ -355,7 +363,7 @@ export default function CampaignAnalyticsDetailPage() {
           <span className="text-[11px] text-slate-400 font-medium block">
             {campaign.failedCount} dispatch failures
           </span>
-        </div>
+        </MetricCard>
 
       </div>
 
@@ -424,7 +432,7 @@ export default function CampaignAnalyticsDetailPage() {
       </div>
 
       {/* Recipient Logs Table */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs space-y-4">
+      <div id="recipient-logs" className="scroll-mt-24 bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div>
             <h3 className="text-base font-black text-slate-900">Recipient Dispatch Logs</h3>

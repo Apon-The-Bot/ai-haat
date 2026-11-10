@@ -8,7 +8,6 @@ import { validateImageBuffer } from "../src/lib/security/upload-validator";
 import { getClientIp, checkRateLimit } from "../src/lib/rate-limit";
 import { encryptCredential, decryptCredential } from "../src/lib/mfa/crypto";
 import { isSameOriginMutation } from "../src/lib/security/csrf";
-import { getAdminEmails, isUserAdmin } from "../src/lib/auth";
 import { safeAddBDT, safeSubBDT, safeMulBDT, toPoisha, fromPoisha, calculatePercentageDiscount } from "../src/lib/commerce/money";
 import { generateInvoiceToken } from "../src/lib/invoicing/tokens";
 import crypto from "crypto";
@@ -123,15 +122,6 @@ async function runTestSuite() {
 
   const legacyPlain = "LegacyUnencryptedPass";
   assert(decryptCredential(legacyPlain) === legacyPlain, "Legacy unencrypted values pass through gracefully");
-
-  // 6. AUDIT-007: Administrative Email Configuration
-  console.log("\n--- TEST GROUP 6: AUDIT-007 Admin Email Priority ---");
-  process.env.ADMIN_EMAILS = "configured.admin@aihaat.shop, owner@aihaat.shop";
-  const emails = getAdminEmails();
-  assert(emails.includes("configured.admin@aihaat.shop"), "Configured admin email from env is recognized");
-  assert(emails.includes("owner@aihaat.shop"), "Second configured admin email from env is recognized");
-  assert(isUserAdmin("owner@aihaat.shop") === true, "isUserAdmin correctly validates env admin");
-  assert(isUserAdmin("random.user@gmail.com") === false, "Regular customer is not classified as admin");
 
   // 7. AUDIT-008: CSRF Same-Origin Validation
   console.log("\n--- TEST GROUP 7: AUDIT-008 CSRF Same-Origin Defense ---");

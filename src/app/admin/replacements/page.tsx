@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback } from "react";
 import {
   RefreshCw,
@@ -164,7 +166,7 @@ export default function AdminReplacementsPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+        <MetricCard label="Pending Replacements" onClick={() => setActiveTab("REQUESTED")} className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">
             Pending Replacements
           </span>
@@ -172,9 +174,9 @@ export default function AdminReplacementsPage() {
             <span className="text-3xl font-black text-slate-900">{kpis.pending}</span>
             <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-md">অপেক্ষমান</span>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+        <MetricCard label="Completed Replacements" onClick={() => setActiveTab("FULFILLED")} className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
             Completed Replacements
           </span>
@@ -182,9 +184,9 @@ export default function AdminReplacementsPage() {
             <span className="text-3xl font-black text-slate-900">{kpis.completed}</span>
             <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md">সফলভাবে সম্পন্ন</span>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+        <MetricCard label="Rejected Claims" onClick={() => setActiveTab("REJECTED")} className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <span className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">
             Rejected Claims
           </span>
@@ -192,9 +194,9 @@ export default function AdminReplacementsPage() {
             <span className="text-3xl font-black text-slate-900">{kpis.rejected}</span>
             <span className="px-2 py-0.5 bg-rose-50 text-rose-700 text-xs font-bold rounded-md">বাতিলকৃত</span>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+        <MetricCard label="Replacement Rate" onClick={() => setActiveTab("ALL")} className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
             Replacement Rate
           </span>
@@ -202,7 +204,7 @@ export default function AdminReplacementsPage() {
             <span className="text-3xl font-black text-slate-900">{kpis.replacementRate}%</span>
             <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-md">সাকসেস রেট</span>
           </div>
-        </div>
+        </MetricCard>
       </div>
 
       {/* Filter and Search Bar */}

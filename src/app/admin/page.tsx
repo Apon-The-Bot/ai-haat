@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -147,7 +149,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         
         {/* KPI 1: Authoritative Verified Revenue */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Verified Revenue" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Verified Revenue</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -160,10 +162,10 @@ export default function AdminDashboardPage() {
           <span className="text-[11px] text-emerald-600 font-semibold block">
             {stats?.verifiedOrdersCount || 0} paid orders
           </span>
-        </div>
+        </MetricCard>
 
         {/* KPI 2: Total Orders */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Total Orders" href="/admin/orders" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Total Orders</span>
             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -176,10 +178,10 @@ export default function AdminDashboardPage() {
           <span className="text-[11px] text-slate-400 font-semibold block">
             AOV: {formatPrice(stats?.averageOrderValue || 0)}
           </span>
-        </div>
+        </MetricCard>
 
         {/* KPI 3: Pending Delivery */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Pending Delivery" href="/admin/orders?deliveryStatus=ORDER_PLACED" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Pending Delivery</span>
             <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -189,13 +191,13 @@ export default function AdminDashboardPage() {
           <span className="text-2xl font-black text-[#FC5C03] block">
             {stats?.pendingFulfillment || 0}
           </span>
-          <Link href="/admin/orders?deliveryStatus=ORDER_PLACED" className="text-[11px] text-[#FC5C03] font-bold hover:underline block">
+          <span className="text-[11px] text-[#FC5C03] font-bold hover:underline block">
             Fulfill Orders →
-          </Link>
-        </div>
+          </span>
+        </MetricCard>
 
         {/* KPI 4: Pending Wallet Approvals */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Wallet Requests" href="/admin/wallet" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Wallet Requests</span>
             <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#FC5C03] flex items-center justify-center">
@@ -205,13 +207,13 @@ export default function AdminDashboardPage() {
           <span className="text-2xl font-black text-slate-900 block">
             {stats?.pendingDeposits || 0}
           </span>
-          <Link href="/admin/wallet" className="text-[11px] text-[#FC5C03] font-bold hover:underline block">
+          <span className="text-[11px] text-[#FC5C03] font-bold hover:underline block">
             Approve Top-ups →
-          </Link>
-        </div>
+          </span>
+        </MetricCard>
 
         {/* KPI 5: Digital Stock Pool */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Available Vault Keys" href="/admin/inventory?status=AVAILABLE" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Available Vault Keys</span>
             <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
@@ -221,13 +223,13 @@ export default function AdminDashboardPage() {
           <span className="text-2xl font-black text-slate-900 block">
             {stats?.availableStockCount || 0}
           </span>
-          <Link href="/admin/inventory" className="text-[11px] text-purple-600 font-bold hover:underline block">
+          <span className="text-[11px] text-purple-600 font-bold hover:underline block">
             Manage Vault →
-          </Link>
-        </div>
+          </span>
+        </MetricCard>
 
         {/* KPI 6: Registered Customers */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
+        <MetricCard label="Customers" href="/admin/users" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">Customers</span>
             <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
@@ -237,17 +239,17 @@ export default function AdminDashboardPage() {
           <span className="text-2xl font-black text-slate-900 block">
             {stats?.totalCustomers || 0}
           </span>
-          <Link href="/admin/users" className="text-[11px] text-slate-500 font-bold hover:underline block">
+          <span className="text-[11px] text-slate-500 font-bold hover:underline block">
             View Users →
-          </Link>
-        </div>
+          </span>
+        </MetricCard>
 
       </div>
 
       {/* Financial Intelligence: COGS & Net Profit Margin Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Delivered COGS */}
-        <div className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl border border-amber-200/80 p-5 shadow-2xs">
+        <MetricCard label="Delivered COGS" href="/admin/reports" className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl border border-amber-200/80 p-5 shadow-2xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-900">Delivered COGS</span>
             <span className="p-1.5 bg-amber-100 text-amber-800 rounded-lg text-xs font-bold">Cost of Sales</span>
@@ -256,10 +258,10 @@ export default function AdminDashboardPage() {
             {formatPrice(stats?.cogs || 0)}
           </div>
           <p className="text-xs text-slate-500 mt-1">Acquisition cost of keys delivered to customers</p>
-        </div>
+        </MetricCard>
 
         {/* Realized Gross / Net Profit */}
-        <div className="bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent rounded-2xl border border-emerald-200/80 p-5 shadow-2xs">
+        <MetricCard label="Net Gross Profit" href="/admin/reports" className="bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent rounded-2xl border border-emerald-200/80 p-5 shadow-2xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">Net Gross Profit</span>
             <span className="p-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold">
@@ -270,10 +272,10 @@ export default function AdminDashboardPage() {
             {formatPrice(stats?.grossProfit || 0)}
           </div>
           <p className="text-xs text-slate-500 mt-1">Net revenue minus recognized COGS</p>
-        </div>
+        </MetricCard>
 
         {/* Financial Truth Audit Link */}
-        <div className="bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent rounded-2xl border border-blue-200/80 p-5 shadow-2xs flex flex-col justify-between">
+        <MetricCard label="Financial Reports" href="/admin/reports" className="bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent rounded-2xl border border-blue-200/80 p-5 shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-blue-900">Financial Reports</span>
@@ -284,10 +286,10 @@ export default function AdminDashboardPage() {
             </div>
             <p className="text-xs text-slate-500 mt-1">Breakdown by suppliers, batches & CSV export</p>
           </div>
-          <Link href="/admin/reports" className="text-xs font-bold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 mt-3">
+          <span className="text-xs font-bold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 mt-3">
             Open Financial Reports →
-          </Link>
-        </div>
+          </span>
+        </MetricCard>
       </div>
 
       {/* Visual Analytics & Gateway Velocity Row */}

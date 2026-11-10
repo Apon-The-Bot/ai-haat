@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback } from "react";
 import {
   TrendingUp,
@@ -179,7 +181,7 @@ export default function AdminReportsPage() {
           {/* Top KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Verified Revenue */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Verified Revenue" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Verified Revenue</span>
                 <span className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">৳</span>
@@ -188,10 +190,10 @@ export default function AdminReportsPage() {
                 {loading ? "..." : formatPrice(kpis?.verifiedRevenue?.current || 0)}
               </div>
               <p className="text-xs text-slate-400 mt-2">Gross customer payments confirmed</p>
-            </div>
+            </MetricCard>
 
             {/* Net Revenue */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Net Revenue" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Net Revenue</span>
                 <span className="p-2 bg-blue-50 text-blue-600 rounded-lg">৳</span>
@@ -200,10 +202,10 @@ export default function AdminReportsPage() {
                 {loading ? "..." : formatPrice(kpis?.netRevenue?.current || 0)}
               </div>
               <p className="text-xs text-slate-400 mt-2">Verified revenue minus refunds</p>
-            </div>
+            </MetricCard>
 
             {/* Total COGS */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Delivered COGS" href="/admin/inventory/batches" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Delivered COGS</span>
                 <DollarSign className="w-4 h-4 text-amber-600" />
@@ -212,10 +214,10 @@ export default function AdminReportsPage() {
                 {loading ? "..." : formatPrice(kpis?.cogs?.current || 0)}
               </div>
               <p className="text-xs text-slate-400 mt-2">Cost of resources consumed by deliveries</p>
-            </div>
+            </MetricCard>
 
             {/* Gross Profit */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Gross Profit" onClick={() => setActiveTab("PROFIT")} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Gross Profit</span>
                 <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg font-bold text-xs">
@@ -228,10 +230,10 @@ export default function AdminReportsPage() {
               <p className="text-xs text-slate-400 mt-2">
                 Coverage: {kpis?.costCoveragePct || 100}% known
               </p>
-            </div>
+            </MetricCard>
 
             {/* Procurement Spend */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Procurement Spend" href="/admin/inventory/batches" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Procurement Spend</span>
                 <Building2 className="w-4 h-4 text-indigo-600" />
@@ -240,10 +242,10 @@ export default function AdminReportsPage() {
                 {loading ? "..." : formatPrice(kpis?.procurementSpend || 0)}
               </div>
               <p className="text-xs text-slate-400 mt-2">Batch inventory purchases in period</p>
-            </div>
+            </MetricCard>
 
             {/* Completed Refunds */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Completed Refunds" href="/admin/refunds" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Completed Refunds</span>
                 <Undo2 className="w-4 h-4 text-rose-600" />
@@ -252,10 +254,10 @@ export default function AdminReportsPage() {
                 {loading ? "..." : formatPrice(kpis?.refundedValue?.current || 0)}
               </div>
               <p className="text-xs text-slate-400 mt-2">Deducted from gross verified revenue</p>
-            </div>
+            </MetricCard>
 
             {/* Paid Orders */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Paid Orders" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Paid Orders</span>
                 <ShoppingBag className="w-4 h-4 text-purple-600" />
@@ -266,10 +268,10 @@ export default function AdminReportsPage() {
               <p className="text-xs text-slate-400 mt-2">
                 Total placed: {kpis?.totalOrders?.current || 0} orders
               </p>
-            </div>
+            </MetricCard>
 
             {/* Gross AOV */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Gross AOV" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Gross AOV</span>
                 <TrendingUp className="w-4 h-4 text-amber-600" />
@@ -278,7 +280,7 @@ export default function AdminReportsPage() {
                 {loading ? "..." : formatPrice(kpis?.averageOrderValue?.current || 0)}
               </div>
               <p className="text-xs text-slate-400 mt-2">Average verified order basket size</p>
-            </div>
+            </MetricCard>
           </div>
         </div>
       )}

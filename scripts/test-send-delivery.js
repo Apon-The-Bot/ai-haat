@@ -1,38 +1,29 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
-async function testSend() {
+async function run() {
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM } = process.env;
+  const recipient = process.argv[2];
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !recipient) {
+    throw new Error("SMTP settings and an explicit test recipient are required");
+  }
+  const port = Number(SMTP_PORT || 465);
   const transporter = nodemailer.createTransport({
-    host: 'smtp.hostinger.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: 'delivery@aihaat.shop',
-      pass: 'Rk#delivery@aihaat.sh0p',
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
+    host: SMTP_HOST,
+    port,
+    secure: port === 465,
+    requireTLS: port !== 465,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
-
-  const info = await transporter.sendMail({
-    from: '"AI Haat Official" <delivery@aihaat.shop>',
-    to: 'seratulalimkhanrhythm@gmail.com',
-    subject: 'AI Haat Test Delivery Notification - Order #AH-98211',
-    html: `
-      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 12px; max-width: 600px; margin: auto;">
-        <h2 style="color: #FC5C03;">AI Haat Order Delivery</h2>
-        <p>Dear Customer, your digital subscription has been delivered!</p>
-        <div style="background: #FFF9F5; padding: 15px; border-radius: 8px; border: 1px solid #FFE4D6;">
-          <strong>Product:</strong> ChatGPT Plus 1 Month<br/>
-          <strong>Login Email:</strong> test@aihaat.shop<br/>
-          <strong>Password:</strong> AiHaat#2026!Pass
-        </div>
-        <p style="color: #888; font-size: 12px; margin-top: 20px;">AI Haat - Bangladesh's #1 Digital Marketplace</p>
-      </div>
-    `,
+  await transporter.sendMail({
+    from: EMAIL_FROM || SMTP_USER,
+    to: recipient,
+    subject: "AI Haat delivery email test",
+    text: "This test verifies delivery mail routing.",
   });
-
-  console.log('✓ Email successfully delivered! Message ID:', info.messageId);
+  console.log("Test message accepted");
 }
 
-testSend().catch(console.error);
+run().catch(() => {
+  console.error("SMTP delivery test failed");
+  process.exitCode = 1;
+});

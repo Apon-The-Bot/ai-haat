@@ -163,6 +163,12 @@ export default function AdminOrdersPage() {
   const [paymentFilter, setPaymentFilter] = useState("ALL");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("ALL");
 
+  useEffect(() => {
+    const filters = new URLSearchParams(window.location.search);
+    setStatusFilter(filters.get("deliveryStatus") === "ORDER_PLACED" ? "ORDER_PLACED" : "ALL");
+    setPaymentFilter(filters.get("paymentStatus") === "VERIFIED" ? "VERIFIED" : "ALL");
+  }, []);
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);

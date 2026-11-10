@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect } from "react";
 import { 
   Building2, 
@@ -287,7 +289,7 @@ export default function AdminSuppliersPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Active Suppliers" href="#supplier-list" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
             <Building2 className="w-5 h-5" />
           </div>
@@ -295,9 +297,9 @@ export default function AdminSuppliersPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active Suppliers</p>
             <p className="text-xl font-bold text-gray-900">{activeSuppliersCount} / {totalSuppliersCount}</p>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Total Procurement Spend" href="/admin/inventory/batches" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
             <DollarSign className="w-5 h-5" />
           </div>
@@ -305,9 +307,9 @@ export default function AdminSuppliersPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Procurement Spend</p>
             <p className="text-xl font-bold text-gray-900">৳{totalProcurementSpend.toLocaleString()}</p>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Available Stock Valuation" href="/admin/inventory/batches" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
             <PackageCheck className="w-5 h-5" />
           </div>
@@ -315,9 +317,9 @@ export default function AdminSuppliersPage() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Available Stock Valuation</p>
             <p className="text-xl font-bold text-gray-900">৳{totalAvailableStockValuation.toLocaleString()}</p>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <MetricCard label="Total Sourced Units" href="/admin/inventory/batches" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
             <Layers className="w-5 h-5" />
           </div>
@@ -327,11 +329,11 @@ export default function AdminSuppliersPage() {
               {suppliers.reduce((acc, s) => acc + (s.totalUnitsPurchased || 0), 0).toLocaleString()}
             </p>
           </div>
-        </div>
+        </MetricCard>
       </div>
 
       {/* Suppliers Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div id="supplier-list" className="scroll-mt-24 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h2 className="font-bold text-gray-900 text-base">Registered Suppliers & Performance Indicators</h2>
           <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">

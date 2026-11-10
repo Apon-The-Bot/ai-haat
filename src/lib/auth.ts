@@ -3,46 +3,19 @@ import GoogleProvider from "next-auth/providers/google";
 import { sendWelcomeEmail } from "@/utils/email";
 import { prisma } from "@/lib/prisma";
 
-export const DEFAULT_ADMIN_EMAILS = [
-  "mdamanullahsheikhapon@gmail.com",
-  "seratul.alim@gmail.com",
-  "seratulalimkhanrhythm@gmail.com",
-  "admin@aihaat.com",
-];
-
-export function getAdminEmails(): string[] {
-  const envAdmins = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  
-  // AUDIT-007: Prioritize ADMIN_EMAILS environment variable over hardcoded fallbacks
-  if (envAdmins.length > 0) {
-    return envAdmins;
-  }
-  return DEFAULT_ADMIN_EMAILS.map((e) => e.toLowerCase());
-}
-
-export function isUserAdmin(email?: string | null): boolean {
-  if (!email) return false;
-  const cleanEmail = email.trim().toLowerCase();
-  return getAdminEmails().includes(cleanEmail);
-}
-
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       profile(profile) {
-        const email = profile.email?.toLowerCase().trim() || "";
-        const isAdmin = isUserAdmin(email);
+        if (!profile.email_verified || !profile.email) throw new Error("Verified Google email required");
         return {
           id: profile.sub,
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          role: isAdmin ? "ADMIN" : "USER",
+          role: "USER",
           walletBalanceBDT: 0,
         };
       },
@@ -54,7 +27,6 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         const googleSub = user.id;
         const email = (user.email || "").toLowerCase().trim();
-        const isAdmin = isUserAdmin(email);
 
         if (email) {
           try {
@@ -75,7 +47,7 @@ export const authOptions: NextAuthOptions = {
                   email,
                   name: user.name || null,
                   image: user.image || null,
-                  role: isAdmin ? "ADMIN" : "USER",
+                  role: "USER",
                   walletBalanceBDT: 0,
                 },
                 include: { security: true },
@@ -84,9 +56,6 @@ export const authOptions: NextAuthOptions = {
             } else {
               // Update user name/image and admin role if needed
               const updateData: any = {};
-              if (isAdmin && dbUser.role !== "ADMIN") {
-                updateData.role = "ADMIN";
-              }
               if (user.image && user.image !== dbUser.image) {
                 updateData.image = user.image;
               }
@@ -102,7 +71,7 @@ export const authOptions: NextAuthOptions = {
               }
             }
 
-            const effectiveRole = isAdmin ? "ADMIN" : (dbUser.role || "USER");
+            const effectiveRole = dbUser.role;
             token.appUserId = dbUser.id; // Canonical Prisma User ID
             token.id = dbUser.id;
             token.role = effectiveRole;
@@ -115,16 +84,13 @@ export const authOptions: NextAuthOptions = {
             if (isNewUser && user.name) {
               sendWelcomeEmail({ name: user.name, email }).catch(() => {});
             }
-          } catch (err) {
-            console.error("[NextAuth JWT Sign-in Error]:", err);
-            // Fallback for offline/Prisma hiccups
-            token.role = isAdmin ? "ADMIN" : "USER";
+          } catch {
+            throw new Error("Unable to verify account");
           }
         }
       } else if (token.email) {
         // 2. Token refresh / existing session
         const email = (token.email as string).toLowerCase().trim();
-        const isAdmin = isUserAdmin(email);
 
         try {
           const dbUser = await prisma.user.findFirst({
@@ -138,25 +104,20 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (dbUser) {
-            if (isAdmin && dbUser.role !== "ADMIN") {
-              await prisma.user.update({
-                where: { id: dbUser.id },
-                data: { role: "ADMIN" },
-              });
-            }
             token.appUserId = dbUser.id;
             token.id = dbUser.id;
-            token.role = isAdmin ? "ADMIN" : dbUser.role;
+            token.role = dbUser.role;
             token.walletBalanceBDT = dbUser.walletBalanceBDT || 0;
             token.mfaRequired = dbUser.security?.totpEnabled ?? false;
           } else {
-            token.role = isAdmin ? "ADMIN" : (token.role || "USER");
+            delete token.appUserId;
+            delete token.id;
+            token.role = "USER";
           }
-        } catch (err) {
-          console.warn("[NextAuth Token Refresh Warning]:", err);
-          if (isAdmin) {
-            token.role = "ADMIN";
-          }
+        } catch {
+          delete token.appUserId;
+          delete token.id;
+          token.role = "USER";
         }
       }
 
@@ -169,11 +130,9 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        const email = session.user.email?.toLowerCase().trim();
-        const isAdmin = isUserAdmin(email) || token.role === "ADMIN";
         const canonicalId = (token.appUserId || token.id) as string;
         (session.user as any).id = canonicalId;
-        (session.user as any).role = isAdmin ? "ADMIN" : ((token.role as string) || "USER");
+        (session.user as any).role = token.role === "ADMIN" ? "ADMIN" : "USER";
         (session.user as any).walletBalanceBDT = (token.walletBalanceBDT as number) || 0;
         (session.user as any).mfaRequired = Boolean(token.mfaRequired);
         if (token.picture) {

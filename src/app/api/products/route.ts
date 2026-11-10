@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicProducts, createProduct, updateProduct, deleteProduct } from "@/lib/commerce/products";
-import { requireAdmin } from "@/lib/auth-guard";
+import { requireAdminMfa } from "@/lib/auth-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +12,10 @@ export async function GET(req: NextRequest) {
     const sort = searchParams.get("sort") || undefined;
     const featured = searchParams.get("featured") === "true" ? true : undefined;
     const status = searchParams.get("status") || undefined;
+    if (status && status !== "ACTIVE") {
+      const authResult = await requireAdminMfa();
+      if (authResult instanceof NextResponse) return authResult;
+    }
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "100", 10);
 
@@ -38,7 +42,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authResult = await requireAdmin();
+    const authResult = await requireAdminMfa();
     if (authResult instanceof NextResponse) return authResult;
 
     const body = await req.json();
@@ -52,7 +56,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const authResult = await requireAdmin();
+    const authResult = await requireAdminMfa();
     if (authResult instanceof NextResponse) return authResult;
 
     const body = await req.json();
@@ -70,7 +74,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const authResult = await requireAdmin();
+    const authResult = await requireAdminMfa();
     if (authResult instanceof NextResponse) return authResult;
 
     const { searchParams } = new URL(req.url);

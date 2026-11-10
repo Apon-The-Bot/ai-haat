@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
-import { authOptions, isUserAdmin } from './auth';
+import { authOptions } from './auth';
 import { getMfaSessionFromCookieStore } from './mfa/session';
 import { prisma } from './prisma';
 import { getUserEffectiveStatus } from './user-control/user-control-service';
@@ -21,42 +21,11 @@ export async function requireAuth(): Promise<AuthResult | NextResponse> {
   }
   
   const user = session.user as { id: string; email: string; role: string; name?: string };
-  const isAdmin = isUserAdmin(user.email);
-  
   if (!user.id || !user.role) {
-    const dbUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: user.email },
-          { email: user.email.toLowerCase() },
-        ]
-      },
-      select: { id: true, email: true, role: true, name: true }
-    });
-    
-    if (!dbUser) {
-      return {
-        user: {
-          id: user.id || `user-${user.email}`,
-          email: user.email,
-          role: isAdmin ? 'ADMIN' : 'USER',
-          name: user.name
-        }
-      };
-    }
-    return {
-      user: {
-        id: dbUser.id,
-        email: dbUser.email,
-        role: isAdmin ? 'ADMIN' : dbUser.role,
-        name: dbUser.name ?? undefined
-      }
-    };
+    return NextResponse.json({ error: "Account verification required" }, { status: 401 });
   }
-  
-  if (isAdmin) {
-    user.role = 'ADMIN';
-  } else if (user.id) {
+
+  if (user.role !== "ADMIN") {
     // Non-admin account status enforcement (BANNED / SUSPENDED)
     try {
       const effectiveStatus = await getUserEffectiveStatus(user.id);
@@ -79,7 +48,7 @@ export async function requireAdmin(): Promise<AuthResult | NextResponse> {
   const auth = await requireAuth();
   if (auth instanceof NextResponse) return auth;
   
-  const isAdmin = auth.user.role === 'ADMIN' || isUserAdmin(auth.user.email);
+  const isAdmin = auth.user.role === 'ADMIN';
   if (!isAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
@@ -99,7 +68,7 @@ export async function requireMfaVerified(): Promise<MfaAuthResult | NextResponse
     });
     isMfaEnabled = userSecurity?.totpEnabled ?? false;
   } catch (err) {
-    console.warn("[MFA Status Check Warning]:", err);
+    return NextResponse.json({ error: "Unable to verify MFA status" }, { status: 503 });
   }
   
   if (isMfaEnabled) {

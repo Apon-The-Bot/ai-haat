@@ -75,12 +75,6 @@ export function upsertLocalUser(user: Partial<LocalUser> & { email: string }): L
   const clean = user.email.toLowerCase().trim();
   const idx = users.findIndex((u) => u.email.toLowerCase().trim() === clean);
 
-  const adminEmails = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  const isAdmin = adminEmails.includes(clean);
-
   const now = new Date().toISOString();
 
   if (idx >= 0) {
@@ -88,7 +82,7 @@ export function upsertLocalUser(user: Partial<LocalUser> & { email: string }): L
       ...users[idx],
       ...user,
       email: clean,
-      role: isAdmin ? "ADMIN" : (user.role || users[idx].role || "USER"),
+      role: user.role || users[idx].role || "USER",
       walletBalanceBDT: user.walletBalanceBDT ?? users[idx].walletBalanceBDT ?? 0,
       updatedAt: now,
     };
@@ -102,7 +96,7 @@ export function upsertLocalUser(user: Partial<LocalUser> & { email: string }): L
       email: clean,
       phone: user.phone || "",
       avatar: user.avatar,
-      role: isAdmin ? "ADMIN" : (user.role || "USER"),
+      role: user.role || "USER",
       walletBalanceBDT: user.walletBalanceBDT || 0,
       createdAt: now,
       updatedAt: now,

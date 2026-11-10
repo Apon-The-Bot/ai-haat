@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireAdminMfa } from "@/lib/auth-guard";
 import {
   bulkUpdateProductStatus,
@@ -49,9 +50,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, count: result.count, visibility });
     } else if (action === "ARCHIVE") {
       const result = await bulkArchiveProducts(productIds, authResult.user);
+      revalidatePath("/product/[slug]", "page");
       return NextResponse.json({ success: true, count: result.count });
     } else if (action === "DELETE") {
       const result = await bulkDeleteProducts(productIds, authResult.user);
+      revalidatePath("/product/[slug]", "page");
       return NextResponse.json({
         success: true,
         deletedCount: result.deletedCount,

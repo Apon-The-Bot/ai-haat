@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
@@ -73,6 +75,10 @@ export default function AdminProductsPage() {
     try {
       setIsLoading(true);
       const res = await fetch("/api/products?limit=100&status=ALL");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to fetch products");
+      }
       if (res.ok) {
         const data = await res.json();
         if (data.products) {
@@ -89,7 +95,7 @@ export default function AdminProductsPage() {
       }
     } catch (e) {
       console.error(e);
-      showToast("Failed to fetch products", "error");
+      showToast(e instanceof Error ? e.message : "Failed to fetch products", "error");
     } finally {
       setIsLoading(false);
     }
@@ -103,8 +109,8 @@ export default function AdminProductsPage() {
   const stats = useMemo(() => {
     const total = productList.length;
     const active = productList.filter((p) => p.status === "ACTIVE").length;
-    const drafts = productList.filter((p) => p.status === "DRAFT" || p.status === ("PENDING" as any)).length;
-    const outOfStock = productList.filter((p) => p.digitalStock === 0 || !p.inStock).length;
+    const drafts = productList.filter((p) => p.status === "DRAFT").length;
+    const outOfStock = productList.filter((p) => !p.inStock || (p.digitalStock ?? 0) <= 0).length;
     const categories = new Set(productList.map((p) => p.category)).size;
     
     return { total, active, drafts, outOfStock, categories };
@@ -133,11 +139,20 @@ export default function AdminProductsPage() {
       
       const matchStock = stockFilter === "ALL" ||
         (stockFilter === "IN_STOCK" && (p.digitalStock || 0) > 0) ||
-        (stockFilter === "LOW_OUT" && (p.digitalStock === undefined || p.digitalStock <= 0));
+        (stockFilter === "LOW_OUT" && (!p.inStock || (p.digitalStock ?? 0) <= 0));
 
       return matchSearch && matchCategory && matchStatus && matchFulfillment && matchStock;
     });
   }, [productList, search, categoryFilter, statusFilter, fulfillmentFilter, stockFilter]);
+
+  const showProductMetric = (status: string, stock = "ALL") => {
+    setSearch("");
+    setCategoryFilter("ALL");
+    setFulfillmentFilter("ALL");
+    setStatusFilter(status);
+    setStockFilter(stock);
+    document.getElementById("product-filters")?.scrollIntoView({ block: "nearest" });
+  };
 
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -210,11 +225,22 @@ export default function AdminProductsPage() {
     if (!deletingProductId) return;
     setIsDeleting(true);
     try {
-      await fetch(`/api/products?id=${deletingProductId}`, { method: "DELETE" });
-      setProductList((prev) => prev.filter((p) => p.id !== deletingProductId));
-      showToast("Deleted successfully.", "success");
-    } catch {
-      showToast("Error deleting product.", "error");
+      const response = await fetch("/api/admin/products/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "DELETE", productIds: [deletingProductId] }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Could not remove the product.");
+      }
+      if (!result.deletedCount && !result.archivedCount) {
+        throw new Error("Product not found.");
+      }
+      showToast(result.archivedCount ? "Product archived." : "Product permanently deleted.", "success");
+      void fetchProducts();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Could not remove the product.", "error");
     } finally {
       setIsDeleting(false);
       setDeletingProductId(null);
@@ -432,30 +458,30 @@ export default function AdminProductsPage() {
       
       {/* 5 Top Metric KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex flex-col justify-center">
+        <MetricCard label="Total Products" onClick={() => showProductMetric("ALL")} active={statusFilter === "ALL" && stockFilter === "ALL"} className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex flex-col justify-center">
             <span className="text-xs font-bold text-indigo-600 uppercase">Total Products</span>
             <span className="text-2xl font-black text-indigo-900">{stats.total}</span>
-        </div>
-        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex flex-col justify-center">
+        </MetricCard>
+        <MetricCard label="Active / Published" onClick={() => showProductMetric("ACTIVE")} active={statusFilter === "ACTIVE"} className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex flex-col justify-center">
             <span className="text-xs font-bold text-emerald-600 uppercase">Active / Published</span>
             <span className="text-2xl font-black text-emerald-900">{stats.active}</span>
-        </div>
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex flex-col justify-center">
+        </MetricCard>
+        <MetricCard label="Drafts / Pending" onClick={() => showProductMetric("DRAFT")} active={statusFilter === "DRAFT"} className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex flex-col justify-center">
             <span className="text-xs font-bold text-amber-600 uppercase">Drafts / Pending</span>
             <span className="text-2xl font-black text-amber-900">{stats.drafts}</span>
-        </div>
-        <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 flex flex-col justify-center">
+        </MetricCard>
+        <MetricCard label="Out of Stock / Low" onClick={() => showProductMetric("ALL", "LOW_OUT")} active={stockFilter === "LOW_OUT"} className="bg-rose-50 border border-rose-100 rounded-xl p-4 flex flex-col justify-center">
             <span className="text-xs font-bold text-rose-600 uppercase">Out of Stock / Low</span>
             <span className="text-2xl font-black text-rose-900">{stats.outOfStock}</span>
-        </div>
-        <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 flex flex-col justify-center">
+        </MetricCard>
+        <MetricCard label="Total Categories" href="/admin/categories" className="bg-purple-50 border border-purple-100 rounded-xl p-4 flex flex-col justify-center">
             <span className="text-xs font-bold text-purple-600 uppercase">Total Categories</span>
             <span className="text-2xl font-black text-purple-900">{stats.categories}</span>
-        </div>
+        </MetricCard>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs space-y-4">
+      <div id="product-filters" className="scroll-mt-24 bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="relative w-full sm:w-80">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -706,9 +732,9 @@ export default function AdminProductsPage() {
         isOpen={Boolean(deletingProductId)}
         onClose={() => setDeletingProductId(null)}
         onConfirm={confirmDelete}
-        title="Delete Product"
-        message="Are you sure you want to delete this product? This action cannot be undone."
-        confirmText="Yes, delete it"
+        title="Delete or Archive Product"
+        message="This permanently deletes products without linked commercial records. Products with linked records are archived and removed from the storefront."
+        confirmText="Yes, remove it"
         cancelText="Cancel"
         variant="danger"
         isLoading={isDeleting}

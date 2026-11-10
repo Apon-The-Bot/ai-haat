@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { MetricCard } from "@/components/admin/MetricCard";
 import {
   LifeBuoy,
   RefreshCw,
@@ -59,17 +60,16 @@ export default function AdminSupportQueuePage() {
   }, [fetchTickets]);
 
   // Derived real-time KPIs
-  const openTicketsCount = tickets.filter((t) => t.status === "OPEN" || t.status === "WAITING_FOR_ADMIN").length;
-  const waitingAdminCount = tickets.filter((t) => t.status === "WAITING_FOR_ADMIN" || t.needsAttention).length;
-  const highUrgentCount = tickets.filter((t) => t.priority === "HIGH" || t.priority === "URGENT").length;
-  const resolvedCount = tickets.filter((t) => t.status === "RESOLVED" || t.status === "CLOSED").length;
+  const [activeMetric, setActiveMetric] = useState<string | null>(null);
 
   const kpiCards = [
-    { title: "Open Tickets", value: String(openTicketsCount), icon: LifeBuoy, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
-    { title: "Waiting for Admin", value: String(waitingAdminCount), icon: Clock, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
-    { title: "High / Urgent Priority", value: String(highUrgentCount), icon: AlertTriangle, color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-100" },
-    { title: "Resolved / Closed", value: String(resolvedCount), icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+    { title: "Open Tickets", matches: (t: typeof tickets[number]) => t.status === "OPEN" || t.status === "WAITING_FOR_ADMIN", icon: LifeBuoy, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
+    { title: "Waiting for Admin", matches: (t: typeof tickets[number]) => t.status === "WAITING_FOR_ADMIN" || t.needsAttention, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+    { title: "High / Urgent Priority", matches: (t: typeof tickets[number]) => t.priority === "HIGH" || t.priority === "URGENT", icon: AlertTriangle, color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-100" },
+    { title: "Resolved / Closed", matches: (t: typeof tickets[number]) => t.status === "RESOLVED" || t.status === "CLOSED", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
   ];
+  const metric = kpiCards.find(({ title }) => title === activeMetric);
+  const visibleTickets = metric ? tickets.filter(metric.matches) : tickets;
 
   return (
     <div className="space-y-6">
@@ -95,18 +95,18 @@ export default function AdminSupportQueuePage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpiCards.map((kpi, idx) => {
+        {kpiCards.map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={idx} className={`p-5 rounded-2xl border ${kpi.border} bg-white shadow-sm flex items-start justify-between`}>
+            <MetricCard key={kpi.title} label={`Filter this page: ${kpi.title}`} active={activeMetric === kpi.title} onClick={() => setActiveMetric(activeMetric === kpi.title ? null : kpi.title)} className={`p-5 rounded-2xl border ${kpi.border} bg-white shadow-sm flex items-start justify-between`}>
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{kpi.title}</p>
-                <p className="text-3xl font-black text-slate-900 mt-2">{kpi.value}</p>
+                <p className="text-3xl font-black text-slate-900 mt-2">{tickets.filter(kpi.matches).length}</p>
               </div>
               <div className={`p-3 rounded-xl ${kpi.bg} ${kpi.color}`}>
                 <Icon className="w-6 h-6 stroke-[2.5]" />
               </div>
-            </div>
+            </MetricCard>
           );
         })}
       </div>
@@ -175,7 +175,7 @@ export default function AdminSupportQueuePage() {
             <AlertCircle className="w-6 h-6 mx-auto mb-2" />
             {error}
           </div>
-        ) : tickets.length === 0 ? (
+        ) : visibleTickets.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-500" />
             No support tickets match the selected filters.
@@ -195,7 +195,7 @@ export default function AdminSupportQueuePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {tickets.map((ticket) => (
+                {visibleTickets.map((ticket) => (
                   <tr key={ticket.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-5 py-4 whitespace-nowrap">
                       <span className="text-sm font-bold text-slate-900">{ticket.ticketNumber || ticket.id}</span>
@@ -263,7 +263,7 @@ export default function AdminSupportQueuePage() {
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap text-right">
                       <Link
-                        href={`/admin/support/tickets/${ticket.id}`}
+                        href={`/admin/support/${ticket.id}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-all"
                       >
                         <span>Open Ticket</span>

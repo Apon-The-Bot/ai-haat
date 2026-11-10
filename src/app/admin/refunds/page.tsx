@@ -1,5 +1,7 @@
 "use client";
 
+import { MetricCard } from "@/components/admin/MetricCard";
+
 import React, { useState, useEffect, useCallback } from "react";
 import {
   RefreshCw,
@@ -159,7 +161,7 @@ export default function AdminRefundsPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+        <MetricCard label="Pending Refund Requests" onClick={() => setActiveTab("REQUESTED")} className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">
             Pending Refund Requests
           </span>
@@ -167,9 +169,9 @@ export default function AdminRefundsPage() {
             <span className="text-3xl font-black text-slate-900">{kpis.pending}</span>
             <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-md">অপেক্ষমান</span>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+        <MetricCard label="Total Refunded (BDT)" onClick={() => setActiveTab("REFUNDED")} className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
             Total Refunded (BDT)
           </span>
@@ -177,9 +179,9 @@ export default function AdminRefundsPage() {
             <span className="text-3xl font-black text-slate-900">৳{kpis.totalRefunded.toLocaleString()}</span>
             <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md">রিফান্ডেড</span>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+        <MetricCard label="Wallet Refunds Count" onClick={() => setActiveTab("REFUNDED")} className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
             Wallet Refunds Count
           </span>
@@ -187,9 +189,9 @@ export default function AdminRefundsPage() {
             <span className="text-3xl font-black text-slate-900">{kpis.walletCount}</span>
             <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-md">ওয়ালেট রিফান্ড</span>
           </div>
-        </div>
+        </MetricCard>
 
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+        <MetricCard label="Manual MFS Pending" onClick={() => setActiveTab("APPROVED")} className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <span className="text-[11px] font-bold text-purple-600 uppercase tracking-wider">
             Manual MFS Pending
           </span>
@@ -197,7 +199,7 @@ export default function AdminRefundsPage() {
             <span className="text-3xl font-black text-slate-900">{kpis.manualPending}</span>
             <span className="px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-md">MFS অপেক্ষমান</span>
           </div>
-        </div>
+        </MetricCard>
       </div>
 
       {/* Tabs and Search */}
