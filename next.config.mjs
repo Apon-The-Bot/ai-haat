@@ -16,6 +16,10 @@ const cspHeader = `
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Shared hosting has a limited process and thread budget during prerendering.
+    cpus: 1,
+  },
   images: {
     formats: ["image/webp"],
     remotePatterns: [

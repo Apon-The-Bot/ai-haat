@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/build.mjs",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -22,7 +22,7 @@
     "lucide-react": "^0.453.0",
     "next": "^15.5.26",
     "next-auth": "^4.24.15",
-    "nodemailer": "^10.0.10",
+    "nodemailer": "^10.1.4",
     "otpauth": "^9.5.1",
     "postcss": "^8.5.28",
     "prisma": "^5.19.1",
@@ -46,6 +46,9 @@
     "playwright": "^1.62.1"
   },
   "overrides": {
+    "next-auth": {
+      "nodemailer": "$nodemailer"
+    },
     "postcss": "^8.5.28"
   }
 }
