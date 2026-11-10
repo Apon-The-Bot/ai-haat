@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -107,7 +107,7 @@ function CheckoutContent() {
   useEffect(() => {
     if (user) {
       if (!fullName) setFullName(user.name || "");
-      if (!email) setEmail(user.email || "");
+      if (email !== user.email) setEmail(user.email || "");
       if (!phone && user.phone) setPhone(user.phone);
     }
   }, [user]);
@@ -223,9 +223,8 @@ function CheckoutContent() {
     return () => clearTimeout(timeout);
   }, [email, phone, fullName, items, subtotalBDT, appliedCoupon]);
 
-  const handleApplyCoupon = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const cleanCode = couponCodeInput.trim().toUpperCase();
+  const handleApplyCoupon = useCallback(async (code: string) => {
+    const cleanCode = code.trim().toUpperCase();
     if (!cleanCode) return;
     if (items.length === 0) return;
 
@@ -296,7 +295,16 @@ function CheckoutContent() {
     } finally {
       setIsValidatingCoupon(false);
     }
-  };
+  }, [items, subtotalBDT, showToast]);
+
+  const returnedCoupon = searchParams?.get("coupon");
+  const restoredCouponRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!returnedCoupon || !items.length || restoredCouponRef.current === returnedCoupon) return;
+    restoredCouponRef.current = returnedCoupon;
+    setCouponCodeInput(returnedCoupon);
+    void handleApplyCoupon(returnedCoupon);
+  }, [returnedCoupon, items.length, handleApplyCoupon]);
 
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
@@ -321,7 +329,7 @@ function CheckoutContent() {
 
     // 1. Direct Login check
     if (!user) {
-      openLoginModal("/checkout");
+      openLoginModal(window.location.pathname + window.location.search);
       return;
     }
 
@@ -469,6 +477,10 @@ function CheckoutContent() {
       });
 
       const orderData = await orderRes.json();
+      if (orderRes.status === 401) {
+        openLoginModal(window.location.pathname + window.location.search);
+        return;
+      }
       if (!orderRes.ok || !orderData.success) {
         showToast(orderData.error || "অর্ডার তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", "error");
         setIsSubmitting(false);
@@ -713,10 +725,7 @@ function CheckoutContent() {
                         required
                         autoComplete="email"
                         value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          if (formErrors.email) setFormErrors((prev) => ({ ...prev, email: undefined }));
-                        }}
+                        readOnly
                         placeholder="yourname@gmail.com"
                         className={`w-full text-xs sm:text-sm p-3 rounded-xl border transition-all font-medium focus:outline-none ${
                           formErrors.email
@@ -1213,7 +1222,7 @@ function CheckoutContent() {
                         <button
                           type="button"
                           disabled={isValidatingCoupon || !couponCodeInput.trim()}
-                          onClick={() => handleApplyCoupon()}
+                          onClick={() => handleApplyCoupon(couponCodeInput)}
                           className="px-4 py-2 bg-[#1A1D26] hover:bg-black disabled:bg-gray-300 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed"
                         >
                           {isValidatingCoupon ? "..." : "এপ্লাই"}

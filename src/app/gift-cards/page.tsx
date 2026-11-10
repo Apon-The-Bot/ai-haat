@@ -17,7 +17,7 @@ const DENOMINATIONS = [
 export default function GiftCardsPage() {
   const { formatPrice } = useCurrency();
   const { showToast } = useToast();
-  const { user } = useAuth();
+  const { user, openLoginModal, refreshUser } = useAuth();
   const router = useRouter();
 
   const [selectedAmount, setSelectedAmount] = useState<number>(1000);
@@ -31,6 +31,11 @@ export default function GiftCardsPage() {
 
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.id) {
+      openLoginModal("/gift-cards");
+      return;
+    }
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
@@ -47,7 +52,10 @@ export default function GiftCardsPage() {
       });
 
       const data = await res.json();
-      if (res.ok && data.success && data.giftCard) {
+      if (res.status === 401) {
+        openLoginModal("/gift-cards");
+      } else if (res.ok && data.success && data.giftCard) {
+        void refreshUser();
         showToast("🎉 আপনার গিফট কার্ড সফলভাবে তৈরি হয়েছে!", "success");
         // Redirect to wallet or show the code
         router.push(`/dashboard/wallet?giftcard=${data.giftCard.code}`);
@@ -75,7 +83,7 @@ export default function GiftCardsPage() {
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
             ChatGPT, Claude, Canva বা Windows কী—যেকোনো ডিজিটাল প্রোডাক্ট কিনতে AI Haat গিফট কার্ড ব্যবহার করা যায়।
-            ১-ক্লিকে নিজের ওয়ালেটে বা বন্ধুর ইমেইলে পাঠিয়ে দিন।
+            ওয়ালেট ব্যালেন্স দিয়ে গিফট কার্ড কিনুন।
           </p>
         </div>
 

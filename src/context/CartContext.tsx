@@ -24,6 +24,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isRestored, setIsRestored] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { showToast } = useToast();
 
@@ -31,20 +32,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = localStorage.getItem("aihaat_cart");
       if (saved) {
-        setItems(JSON.parse(saved));
+        const restored = JSON.parse(saved);
+        if (Array.isArray(restored)) setItems(restored);
       }
     } catch (e) {
       console.error("Failed to load cart from localStorage", e);
+    } finally {
+      setIsRestored(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!isRestored) return;
     try {
       localStorage.setItem("aihaat_cart", JSON.stringify(items));
     } catch (e) {
       console.error("Failed to save cart to localStorage", e);
     }
-  }, [items]);
+  }, [items, isRestored]);
 
   const addToCart = (product: Product, variation: Variation, quantity = 1) => {
     setItems((prev) => {

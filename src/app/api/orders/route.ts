@@ -226,7 +226,7 @@ export async function GET(req: NextRequest) {
           {
             OR: [
               { userId: user.id },
-              { customerEmail: user.email.toLowerCase().trim() },
+              { userId: null, customerEmail: user.email.toLowerCase().trim() },
             ],
           },
         ];
@@ -304,7 +304,7 @@ export async function GET(req: NextRequest) {
         // Non-admin can ONLY view their own orders
         whereClause.OR = [
           { userId: user.id },
-          { customerEmail: user.email.toLowerCase().trim() },
+          { userId: null, customerEmail: user.email.toLowerCase().trim() },
         ];
       } else {
         // Admin filters
@@ -449,7 +449,9 @@ export async function GET(req: NextRequest) {
     // 5. Fallback to Local JSON DB (with strict ownership filtering)
     let localOrders = getAllOrders();
     if (!isAdmin) {
-      localOrders = localOrders.filter((o) => o.customerEmail?.toLowerCase() === user.email.toLowerCase());
+      localOrders = localOrders.filter((o) => o.userId
+        ? o.userId === user.id
+        : o.customerEmail?.toLowerCase() === user.email.toLowerCase());
     } else {
       if (email) {
         localOrders = localOrders.filter((o) => o.customerEmail?.toLowerCase() === email.toLowerCase());
@@ -481,6 +483,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth();
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+  const customerEmail = user.email.trim().toLowerCase();
   // CSRF Defense
   if (!isSameOriginMutation(req)) {
     return NextResponse.json({ error: "Cross-site request forgery blocked" }, { status: 403 });
@@ -500,7 +506,6 @@ export async function POST(req: NextRequest) {
       orderId,
       customerName,
       customerPhone,
-      customerEmail,
       items,
       couponCode,
       paymentMethod,
@@ -527,29 +532,28 @@ export async function POST(req: NextRequest) {
     }
 
     // 0. Server-Enforced Feature Entitlement & Account Restriction Check
-    if (customerEmail) {
-      const dbUser = await prisma.user.findFirst({
+    const entitlement = await checkFeatureEntitlement(user.id, "SHOPPING_PURCHASE", {
+      action: "PURCHASE",
+    });
+    if (!entitlement.allowed) {
+      return NextResponse.json(
+        { error: entitlement.reason || "Order placement is currently restricted for your account." },
+        { status: 403 }
+      );
+    }
+
+    let previousOrderId: string | null = null;
+    if (isRenewal || renewedFromOrderId || renewedFromKeyId) {
+      const previousOrder = await prisma.order.findFirst({
         where: {
-          OR: [
-            { email: customerEmail.trim() },
-            { email: customerEmail.trim().toLowerCase() },
-          ],
+          userId: user.id,
+          OR: [{ id: renewedFromOrderId || "" }, { orderNumber: renewedFromOrderId || "" }],
+          ...(renewedFromKeyId ? { deliveredKeys: { some: { id: renewedFromKeyId } } } : {}),
         },
         select: { id: true },
       });
-
-      if (dbUser) {
-        const entitlement = await checkFeatureEntitlement(dbUser.id, "SHOPPING_PURCHASE", {
-          action: "PURCHASE",
-        });
-
-        if (!entitlement.allowed) {
-          return NextResponse.json(
-            { error: entitlement.reason || "Order placement is currently restricted for your account." },
-            { status: 403 }
-          );
-        }
-      }
+      if (!previousOrder) return NextResponse.json({ error: "Renewal order not found." }, { status: 404 });
+      previousOrderId = previousOrder.id;
     }
 
     // 1. Server-Authoritative Price & Coupon Recalculation
@@ -585,7 +589,8 @@ export async function POST(req: NextRequest) {
       id: generatedNumber,
       orderNumber: generatedNumber,
       customerName,
-      customerEmail: customerEmail ? customerEmail.trim().toLowerCase() : "",
+      userId: user.id,
+      customerEmail,
       customerPhone,
       items: quote.items,
       totalBDT: quote.totalBDT,
@@ -612,29 +617,15 @@ export async function POST(req: NextRequest) {
       updatedAt: now.toISOString(),
     };
 
-    let userRecord: any = null;
     // 2. Save Order to Prisma MySQL with atomic coupon consumption
-    try {
-      if (customerEmail) {
-        userRecord = await prisma.user.findFirst({
-          where: {
-            OR: [
-              { email: customerEmail.trim().toLowerCase() },
-              { email: customerEmail.trim() },
-            ],
-          },
-        });
-      }
-
-      await prisma.$transaction(async (tx) => {
-        await tx.order.upsert({
-          where: { orderNumber: generatedNumber },
-          create: {
+    await prisma.$transaction(async (tx) => {
+        await tx.order.create({
+          data: {
             id: generatedNumber,
             orderNumber: generatedNumber,
-            userId: userRecord?.id || null,
+            userId: user.id,
             customerName,
-            customerEmail: customerEmail ? customerEmail.trim().toLowerCase() : "customer@aihaat.shop",
+            customerEmail,
             customerPhone,
             notes: notes || null,
             subtotalBDT: quote.subtotalBDT,
@@ -646,7 +637,7 @@ export async function POST(req: NextRequest) {
             paymentStatus: "PENDING",
             deliveryStatus: "ORDER_PLACED",
             isRenewal: Boolean(isRenewal),
-            renewedFromOrderId: renewedFromOrderId || null,
+            renewedFromOrderId: previousOrderId,
             costPriceTotalBDT: quote.costPriceTotalBDT || null,
             // Direct Product Gifting
             isGift: Boolean(isGift),
@@ -692,17 +683,6 @@ export async function POST(req: NextRequest) {
               },
             },
           },
-          update: {
-            userId: userRecord?.id || undefined,
-            customerName,
-            customerEmail: customerEmail ? customerEmail.trim().toLowerCase() : "customer@aihaat.shop",
-            customerPhone,
-            subtotalBDT: quote.subtotalBDT,
-            discountBDT: quote.discountBDT,
-            totalBDT: quote.totalBDT,
-            paymentMethod: paymentMethod || "gateway",
-            updatedAt: now,
-          },
         });
 
         // V9 FIX: Atomic coupon consumption INSIDE the transaction
@@ -712,13 +692,14 @@ export async function POST(req: NextRequest) {
             WHERE id = ${quote.couponId} AND usedCount < usageLimit
           `;
         }
-      });
-    } catch (prismaErr) {
-      console.warn("[Prisma Order Create Error - Non-fatal]:", prismaErr);
-    }
+    });
 
     // 3. Backup to JSON
-    saveOrder(newOrder);
+    try {
+      saveOrder(newOrder);
+    } catch (backupError) {
+      console.warn("[Order backup warning]:", backupError);
+    }
 
     // 3.0 Mark Abandoned Cart Converted (suppress recovery emails)
     if (customerEmail) {
@@ -757,7 +738,7 @@ export async function POST(req: NextRequest) {
         eventType: NOTIFICATION_EVENTS.ORDER_CREATED,
         entityType: "ORDER",
         entityId: generatedNumber,
-        userId: userRecord?.id || undefined,
+        userId: user.id,
         recipientEmail: customerEmail,
         recipientPhone: customerPhone,
         dedupeKey: `order_created_${generatedNumber}`,
@@ -811,7 +792,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("[Orders POST Error]:", error);
     return NextResponse.json(
-      { error: error?.message || "Failed to create order" },
+      { error: "Failed to create order" },
       { status: 500 }
     );
   }
@@ -881,6 +862,12 @@ export async function PATCH(req: NextRequest) {
           : deliveryStatus.toUpperCase() === "PREPARING"
           ? "PREPARING"
           : "ORDER_PLACED";
+
+      if (normalizedDelivery === "DELIVERED" &&
+        (!existing.userId || existing.paymentStatus !== "VERIFIED" || existing.deliveryStatus === "CANCELLED" ||
+          (updateData.paymentStatus && updateData.paymentStatus !== "VERIFIED"))) {
+        return NextResponse.json({ error: "Verify payment on an account-owned order before marking it delivered." }, { status: 409 });
+      }
 
       // Validate legal transition: DELIVERED -> PENDING without revocation is blocked
       if (existing.deliveryStatus === "DELIVERED" && normalizedDelivery === "ORDER_PLACED") {

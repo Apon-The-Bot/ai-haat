@@ -25,38 +25,43 @@ import PurchaseTracker from "@/components/analytics/PurchaseTracker";
 function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams?.get("orderId") || "AH-XXXXX";
-  const status = (searchParams?.get("status") || "completed").toLowerCase();
-  const trxId = searchParams?.get("trxId") || "";
   const { language } = useLanguage();
   const { showToast } = useToast();
   const isBn = language === "bn";
 
-  const isCompleted = status === "completed" || status === "success";
-  const isPending = status === "pending";
-
-  const [giftDetails, setGiftDetails] = useState<{
+  const [order, setOrder] = useState<{
+    reference: string;
+    paymentStatus: string;
+    deliveryStatus: string;
+    trxId?: string;
     isGift: boolean;
     recipientName?: string | null;
     giftClaimToken?: string | null;
   } | null>(null);
+  const [loginRequired, setLoginRequired] = useState(false);
   const [copiedGiftLink, setCopiedGiftLink] = useState(false);
+  const ownedOrder = order?.reference === orderId ? order : null;
+  const giftDetails = ownedOrder?.isGift ? ownedOrder : null;
+  const status = ownedOrder?.deliveryStatus === "CANCELLED" || ownedOrder?.paymentStatus === "FAILED"
+    ? "failed"
+    : ownedOrder?.paymentStatus === "VERIFIED" ? "completed" : "pending";
+  const isCompleted = status === "completed";
+  const isPending = status === "pending";
+  const trxId = ownedOrder?.trxId || "";
 
   useEffect(() => {
     if (!orderId || orderId === "AH-XXXXX") return;
 
     let isMounted = true;
-    fetch(`/api/orders?query=${encodeURIComponent(orderId)}&tracking=true`)
-      .then((res) => res.json())
+    setLoginRequired(false);
+    fetch(`/api/orders?orderId=${encodeURIComponent(orderId)}`, { cache: "no-store" })
+      .then(async (res) => {
+        if (isMounted && res.status === 401) setLoginRequired(true);
+        return res.ok ? res.json() : null;
+      })
       .then((data) => {
-        if (isMounted && data.success && Array.isArray(data.orders) && data.orders.length > 0) {
-          const ord = data.orders[0];
-          if (ord.isGift && ord.giftClaimToken) {
-            setGiftDetails({
-              isGift: true,
-              recipientName: ord.recipientName,
-              giftClaimToken: ord.giftClaimToken,
-            });
-          }
+        if (isMounted && data?.success && data.order) {
+          setOrder({ ...data.order, reference: orderId });
         }
       })
       .catch((err) => console.warn("[SuccessPage] Failed to fetch order gift status:", err));
@@ -74,6 +79,11 @@ function SuccessContent() {
   return (
     <div className="min-h-[75vh] flex items-center justify-center py-12 px-4 bg-gray-50/70">
       <div className="max-w-lg w-full bg-white rounded-3xl border border-[#E8E8EE] shadow-sm p-6 sm:p-10 text-center space-y-6">
+        {loginRequired && (
+          <Link className="text-sm font-semibold text-brand-primary underline" href={`/login?callbackUrl=${encodeURIComponent(`/checkout/success?orderId=${encodeURIComponent(orderId)}`)}`}>
+            {isBn ? "অর্ডারের অবস্থা দেখতে লগইন করুন" : "Sign in to see your order status"}
+          </Link>
+        )}
         
         {/* Status Icon */}
         <div

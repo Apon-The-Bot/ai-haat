@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { requireAuth } from "@/lib/auth-guard";
+import { isSameOriginMutation } from "@/lib/security/csrf";
+import { randomUUID } from "node:crypto";
+import { checkFeatureEntitlement } from "@/lib/user-control/user-control-service";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  const auth = await requireAuth();
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+  if (!isSameOriginMutation(req)) {
+    return NextResponse.json({ error: "Cross-site request forgery blocked" }, { status: 403 });
+  }
   const ip = getClientIp(req);
   const rateLimit = checkRateLimit(`payment-create:${ip}`, 6, 60 * 1000);
   if (!rateLimit.allowed) {
@@ -17,9 +27,7 @@ export async function POST(req: Request) {
       orderId,
       amount,
       customerName,
-      customerEmail,
       customerPhone,
-      metadata,
     } = body;
 
     const baseUrl = process.env.PIPRAPAY_BASE_URL;
@@ -35,11 +43,20 @@ export async function POST(req: Request) {
     // SECURITY FIX: Use canonical server-configured URL instead of request headers
     const siteUrl = process.env.NEXTAUTH_URL || "https://aihaat.shop";
 
-    const currentOrderId = (orderId || `AH-${Date.now().toString().slice(-5)}`).trim();
+    const reference = typeof orderId === "string" ? orderId.trim() : "";
+    if (!reference) {
+      return NextResponse.json({ success: false, message: "Order reference required." }, { status: 400 });
+    }
+    const isTopup = reference.startsWith("WT-");
+    let currentOrderId = isTopup ? `WT-${randomUUID()}` : reference;
     let payableAmount = 0;
 
     // 1. Derive authoritative payable amount
-    if (!currentOrderId.startsWith("WT-")) {
+    if (!isTopup) {
+      const entitlement = await checkFeatureEntitlement(user.id, "SHOPPING_PURCHASE", { action: "PURCHASE" });
+      if (!entitlement.allowed) {
+        return NextResponse.json({ success: false, message: entitlement.reason }, { status: 403 });
+      }
       // STORE ORDER: Amount MUST come from database — never trust client
       const orderRecord = await prisma.order.findFirst({
         where: {
@@ -50,7 +67,7 @@ export async function POST(req: Request) {
         },
       });
 
-      if (!orderRecord) {
+      if (!orderRecord || orderRecord.userId !== user.id) {
         return NextResponse.json(
           { success: false, message: "Order not found." },
           { status: 404 }
@@ -64,8 +81,12 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+      if (orderRecord.paymentStatus !== "PENDING" || orderRecord.deliveryStatus === "CANCELLED") {
+        return NextResponse.json({ success: false, message: "This order cannot be paid." }, { status: 409 });
+      }
 
       payableAmount = Number(orderRecord.totalBDT);
+      currentOrderId = orderRecord.orderNumber;
     } else {
       // WALLET TOP-UP: Accept client amount but enforce minimum
       payableAmount = Number(amount);
@@ -78,14 +99,14 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!payableAmount || payableAmount <= 0) {
+    if (!Number.isFinite(payableAmount) || payableAmount <= 0) {
       return NextResponse.json(
         { success: false, message: "Invalid payment amount." },
         { status: 400 }
       );
     }
 
-    const cleanEmail = (customerEmail || "").trim().toLowerCase();
+    const cleanEmail = user.email.trim().toLowerCase();
     const cleanPhone = (customerPhone || "01700000000").trim();
     const cleanName = (customerName || "Customer").trim();
 
@@ -93,7 +114,7 @@ export async function POST(req: Request) {
 
     const payload = {
       full_name: cleanName,
-      email_address: cleanEmail || "customer@aihaat.shop",
+      email_address: cleanEmail,
       mobile_number: cleanPhone,
       amount: payableAmount.toFixed(2),
       currency: "BDT",
@@ -102,8 +123,8 @@ export async function POST(req: Request) {
       metadata: {
         orderId: currentOrderId,
         email: cleanEmail,
-        userId: metadata?.userId || "",
-        ...(metadata || {}),
+        userId: user.id,
+        ...(isTopup ? { type: "WALLET_TOPUP" } : {}),
       },
     };
 

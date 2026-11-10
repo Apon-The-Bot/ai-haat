@@ -50,7 +50,7 @@ import { getAllOrders, updateOrderStatus } from "@/lib/orders-db";
 /**
  * Retrieve public gift order details by claim token
  */
-export async function getGiftByClaimToken(token: string) {
+export async function getGiftByClaimToken(token: string, viewerEmail: string) {
   if (!token || typeof token !== "string") return null;
   const cleanToken = token.trim();
 
@@ -74,6 +74,7 @@ export async function getGiftByClaimToken(token: string) {
     });
 
     if (order && order.isGift) {
+      if (!viewerEmail || (order.recipientEmail && order.recipientEmail.toLowerCase() !== viewerEmail.toLowerCase())) return null;
       return {
         orderNumber: order.orderNumber,
         senderName: order.customerName,
@@ -100,7 +101,7 @@ export async function getGiftByClaimToken(token: string) {
           image: it.image,
         })),
         deliveredCredentials:
-          order.deliveryStatus === "DELIVERED"
+          order.paymentStatus === "VERIFIED" && order.deliveryStatus === "DELIVERED"
             ? order.deliveredKeys.map((k) => {
                 const parsed = parseCredentials(k.credentials);
                 return {
@@ -126,7 +127,7 @@ export async function getGiftByClaimToken(token: string) {
   // Fallback to local JSON DB
   try {
     const local = getAllOrders().find((o) => o.giftClaimToken === cleanToken && o.isGift);
-    if (local) {
+    if (local && viewerEmail && (!local.recipientEmail || local.recipientEmail.toLowerCase() === viewerEmail.toLowerCase())) {
       return {
         orderNumber: local.orderNumber || local.id,
         senderName: local.customerName,
@@ -153,7 +154,7 @@ export async function getGiftByClaimToken(token: string) {
           image: it.image,
         })),
         deliveredCredentials:
-          local.deliveryStatus === "Delivered" && local.credentialsDelivered
+          local.paymentStatus === "Completed" && local.deliveryStatus === "Delivered" && local.credentialsDelivered
             ? [
                 {
                   id: "cred-local-1",

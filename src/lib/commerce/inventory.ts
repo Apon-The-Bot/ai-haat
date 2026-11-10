@@ -346,7 +346,7 @@ export async function tryAutoFulfillOrder(orderId: string): Promise<{
       },
     });
 
-    if (!order || !order.items || order.items.length === 0) {
+    if (!order?.userId || !order.items || order.items.length === 0) {
       return { success: false, totalItems: 0, deliveredItemsCount: 0, orderStatus: "ORDER_PLACED" };
     }
 
@@ -364,7 +364,12 @@ export async function tryAutoFulfillOrder(orderId: string): Promise<{
     }> = [];
 
     // Process each OrderItem atomically
-    await prisma.$transaction(async (tx) => {
+    const fulfillment = await prisma.$transaction(async (tx) => {
+      const eligible = await tx.order.updateMany({
+        where: { id: order.id, userId: order.userId, paymentStatus: "VERIFIED", deliveryStatus: { notIn: ["CANCELLED", "DELIVERED"] } },
+        data: { updatedAt: new Date() },
+      });
+      if (!eligible.count) return null;
       for (const item of order.items) {
         if (!item.productId) continue;
 
@@ -445,22 +450,16 @@ export async function tryAutoFulfillOrder(orderId: string): Promise<{
           });
         }
       }
+      const allItems = await tx.orderItem.findMany({ where: { orderId: order.id } });
+      const allDelivered = allItems.length > 0 && allItems.every((it) => it.deliveryStatus === "DELIVERED");
+      const finalStatus: DeliveryStatus = allDelivered ? "DELIVERED" : "PROCESSING";
+      await tx.order.update({ where: { id: order.id }, data: { deliveryStatus: finalStatus } });
+      return { allItems, allDelivered, finalStatus };
     });
-
-    // Check all items to determine final order delivery status
-    const allItems = await prisma.orderItem.findMany({
-      where: { orderId: order.id },
-    });
-
-    const allDelivered = allItems.length > 0 && allItems.every((it) => it.deliveryStatus === "DELIVERED");
-    const anyDelivered = allItems.some((it) => it.deliveryStatus === "DELIVERED");
-
-    const finalStatus: DeliveryStatus = allDelivered ? "DELIVERED" : anyDelivered ? "PROCESSING" : "PROCESSING";
-
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { deliveryStatus: finalStatus },
-    });
+    if (!fulfillment) {
+      return { success: false, totalItems: order.items.length, deliveredItemsCount: 0, orderStatus: order.deliveryStatus };
+    }
+    const { allItems, allDelivered, finalStatus } = fulfillment;
 
     const { dispatchNotificationEvent, NOTIFICATION_EVENTS } = await import("@/lib/notifications");
 

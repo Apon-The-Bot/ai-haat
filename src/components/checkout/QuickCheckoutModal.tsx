@@ -41,6 +41,7 @@ export function QuickCheckoutModal() {
     initialQuantity,
     closeQuickCheckout,
     setSelectedVariation,
+    resumeAfterLogin,
   } = useQuickCheckout();
   const { formatPrice } = useCurrency();
   const { user, refreshUser } = useAuth();
@@ -90,7 +91,7 @@ export function QuickCheckoutModal() {
   useEffect(() => {
     if (user && isOpen) {
       setFullName((prev) => prev || user.name || "");
-      setEmail((prev) => prev || user.email || "");
+      setEmail(user.email || "");
       setPhone((prev) => prev || user.phone || "");
     }
   }, [user, isOpen]);
@@ -185,6 +186,10 @@ export function QuickCheckoutModal() {
   const handleQuickSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+    if (!user?.id) {
+      resumeAfterLogin(product, selectedVariation ?? undefined, quantity);
+      return;
+    }
 
     if (isCurrentOutOfStock) {
       showToast("দুঃখিত, নির্বাচিত অপশনটি বর্তমানে স্টক আউট।", "error");
@@ -275,6 +280,10 @@ export function QuickCheckoutModal() {
       });
 
       const orderData = await orderRes.json();
+      if (orderRes.status === 401) {
+        resumeAfterLogin(product, selectedVariation ?? undefined, quantity);
+        return;
+      }
       if (!orderRes.ok || !orderData.success) {
         showToast(orderData.error || "অর্ডার তৈরিতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", "error");
         setIsSubmitting(false);
@@ -615,7 +624,7 @@ export function QuickCheckoutModal() {
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    readOnly
                     placeholder="example@gmail.com"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#FC5C03]/20 focus:border-[#FC5C03]"
                   />

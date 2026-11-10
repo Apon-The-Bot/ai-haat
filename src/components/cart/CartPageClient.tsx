@@ -189,10 +189,13 @@ export function CartPageClient() {
       showToast("কার্টে থাকা স্টক আউট পণ্যটি ডিলিট করে চেকআউটে এগিয়ে যান।", "error");
       return;
     }
+    const checkoutUrl = appliedCoupon
+      ? `/checkout?coupon=${encodeURIComponent(appliedCoupon.code)}`
+      : "/checkout";
     if (!user) {
-      openLoginModal("/checkout");
+      openLoginModal(checkoutUrl);
     } else {
-      router.push("/checkout");
+      router.push(checkoutUrl);
     }
   };
 

@@ -34,10 +34,10 @@ export async function POST(req: NextRequest) {
 
     let isVerifiedSuccess = false;
     let verifiedAmount = 0;
-    let verifiedEmail = (body?.email_address || body?.customer_email || body?.metadata?.email || "").toLowerCase().trim();
-    let verifiedUserId = body?.metadata?.userId || "";
+    let verifiedEmail = "";
+    let verifiedUserId = "";
     let realTrxId = transactionRef;
-    let matchedOrderId = orderId;
+    let matchedOrderId = "";
     let verifiedOrderIdFromProvider = "";
 
     // 1. Direct Server-to-Server Verification with PipraPay Gateway
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
       console.error("[Webhook Verification Error]:", verErr);
     }
 
-    if (!isVerifiedSuccess) {
+    if (!isVerifiedSuccess || !verifiedOrderIdFromProvider || !Number.isFinite(verifiedAmount) || verifiedAmount <= 0) {
       console.warn(`[PaymentAudit] PAYMENT_FAILED: Unverified webhook for ref=${transactionRef}, orderId=${orderId}`);
       return NextResponse.json({ success: false, error: "Payment verification failed" }, { status: 400 });
     }
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        if (!orderRecord) {
+        if (!orderRecord?.userId || (verifiedUserId && verifiedUserId !== orderRecord.userId)) {
           console.warn(`[PaymentAudit] PAYMENT_FAILED: Order "${matchedOrderId}" not found for webhook trxRef="${transactionRef}"`);
           return NextResponse.json({ success: true, message: "Order not found, webhook acknowledged" });
         }
@@ -217,6 +217,7 @@ export async function POST(req: NextRequest) {
           where: {
             id: orderRecord.id,
             paymentStatus: "PENDING", // Atomic guard
+            deliveryStatus: { not: "CANCELLED" },
           },
           data: {
             paymentStatus: "VERIFIED",
@@ -290,9 +291,11 @@ export async function POST(req: NextRequest) {
           }
         } else {
           console.log(`[PaymentAudit] DUPLICATE_EVENT_IGNORED: Order "${matchedOrderId}" already processed (webhook). TrxRef="${transactionRef}"`);
+          return NextResponse.json({ success: true, message: "No payable order transition" });
         }
       } catch (dbErr) {
         console.warn("[Prisma Webhook Update Error]:", dbErr);
+        return NextResponse.json({ success: false, error: "Order update failed" }, { status: 500 });
       }
 
       // Sync to JSON fallback (non-critical)

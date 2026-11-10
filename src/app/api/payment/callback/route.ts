@@ -95,10 +95,10 @@ export async function GET(req: NextRequest) {
   }
 
   // 2. Process Verified Successful Payment
-  if (isVerifiedSuccess) {
+  if (isVerifiedSuccess && Number.isFinite(verifiedAmount) && verifiedAmount > 0) {
     // V3 FIX: Validate that the orderId from the provider matches the orderId from the callback URL
     // This prevents transaction reuse attacks where a transaction from Order A is used for Order B
-    if (verifiedOrderId && orderId && verifiedOrderId !== orderId) {
+    if (!verifiedOrderId || verifiedOrderId !== orderId) {
       console.warn(`[PaymentAudit] PAYMENT_TRX_REUSE_BLOCKED: Callback orderId="${orderId}" does not match provider orderId="${verifiedOrderId}" for trxRef="${transactionRef}"`);
       if (isWalletTopup) {
         return NextResponse.redirect(`${siteUrl}/dashboard/wallet?topup=failed&reason=mismatch`);
@@ -163,7 +163,7 @@ export async function GET(req: NextRequest) {
           },
         });
 
-        if (!orderRecord) {
+        if (!orderRecord?.userId || (verifiedUserId && verifiedUserId !== orderRecord.userId)) {
           console.warn(`[PaymentAudit] PAYMENT_FAILED: Order "${orderId}" not found for callback trxRef="${transactionRef}"`);
           return NextResponse.redirect(
             `${siteUrl}/checkout/success?orderId=${encodeURIComponent(orderId)}&status=failed`
@@ -211,6 +211,7 @@ export async function GET(req: NextRequest) {
           where: {
             id: orderRecord.id,
             paymentStatus: "PENDING", // Atomic guard — only one request succeeds
+            deliveryStatus: { not: "CANCELLED" },
           },
           data: {
             paymentStatus: "VERIFIED",
@@ -269,11 +270,16 @@ export async function GET(req: NextRequest) {
             console.warn("[Analytics] Purchase tracking error (non-fatal):", analyticsErr);
           }
         } else {
+          const current = await prisma.order.findUnique({ where: { id: orderRecord.id } });
+          if (current?.paymentStatus !== "VERIFIED" || current.trxId !== (realTrxId || transactionRef)) {
+            return NextResponse.redirect(`${siteUrl}/checkout/success?orderId=${encodeURIComponent(orderId)}&status=pending`);
+          }
           // Order was already updated (by webhook or concurrent callback) — idempotent
           console.log(`[PaymentAudit] DUPLICATE_EVENT_IGNORED: Order "${orderId}" already processed (callback). TrxRef="${transactionRef}"`);
         }
       } catch (dbErr) {
         console.warn("[Prisma callback update order error]:", dbErr);
+        return NextResponse.redirect(`${siteUrl}/checkout/success?orderId=${encodeURIComponent(orderId)}&status=pending`);
       }
 
       // Sync to JSON fallback (non-critical)

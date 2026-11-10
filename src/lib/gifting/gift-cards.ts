@@ -3,7 +3,7 @@ import crypto from "crypto";
 
 export interface CreateGiftCardParams {
   amountBDT: number;
-  purchasedByUserId?: string;
+  purchasedByUserId: string;
   recipientEmail?: string;
   recipientName?: string;
   senderName?: string;
@@ -27,12 +27,30 @@ export function generateGiftCardCode(): string {
  * Creates a new active digital gift card record.
  */
 export async function createGiftCard(params: CreateGiftCardParams) {
+  if (!Number.isFinite(params.amountBDT) || params.amountBDT < 50) return null;
   const code = generateGiftCardCode();
   const expiresAt = params.expiresInDays
     ? new Date(Date.now() + params.expiresInDays * 24 * 60 * 60 * 1000)
     : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1-year default validity
 
-  const giftCard = await prisma.giftCard.create({
+  return prisma.$transaction(async (tx) => {
+    const debit = await tx.user.updateMany({
+      where: { id: params.purchasedByUserId, walletBalanceBDT: { gte: params.amountBDT } },
+      data: { walletBalanceBDT: { decrement: params.amountBDT } },
+    });
+    if (!debit.count) return null;
+    await tx.walletTransaction.create({
+      data: {
+        userId: params.purchasedByUserId,
+        amountBDT: params.amountBDT,
+        type: "PURCHASE",
+        method: "wallet",
+        trxId: `GIFT-${code}`,
+        status: "APPROVED",
+        note: "Gift card purchase",
+      },
+    });
+    return tx.giftCard.create({
     data: {
       code,
       initialAmountBDT: params.amountBDT,
@@ -47,9 +65,8 @@ export async function createGiftCard(params: CreateGiftCardParams) {
       orderId: params.orderId,
       expiresAt,
     },
+    });
   });
-
-  return giftCard;
 }
 
 /**

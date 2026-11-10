@@ -6,12 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { safeAuthReturn } from "@/lib/security/auth-return";
 
 function LoginForm() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams?.get("callbackUrl") || searchParams?.get("redirect") || "/dashboard";
+  const callbackUrl = safeAuthReturn(searchParams?.get("callbackUrl") || searchParams?.get("redirect"), "/dashboard");
 
   useEffect(() => {
     if (status === "authenticated" && session) {

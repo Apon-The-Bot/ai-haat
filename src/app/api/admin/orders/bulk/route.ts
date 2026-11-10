@@ -82,6 +82,12 @@ export async function POST(req: NextRequest) {
         updateData.deliveryStatus = normalizedDelivery;
       }
 
+      if (normalizedDelivery === "DELIVERED" &&
+        (existingOrders.some((order) => !order.userId || order.paymentStatus !== "VERIFIED" || order.deliveryStatus === "CANCELLED") ||
+          (normalizedPayment && normalizedPayment !== "VERIFIED"))) {
+        return NextResponse.json({ error: "Verify payment on account-owned orders before marking them delivered." }, { status: 409 });
+      }
+
       await prisma.$transaction(async (tx) => {
         // Bulk update
         await tx.order.updateMany({

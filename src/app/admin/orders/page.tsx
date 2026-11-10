@@ -336,11 +336,7 @@ export default function AdminOrdersPage() {
     setEmailTo(order.customerEmail);
     const summary = order.items.map((it) => `${it.productName} (${it.variationName})`).join(", ");
     setEmailSubject(`Your AI Haat Delivery: ${summary} (Order #${order.orderNumber || order.id})`);
-    setCredentials(
-      `Email: ${order.customerEmail.split("@")[0]}@access.aihaat.net\nPassword: Pass${Math.floor(
-        1000 + Math.random() * 9000
-      )}!\nProfile PIN: ${Math.floor(1000 + Math.random() * 9000)}`
-    );
+    setCredentials("");
     setDownloadUrl("");
     setInstructions("Log in using the credentials above. Do not change recovery or account settings. Full replacement warranty active.");
   };
@@ -360,7 +356,7 @@ export default function AdminOrdersPage() {
       const prodSummary = dispatchOrder.items.map((it) => `${it.productName} (${it.variationName})`).join(", ");
 
       // Send Delivery Email via API
-      await fetch("/api/admin/send-delivery-email", {
+      const response = await fetch("/api/admin/send-delivery-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -376,21 +372,12 @@ export default function AdminOrdersPage() {
         }),
       });
 
-      // Update Order Status in DB
-      await fetch("/api/orders", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderNumber: orderNum,
-          deliveryStatus: "DELIVERED",
-          paymentStatus: "VERIFIED",
-          credentialsDelivered: credentials,
-          deliveryInstructions: instructions,
-          downloadUrl: downloadUrl.trim() || null,
-        }),
-      });
-
-      showToast(`Delivery email sent to ${emailTo}! Order marked as Delivered.`, "success");
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        showToast(result.error || "Could not deliver order.", "error");
+        return;
+      }
+      showToast("Delivery saved to the customer's vault.", "success");
       setDispatchOrder(null);
       fetchOrders(true);
       if (selectedOrderNumber) {
@@ -1595,7 +1582,7 @@ export default function AdminOrdersPage() {
                       type="email"
                       required
                       value={emailTo}
-                      onChange={(e) => setEmailTo(e.target.value)}
+                      readOnly
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-hidden focus:border-[#FC5C03]"
                     />
                   </div>

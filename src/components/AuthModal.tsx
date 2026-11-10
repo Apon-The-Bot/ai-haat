@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { X, ShieldCheck, Zap, Lock, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Logo } from "@/components/Logo";
+import { safeAuthReturn } from "@/lib/security/auth-return";
 
 export function AuthModal() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export function AuthModal() {
 
   if (!isAuthModalOpen) return null;
 
-  const targetUrl = redirectCallbackUrl || "/";
+  const targetUrl = safeAuthReturn(redirectCallbackUrl);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);

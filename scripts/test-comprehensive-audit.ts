@@ -242,14 +242,16 @@ async function runAudit() {
     expect(/^AIHT-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(sampleCode), r10, `Gift card code format valid: ${sampleCode}`);
 
     // Create a temporary gift card in DB and test redemption flow
-    const testUser = await prisma.user.findFirst();
+    const testUser = await prisma.user.findFirst({ where: { walletBalanceBDT: { gte: 100 } } });
     if (testUser) {
       const initialBalance = Number(testUser.walletBalanceBDT || 0);
       const testGiftCard = await createGiftCard({
         amountBDT: 100,
+        purchasedByUserId: testUser.id,
         senderName: "Audit Test Suite",
         customMessage: "Automated Verification Test Card",
       });
+      if (!testGiftCard) throw new Error("Fixture wallet could not fund the gift card");
       expect(testGiftCard.status === "ACTIVE", r10, "Newly created gift card has ACTIVE status");
       expect(testGiftCard.initialAmountBDT === 100, r10, "Gift card initial balance matches requested amount");
 
@@ -264,6 +266,7 @@ async function runAudit() {
 
       // Clean up test data
       await prisma.walletTransaction.deleteMany({ where: { trxId: `GC_${testGiftCard.code.replace(/-/g, "")}` } });
+      await prisma.walletTransaction.deleteMany({ where: { trxId: `GIFT-${testGiftCard.code}` } });
       await prisma.giftCard.delete({ where: { id: testGiftCard.id } });
       await prisma.user.update({ where: { id: testUser.id }, data: { walletBalanceBDT: initialBalance } });
       expect(true, r10, "Temporary gift card test data cleaned up safely");

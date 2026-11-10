@@ -73,17 +73,12 @@ export async function POST(req: NextRequest) {
           throw new Error("Order not found.");
         }
 
-        // SECURITY FIX: Check both userId and customerEmail for ownership
-        // Prevents guest order hijacking when userId is null
-        const orderEmailClean = orderRecord.customerEmail?.toLowerCase().trim();
-        const userEmailClean = user.email.toLowerCase().trim();
-        const isOwner = orderRecord.userId === user.id || orderEmailClean === userEmailClean;
-        if (!isOwner && user.role !== "ADMIN") {
+        if (orderRecord.userId !== user.id) {
           throw new Error("Unauthorized access to order.");
         }
 
-        if (orderRecord.paymentStatus === "VERIFIED") {
-          throw new Error("Order is already paid and verified.");
+        if (orderRecord.paymentStatus !== "PENDING" || orderRecord.deliveryStatus === "CANCELLED") {
+          throw new Error("This order cannot be paid.");
         }
 
         requiredAmount = Number(orderRecord.totalBDT);
@@ -143,6 +138,7 @@ export async function POST(req: NextRequest) {
           where: {
             id: orderRecord.id,
             paymentStatus: "PENDING", // Atomic guard
+            deliveryStatus: { not: "CANCELLED" },
           },
           data: {
             paymentStatus: "VERIFIED",

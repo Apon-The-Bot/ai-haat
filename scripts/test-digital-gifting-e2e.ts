@@ -96,7 +96,7 @@ async function runE2ETest() {
 
   // 4. Test Public Claim Retrieval via Token
   console.log("\n[Test 4] Querying Public Gift Claim Portal API...");
-  const publicGift = await getGiftByClaimToken(testToken);
+  const publicGift = await getGiftByClaimToken(testToken, createdOrder.recipientEmail ?? "recipient@example.test");
   if (!publicGift) {
     throw new Error("Failed to retrieve gift details using token!");
   }
@@ -130,7 +130,7 @@ async function runE2ETest() {
 
   // 6. Verify State After Unboxing
   console.log("\n[Test 6] Re-fetching to Verify Opened State in DB...");
-  const refreshedGift = await getGiftByClaimToken(testToken);
+  const refreshedGift = await getGiftByClaimToken(testToken, createdOrder.recipientEmail ?? "recipient@example.test");
   console.log(`  - giftWrapOpened: ${refreshedGift?.giftWrapOpened}`);
   console.log(`  - giftOpenedAt: ${refreshedGift?.giftOpenedAt}`);
   if (!refreshedGift?.giftWrapOpened || !refreshedGift?.giftOpenedAt) {
