@@ -153,6 +153,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
       group: "SYSTEM & AUDIT",
       items: [
         { name: "Site Settings", href: "/admin/settings", icon: Settings },
+        { name: "Meta Tracking", href: "/admin/integrations/meta", icon: Settings },
         { name: "Notification Logs", href: "/admin/notifications", icon: Bell },
         { name: "Audit Logs", href: "/admin/audit-logs", icon: Activity },
       ],

@@ -9,6 +9,8 @@ import { getClientIp, checkRateLimit, rateLimitResponse } from "@/lib/rate-limit
 import { isSameOriginMutation } from "@/lib/security/csrf";
 import { generateGiftToken } from "@/lib/gifting/product-gifting";
 import { checkFeatureEntitlement } from "@/lib/user-control/user-control-service";
+import { consentId, META_CONSENT_COOKIE, metaClickCookie, metaUserAgent } from "@/lib/analytics/meta-consent";
+import { trackServerPurchase } from "@/lib/analytics/server";
 
 export const dynamic = "force-dynamic";
 
@@ -293,7 +295,8 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
       }
 
-      return NextResponse.json({ success: true, order: orderDetail });
+      const { metaConsentId, metaAttribution, ...visibleOrder } = orderDetail;
+      return NextResponse.json({ success: true, order: visibleOrder });
     }
 
     // 4. Query Prisma MySQL Database with Multi-filtering & Server Pagination
@@ -579,6 +582,10 @@ export async function POST(req: NextRequest) {
     const generatedNumber = `AH-${randomBytes(4).toString("hex").toUpperCase()}`;
     const generatedGiftToken = isGift ? generateGiftToken() : null;
     const now = new Date();
+    const advertisingId = consentId(req.cookies?.get(META_CONSENT_COOKIE)?.value);
+    const advertisingConsent = advertisingId
+      ? await prisma.advertisingConsent.findUnique({ where: { id: advertisingId } }).catch(() => null)
+      : null;
     const dateFormatted = now.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -626,6 +633,14 @@ export async function POST(req: NextRequest) {
             userId: user.id,
             customerName,
             customerEmail,
+            ...(advertisingConsent && advertisingConsent.expiresAt > now ? {
+              metaConsentId: advertisingConsent.id,
+              metaAttribution: {
+                fbp: metaClickCookie(req.cookies.get("_fbp")?.value) ?? null,
+                fbc: metaClickCookie(req.cookies.get("_fbc")?.value) ?? null,
+                userAgent: metaUserAgent(req.headers.get("user-agent")) ?? null,
+              },
+            } : {}),
             customerPhone,
             notes: notes || null,
             subtotalBDT: quote.subtotalBDT,
@@ -915,6 +930,7 @@ export async function PATCH(req: NextRequest) {
 
     // Award Loyalty Coins if payment verified and user exists
     if (updateData.paymentStatus === "VERIFIED") {
+      await trackServerPurchase(existing.id);
       try {
         const { awardCoinsForOrder } = await import("@/lib/loyalty/coins");
         await awardCoinsForOrder(existing.id);

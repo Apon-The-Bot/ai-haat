@@ -80,7 +80,7 @@ export const legalDocuments: LegalDocument[] = [
     slug: "cookie-policy", titleBn: "কুকি নীতিমালা", titleEn: "Cookie Policy", category: "গোপনীয়তা ও নিরাপত্তা", classification: "প্রকৃত tracking থাকলে প্রয়োজনীয়", summaryBn: "প্রয়োজনীয় সেশন কুকি এবং প্রকৃত analytics/marketing প্রযুক্তি সম্পর্কে প্রকাশ।",
     sections: [
       { heading: "প্রয়োজনীয় কুকি", body: ["লগইন, নিরাপত্তা, কার্ট ও পছন্দ সংরক্ষণের জন্য প্রয়োজনীয় কুকি থাকতে পারে। এগুলো বন্ধ করলে সাইটের কিছু ফিচার কাজ নাও করতে পারে।"] },
-      { heading: "ঐচ্ছিক কুকি", body: ["Analytics, attribution বা বিজ্ঞাপন কুকি বাস্তবে চালু থাকলে vendor, উদ্দেশ্য, মেয়াদ, consent ও withdrawal পদ্ধতি নির্দিষ্ট করতে হবে। বর্তমান vendor inventory যাচাই না করে কোনো provider বা cookie name প্রকাশ করা যাবে না।"] },
+      { heading: "ঐচ্ছিক কুকি", body: ["Cookie preferences থেকে analytics ও বিজ্ঞাপন আলাদাভাবে চালু বা বন্ধ করা যায়। প্রয়োজনীয় shopping এবং sign-in এ সিদ্ধান্তের ওপর নির্ভর করে না। আপনার পছন্দ ৯০ দিন সংরক্ষিত থাকে।", "সাইটে Meta বিজ্ঞাপন পরিমাপ চালু থাকলে, আপনার অনুমতি নিয়ে Meta Pixel এবং Conversions API পণ্যের সঙ্গে ইন্টারঅ্যাকশন ও যাচাইকৃত কেনাকাটা পরিমাপ করে। Meta-এর _fbp ও _fbc শনাক্তকারী এবং advanced matching চালু থাকলে হ্যাশ করা ইমেইল, ফোন ও অ্যাকাউন্ট আইডি ব্যবহার হতে পারে। স্থানীয় বিজ্ঞাপন queue ও order attribution সর্বোচ্চ ৩০ দিন রাখার জন্য নির্ধারিত। Cookie preferences থেকে সম্মতি প্রত্যাহার করলে পরবর্তী বিজ্ঞাপন প্রেরণ বন্ধ হয়।"] },
     ],
   },
 ];

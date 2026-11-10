@@ -124,6 +124,8 @@ const orders = loadModule("../src/app/api/orders/route.ts", {
   }) },
   "@/lib/audit-logger": {},
   "@/lib/gifting/product-gifting": {},
+  "@/lib/analytics/meta-consent": { consentId: () => null },
+  "@/lib/analytics/server": {},
   "@/lib/commerce/abandoned-cart": { markCartConverted: async () => {} },
   "@/lib/notifications": { NOTIFICATION_EVENTS: {}, dispatchNotificationEvent: async () => {} },
 });

@@ -14,6 +14,7 @@ import { AppShell } from "@/components/AppShell";
 import AnalyticsProvider from "@/components/analytics/AnalyticsProvider";
 import PageViewTracker from "@/components/analytics/PageViewTracker";
 import ReferralTracker from "@/components/analytics/ReferralTracker";
+import RegistrationTracker from "@/components/analytics/RegistrationTracker";
 import { Suspense } from "react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -32,6 +33,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                           {children}
                           <Suspense fallback={null}>
                             <PageViewTracker />
+                            <RegistrationTracker />
                             <ReferralTracker />
                           </Suspense>
                         </AppShell>

@@ -78,19 +78,19 @@ assert(
 // ─── TEST 6: Fake success page does NOT fire Purchase ─────────
 assert(
   "PurchaseTracker only fires when paymentStatus === 'VERIFIED'",
-  fileContains("src/components/analytics/PurchaseTracker.tsx", 'data.paymentStatus !== "VERIFIED"')
+  fileContains("src/components/analytics/PurchaseTracker.tsx", 'order.paymentStatus !== "VERIFIED"')
 );
 
 // ─── TEST 7: Verified order success fires exactly one Purchase
 assert(
   "PurchaseTracker fires trackPurchase for VERIFIED orders with event_id",
-  fileContains("src/components/analytics/PurchaseTracker.tsx", "trackPurchase(purchaseData)", "event_id: `purchase_${data.orderNumber}`")
+  fileContains("src/components/analytics/PurchaseTracker.tsx", "trackPurchase({", "event_id: order.eventId")
 );
 
 // ─── TEST 8: Success page refresh does NOT duplicate Purchase ─
 assert(
   "PurchaseTracker uses sessionStorage dedup key",
-  fileContains("src/components/analytics/PurchaseTracker.tsx", "sessionStorage.getItem(dedupKey)", "sessionStorage.setItem(dedupKey")
+  fileContains("src/components/analytics/PurchaseTracker.tsx", "sessionStorage.getItem(key)", "sessionStorage.setItem(key")
 );
 
 // ─── TEST 9: Server-side CAPI on payment callback ─────────────
@@ -103,32 +103,33 @@ assert(
 // ─── TEST 10: CAPI event_id matches client Purchase ───────────
 assert(
   "Server uses same event_id format (purchase_<orderNumber>) as client",
-  fileContains("src/lib/analytics/server.ts", "const eventId = `purchase_${order.orderNumber}`") &&
-  fileContains("src/components/analytics/PurchaseTracker.tsx", "event_id: `purchase_${data.orderNumber}`")
+  fileContains("src/lib/analytics/server.ts", "purchaseEventId(order.orderNumber)") &&
+  fileContains("src/app/api/orders/analytics/route.ts", "purchaseEventId(order.orderNumber)")
 );
 
 // ─── TEST 11: Multi-item order Purchase includes all items ────
 assert(
   "Server Purchase builds items array from order.items",
-  fileContains("src/lib/analytics/server.ts", "order.items")
+  fileContains("src/lib/analytics/meta-purchase.ts", "order.items")
 );
 
 // ─── TEST 12: Purchase uses OrderItem.priceBDT ────────────────
 assert(
   "CAPI Purchase data uses historical item.priceBDT from OrderItem",
-  fileContains("src/lib/analytics/meta-capi.ts", "item_price: item.priceBDT")
+  fileContains("src/lib/analytics/meta-purchase.ts", "item_price: item.priceBDT")
 );
 
 // ─── TEST 13: Coupon included in Purchase ─────────────────────
 assert(
-  "PurchaseTracker passes coupon to Purchase event",
-  fileContains("src/components/analytics/PurchaseTracker.tsx", "coupon: data.couponCode")
+  "Purchase uses the server total after discounts and omits private coupon codes",
+  fileContains("src/lib/analytics/meta-purchase.ts", "value: order.totalBDT") &&
+  fileNotContains("src/lib/analytics/meta-purchase.ts", "couponCode")
 );
 
 // ─── TEST 14: Failed payment produces no Purchase ─────────────
 assert(
-  "PurchaseTracker aborts if status is not 'completed'/'success'",
-  fileContains("src/components/analytics/PurchaseTracker.tsx", 'if (status !== "completed" && status !== "success") return')
+  "PurchaseTracker aborts unless the checkout view is completed",
+  fileContains("src/components/analytics/PurchaseTracker.tsx", 'status !== "completed"')
 );
 
 // ─── TEST 15: Wallet purchase fires product Purchase ──────────
@@ -139,9 +140,9 @@ assert(
 
 // ─── TEST 16: Wallet top-up is NOT a Purchase event ───────────
 assert(
-  "Server trackServerWalletTopup is separate from trackServerPurchase — no Purchase event",
-  fileContains("src/lib/analytics/server.ts", "trackServerWalletTopup") &&
-  fileNotContains("src/lib/analytics/server.ts", "wallet_topup.*Purchase")
+  "Wallet recharge cannot queue a Purchase event",
+  fileNotContains("src/app/api/wallet/recharge/route.ts", "trackServerPurchase") &&
+  fileContains("src/lib/analytics/server.ts", 'paymentStatus: "VERIFIED"')
 );
 
 // ─── TEST 17: UTM attribution persists in cookies ─────────────
@@ -181,16 +182,16 @@ assert(
 
 // ─── TEST 22: Analytics does not break checkout ───────────────
 assert(
-  "Client analytics wraps gtag/fbq in try-catch (safeGtag/safeFbq)",
-  fileContains("src/lib/analytics/client.ts", "function safeGtag", "function safeFbq") &&
-  fileContains("src/lib/analytics/client.ts", "try {")
+  "Client analytics wraps both provider calls in try-catch",
+  fileContains("src/lib/analytics/client.ts", "function safeGtag", "try {") &&
+  fileContains("src/lib/analytics/meta-browser.ts", "function trackMeta", "try {")
 );
 
 // ─── TEST 23: Missing env vars do not crash app ───────────────
 assert(
-  "AnalyticsProvider conditionally loads scripts based on env vars",
+  "GA uses its public ID while Meta uses the public-safe settings endpoint",
   fileContains("src/components/analytics/AnalyticsProvider.tsx", 'process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ""') &&
-  fileContains("src/components/analytics/AnalyticsProvider.tsx", 'process.env.NEXT_PUBLIC_META_PIXEL_ID || ""')
+  fileContains("src/components/analytics/AnalyticsProvider.tsx", 'fetch("/api/analytics/meta"')
 );
 
 // ─── TEST 24: SPA page view tracking on navigation ────────────
@@ -231,9 +232,10 @@ assert(
 
 // Meta CAPI token is server-only
 assert(
-  "[BONUS] META_CAPI_ACCESS_TOKEN is server-only (no NEXT_PUBLIC prefix)",
-  fileContains("src/lib/analytics/meta-capi.ts", "process.env.META_CAPI_ACCESS_TOKEN") &&
-  fileNotContains("src/lib/analytics/meta-capi.ts", "NEXT_PUBLIC_META_CAPI")
+  "[BONUS] Meta token is encrypted at rest and sent only in a server POST body",
+  fileContains("src/lib/analytics/meta-settings.ts", "encryptCredential(replacement)") &&
+  fileContains("src/lib/analytics/meta-capi.ts", "access_token: token") &&
+  fileNotContains("src/components/analytics/AnalyticsProvider.tsx", "tokenCiphertext")
 );
 
 // SHA-256 hashing for CAPI user data

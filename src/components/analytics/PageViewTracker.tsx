@@ -10,6 +10,7 @@ import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { trackPageView } from "@/lib/analytics/client";
 import { sanitizeUrl } from "@/lib/analytics/sanitize";
+import { observeMetaNavigation } from "@/lib/analytics/meta-browser";
 
 export default function PageViewTracker() {
   const pathname = usePathname();
@@ -19,9 +20,11 @@ export default function PageViewTracker() {
 
   useEffect(() => {
     if (!pathname) return;
+    observeMetaNavigation();
 
     // Skip admin and dashboard routes — not part of commerce funnel
     if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard")) {
+      lastTrackedRef.current = "";
       return;
     }
 

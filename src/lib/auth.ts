@@ -79,6 +79,7 @@ export const authOptions: NextAuthOptions = {
             token.walletBalanceBDT = dbUser.walletBalanceBDT || 0;
             token.mfaRequired = dbUser.security?.totpEnabled ?? false;
             token.googleSub = googleSub;
+            token.registrationAt = isNewUser ? Date.now() : undefined;
 
             // Only send welcome onboarding email once for newly created accounts
             if (isNewUser && user.name) {
@@ -135,6 +136,9 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).role = token.role === "ADMIN" ? "ADMIN" : "USER";
         (session.user as any).walletBalanceBDT = (token.walletBalanceBDT as number) || 0;
         (session.user as any).mfaRequired = Boolean(token.mfaRequired);
+        if (canonicalId && typeof token.registrationAt === "number" && Date.now() - token.registrationAt < 10 * 60_000) {
+          (session.user as typeof session.user & { registrationAt?: number }).registrationAt = token.registrationAt;
+        }
         if (token.picture) {
           session.user.image = token.picture as string;
         }

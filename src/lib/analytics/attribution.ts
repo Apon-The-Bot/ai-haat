@@ -42,7 +42,7 @@ interface AttributionTouch {
  * First-Touch: Set once, never overwritten.
  * Last-Touch: Updated on each visit that has non-empty marketing params.
  */
-export function captureAttribution(): void {
+export function captureAttribution(allowAdvertising = false): void {
   if (typeof window === "undefined") return;
 
   try {
@@ -71,11 +71,11 @@ export function captureAttribution(): void {
       touch.utmTerm = truncate(params.get("utm_term")!, MAX_FIELD_LEN);
       hasMarketingParams = true;
     }
-    if (params.get("fbclid")) {
+    if (allowAdvertising && params.get("fbclid")) {
       touch.fbclid = truncate(params.get("fbclid")!, MAX_FIELD_LEN);
       hasMarketingParams = true;
     }
-    if (params.get("gclid")) {
+    if (allowAdvertising && params.get("gclid")) {
       touch.gclid = truncate(params.get("gclid")!, MAX_FIELD_LEN);
       hasMarketingParams = true;
     }
@@ -83,7 +83,7 @@ export function captureAttribution(): void {
     // Capture landing page and referrer
     touch.landingPage = truncate(window.location.pathname, MAX_URL_LEN);
     touch.referrer = document.referrer
-      ? truncate(document.referrer, MAX_URL_LEN)
+      ? new URL(document.referrer).origin
       : undefined;
     touch.timestamp = Date.now();
 

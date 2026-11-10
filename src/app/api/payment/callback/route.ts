@@ -221,6 +221,7 @@ export async function GET(req: NextRequest) {
         });
 
         if (updateResult.count > 0) {
+          await trackServerPurchase(orderId);
           // Successfully transitioned — this is the winning request
           console.log(`[PaymentAudit] PAYMENT_VERIFIED: Order "${orderId}" verified via callback. Amount: ৳${verifiedAmount}. TrxId: ${realTrxId}`);
 
@@ -253,22 +254,6 @@ export async function GET(req: NextRequest) {
             console.warn("[Loyalty Coins Warning]:", coinErr);
           }
 
-          // Analytics: Fire server-side Purchase (non-blocking, never blocks payment)
-          try {
-            const cookieHeader = req.headers.get("cookie") || "";
-            const cookies: Record<string, string> = {};
-            cookieHeader.split(";").forEach(c => {
-              const [k, v] = c.trim().split("=");
-              if (k && v) cookies[k] = decodeURIComponent(v);
-            });
-            trackServerPurchase(orderId, {
-              cookies,
-              ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined,
-              userAgent: req.headers.get("user-agent") || undefined,
-            }).catch(console.error);
-          } catch (analyticsErr) {
-            console.warn("[Analytics] Purchase tracking error (non-fatal):", analyticsErr);
-          }
         } else {
           const current = await prisma.order.findUnique({ where: { id: orderRecord.id } });
           if (current?.paymentStatus !== "VERIFIED" || current.trxId !== (realTrxId || transactionRef)) {
@@ -290,7 +275,7 @@ export async function GET(req: NextRequest) {
       });
 
       return NextResponse.redirect(
-        `${siteUrl}/checkout/success?orderId=${encodeURIComponent(orderId)}&status=completed&trxId=${encodeURIComponent(realTrxId || transactionRef)}`
+        `${siteUrl}/checkout/success?orderId=${encodeURIComponent(orderId)}&status=completed`
       );
     }
   }

@@ -31,6 +31,7 @@ import { SafeImage } from "@/components/SafeImage";
 import { Variation } from "@/types";
 import { getAttribution } from "@/lib/analytics/attribution";
 import { DigitalGiftingSection, GiftFormData } from "@/components/checkout/DigitalGiftingSection";
+import { useMetaCheckout } from "@/components/analytics/useMetaCheckout";
 
 export function QuickCheckoutModal() {
   const router = useRouter();
@@ -126,6 +127,9 @@ export function QuickCheckoutModal() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, isSubmitting, closeQuickCheckout]);
 
+  useMetaCheckout(isOpen && !!user?.id, product ? [{
+    productId: product.id, variationId: selectedVariation?.id === "default" ? null : selectedVariation?.id, quantity,
+  }] : [], appliedCoupon?.code);
   if (!isOpen || !product) return null;
 
   const unitPrice = selectedVariation?.priceBDT ?? product.minPriceBDT ?? 0;

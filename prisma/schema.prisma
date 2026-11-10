@@ -465,6 +465,8 @@ model Order {
   referrer     String?   @db.VarChar(500)
   // Analytics deduplication
   analyticsPurchaseSentAt DateTime?
+  metaConsentId String? @db.VarChar(64)
+  metaAttribution Json?
 
   // Direct Product Gifting ("Gift to a Friend")
   isGift              Boolean        @default(false)
@@ -494,6 +496,7 @@ model Order {
   @@index([paymentStatus, deliveryStatus])
   @@index([trxId])
   @@index([giftClaimToken])
+  @@index([metaConsentId])
   @@map("orders")
 }
 
@@ -1483,6 +1486,14 @@ model EmailEventLog {
   @@map("email_event_logs")
 }
 
+model AdvertisingConsent {
+  id        String   @id @db.VarChar(64)
+  expiresAt DateTime
+
+  @@index([expiresAt])
+  @@map("advertising_consents")
+}
+
 model AnalyticsEvent {
   id        String   @id @default(cuid())
   eventName String   @db.VarChar(100)
@@ -1495,8 +1506,10 @@ model AnalyticsEvent {
   lastError String?  @db.Text
   createdAt DateTime @default(now())
   sentAt    DateTime?
+  nextAttemptAt DateTime?
 
   @@index([status, attempts])
+  @@index([provider, status, nextAttemptAt])
   @@index([orderId])
   @@map("analytics_events")
 }

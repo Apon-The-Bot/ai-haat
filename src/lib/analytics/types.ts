@@ -75,9 +75,9 @@ export interface AttributionData {
 
 /** Meta CAPI user data (hashed) */
 export interface MetaCapiUserData {
-  em?: string;  // SHA-256 hashed email
-  ph?: string;  // SHA-256 hashed phone
-  external_id?: string; // SHA-256 hashed user ID
+  em?: string[];  // SHA-256 hashed emails
+  ph?: string[];  // SHA-256 hashed phone numbers
+  external_id?: string[]; // SHA-256 hashed user IDs
   client_ip_address?: string;
   client_user_agent?: string;
   fbp?: string;
@@ -90,7 +90,7 @@ export interface MetaCapiEvent {
   event_time: number;
   event_id: string;
   event_source_url?: string;
-  action_source: "website";
+  action_source: "website" | "system_generated";
   user_data: MetaCapiUserData;
   custom_data?: Record<string, unknown>;
 }

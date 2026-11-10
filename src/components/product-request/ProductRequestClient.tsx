@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { trackCustomEvent } from "@/lib/analytics/client";
+import { trackMeta } from "@/lib/analytics/meta-browser";
 import {
   HelpCircle,
   Send,
@@ -246,6 +247,7 @@ export function ProductRequestClient() {
       const data = await res.json();
 
       if (res.ok && data.success) {
+        trackMeta("Lead");
         setSubmittedData(data.request);
         showToast("আপনার প্রোডাক্ট রিকোয়েস্ট সফলভাবে জমা হয়েছে!", "success");
 

@@ -227,6 +227,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (updateResult.count > 0) {
+          await trackServerPurchase(matchedOrderId);
           console.log(`[PaymentAudit] PAYMENT_VERIFIED: Order "${matchedOrderId}" verified via webhook. Amount: ৳${verifiedAmount}. TrxId: ${realTrxId}`);
 
           // Record timeline event
@@ -280,15 +281,6 @@ export async function POST(req: NextRequest) {
             console.warn("[Loyalty Coins Warning]:", coinErr);
           }
 
-          // Analytics: Fire server-side Purchase (non-blocking)
-          try {
-            trackServerPurchase(matchedOrderId || orderId, {
-              ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined,
-              userAgent: req.headers.get("user-agent") || undefined,
-            }).catch(console.error);
-          } catch (analyticsErr) {
-            console.warn("[Analytics] Purchase tracking error (non-fatal):", analyticsErr);
-          }
         } else {
           console.log(`[PaymentAudit] DUPLICATE_EVENT_IGNORED: Order "${matchedOrderId}" already processed (webhook). TrxRef="${transactionRef}"`);
           return NextResponse.json({ success: true, message: "No payable order transition" });

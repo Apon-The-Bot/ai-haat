@@ -9,6 +9,7 @@ import type {
   SearchEventData,
 } from "./types";
 import { sanitizeUrl, sanitizeSearchTerm, assertNoSensitiveData } from "./sanitize";
+import { hasAnalyticsConsent, trackMeta } from "./meta-browser";
 
 // ─── Type Declarations for Global Analytics ──────────────────────
 declare global {
@@ -22,11 +23,7 @@ declare global {
 // ─── Provider Checks ─────────────────────────────────────────────
 
 function isGa4Ready(): boolean {
-  return typeof window !== "undefined" && typeof window.gtag === "function";
-}
-
-function isMetaReady(): boolean {
-  return typeof window !== "undefined" && typeof window.fbq === "function";
+  return typeof window !== "undefined" && hasAnalyticsConsent() && typeof window.gtag === "function";
 }
 
 function isDev(): boolean {
@@ -39,15 +36,6 @@ function safeGtag(...args: unknown[]): void {
     if (isGa4Ready()) window.gtag!(...args);
   } catch (e) {
     if (isDev()) console.warn("[Analytics GA4]", e);
-  }
-}
-
-/** Safe fbq call — never throws */
-function safeFbq(...args: unknown[]): void {
-  try {
-    if (isMetaReady()) window.fbq!(...args);
-  } catch (e) {
-    if (isDev()) console.warn("[Analytics Meta]", e);
   }
 }
 
@@ -74,7 +62,7 @@ export function trackPageView(url: string, title?: string): void {
   });
 
   // Meta Pixel tracks PageView automatically on init, but for SPA we re-trigger
-  safeFbq("track", "PageView");
+  trackMeta("PageView");
 }
 
 // ─── E-Commerce: Product View ────────────────────────────────────
@@ -88,7 +76,7 @@ export function trackViewItem(item: AnalyticsItem, value: number): void {
     items: [item],
   });
 
-  safeFbq("track", "ViewContent", {
+  trackMeta("ViewContent", {
     content_ids: [item.item_id],
     content_name: item.item_name,
     content_category: item.item_category,
@@ -142,12 +130,13 @@ export function trackAddToCart(item: AnalyticsItem, value: number): void {
     items: [item],
   });
 
-  safeFbq("track", "AddToCart", {
+  trackMeta("AddToCart", {
     content_ids: [item.item_id],
     content_name: item.item_name,
     content_type: "product",
     value,
     currency: "BDT",
+    contents: [{ id: item.item_id, quantity: item.quantity, item_price: item.price }],
   });
 }
 
@@ -161,6 +150,7 @@ export function trackRemoveFromCart(item: AnalyticsItem, value: number): void {
     value,
     items: [item],
   });
+  trackMeta("RemoveFromCart", { content_ids: [item.item_id], quantity: item.quantity, value, currency: "BDT" });
 }
 
 // ─── E-Commerce: View Cart ───────────────────────────────────────
@@ -192,17 +182,6 @@ export function trackBeginCheckout(
     coupon: coupon || undefined,
   });
 
-  safeFbq("track", "InitiateCheckout", {
-    content_ids: items.map((i) => i.item_id),
-    contents: items.map((i) => ({
-      id: i.item_id,
-      quantity: i.quantity,
-    })),
-    content_type: "product",
-    num_items: items.reduce((sum, i) => sum + i.quantity, 0),
-    value,
-    currency: "BDT",
-  });
 }
 
 // ─── E-Commerce: Add Payment Info ────────────────────────────────
@@ -221,11 +200,6 @@ export function trackAddPaymentInfo(
     items,
   });
 
-  safeFbq("track", "AddPaymentInfo", {
-    content_category: paymentType,
-    value,
-    currency: "BDT",
-  });
 }
 
 // ─── E-Commerce: Purchase (Client-Side) ──────────────────────────
@@ -235,7 +209,7 @@ export function trackAddPaymentInfo(
  * Called by PurchaseTracker ONLY after verifying paymentStatus === "VERIFIED".
  * Uses stable event_id for Meta browser/CAPI deduplication.
  */
-export function trackPurchase(data: PurchaseEventData): void {
+export function trackPurchase(data: PurchaseEventData, meta?: { pixelId: string; data: object }, sendGa = true): boolean {
   if (isDev()) {
     assertNoSensitiveData(data as unknown as Record<string, unknown>, "Purchase");
   }
@@ -246,7 +220,7 @@ export function trackPurchase(data: PurchaseEventData): void {
     event_id: data.event_id,
   });
 
-  safeGtag("event", "purchase", {
+  if (sendGa) safeGtag("event", "purchase", {
     transaction_id: data.transaction_id,
     value: data.value,
     currency: data.currency,
@@ -256,18 +230,7 @@ export function trackPurchase(data: PurchaseEventData): void {
     tax: data.tax,
   });
 
-  safeFbq("track", "Purchase", {
-    content_ids: data.items.map((i) => i.item_id),
-    contents: data.items.map((i) => ({
-      id: i.item_id,
-      quantity: i.quantity,
-      item_price: i.price,
-    })),
-    content_type: "product",
-    value: data.value,
-    currency: data.currency,
-    num_items: data.items.reduce((sum, i) => sum + i.quantity, 0),
-  }, { eventID: data.event_id });
+  return meta ? trackMeta("Purchase", meta.data, data.event_id, meta.pixelId) : false;
 }
 
 // ─── Search ──────────────────────────────────────────────────────
@@ -281,7 +244,7 @@ export function trackSearch(term: string): void {
     search_term: sanitized,
   });
 
-  safeFbq("track", "Search", {
+  trackMeta("Search", {
     search_string: sanitized,
   });
 }

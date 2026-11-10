@@ -1,131 +1,47 @@
 "use client";
 
-// ─── AI Haat Analytics — Purchase Event Tracker ──────────────────
-// Fires client-side Purchase event ONLY after verifying order is VERIFIED in DB.
-// Deduplication: sessionStorage prevents re-fire on page refresh.
-// Stable event_id matches CAPI for Meta deduplication.
-// NEVER fires Purchase from URL params alone.
-
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { trackPurchase } from "@/lib/analytics/client";
 import { sanitizeItem } from "@/lib/analytics/sanitize";
-import type { PurchaseEventData, AnalyticsItem } from "@/lib/analytics/types";
+import { useAnalytics } from "./AnalyticsProvider";
 
-interface PurchaseTrackerProps {
-  orderId: string;
-  status: string;
-}
-
-interface AnalyticsOrderData {
+interface OrderAnalytics {
   orderNumber: string;
   totalBDT: number;
-  discountBDT: number;
   paymentStatus: string;
-  paymentMethod: string;
-  couponCode?: string;
-  items: Array<{
-    productId?: string;
-    productName: string;
-    variationName: string;
-    priceBDT: number;
-    quantity: number;
-    category?: string;
-  }>;
+  eventId: string;
+  items: Array<{ productId?: string; variationId?: string; productName: string; variationName: string; priceBDT: number; quantity: number }>;
 }
 
-export default function PurchaseTracker({ orderId, status }: PurchaseTrackerProps) {
-  const hasFiredRef = useRef(false);
-
+export default function PurchaseTracker({ orderId, status }: { orderId: string; status: string }) {
+  const { isEnabled, metaReady } = useAnalytics();
   useEffect(() => {
-    // Guard: Only attempt for completed/success status
-    if (status !== "completed" && status !== "success") return;
-    if (!orderId || orderId === "AH-XXXXX") return;
-    if (hasFiredRef.current) return;
-
-    // SessionStorage dedup — survives within tab session
-    const dedupKey = `analytics_purchase_sent_${orderId}`;
-    if (typeof window !== "undefined" && sessionStorage.getItem(dedupKey)) {
-      return;
-    }
-
-    hasFiredRef.current = true;
-
-    // Fetch server-verified order data (NOT trusting URL params for value/items)
-    fetchVerifiedOrder(orderId)
-      .then((data) => {
-        if (!data) return;
-
-        // CRITICAL: Only fire if server confirms VERIFIED payment
-        if (data.paymentStatus !== "VERIFIED") {
-          if (process.env.NODE_ENV === "development") {
-            console.warn(`[Analytics] Purchase blocked — order "${orderId}" status is "${data.paymentStatus}", not VERIFIED`);
-          }
-          return;
-        }
-
-        // Build purchase event with server-authoritative data
-        const items: AnalyticsItem[] = data.items.map((item, index) =>
-          sanitizeItem({
-            id: item.productId || "unknown",
-            name: item.productName,
-            variant: item.variationName,
-            price: item.priceBDT,
-            quantity: item.quantity,
-            category: item.category,
-            index,
-          })
-        );
-
-        const purchaseData: PurchaseEventData = {
-          transaction_id: data.orderNumber,
-          value: data.totalBDT,
-          currency: "BDT",
-          items,
-          coupon: data.couponCode || undefined,
-          shipping: 0,
-          tax: 0,
-          event_id: `purchase_${data.orderNumber}`,
+    if (!isEnabled || !orderId || status !== "completed") return;
+    const abort = new AbortController();
+    async function send() {
+      try {
+        const response = await fetch(`/api/orders/analytics?orderId=${encodeURIComponent(orderId)}`, { signal: abort.signal, cache: "no-store" });
+        if (!response.ok) return;
+        const { order, meta } = await response.json() as {
+          order: OrderAnalytics; meta?: { pixelId: string; data: object };
         };
-
-        trackPurchase(purchaseData);
-
-        // Mark as sent in sessionStorage
-        try {
-          sessionStorage.setItem(dedupKey, "1");
-        } catch {
-          // sessionStorage may be unavailable (private browsing)
-        }
-      })
-      .catch((err) => {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("[Analytics] Purchase tracking fetch error:", err);
-        }
-      });
-  }, [orderId, status]);
-
-  return null; // Renders nothing
-}
-
-/**
- * Fetch analytics-safe order data from server.
- * Returns null if order not found or not verified.
- */
-async function fetchVerifiedOrder(orderId: string): Promise<AnalyticsOrderData | null> {
-  try {
-    const res = await fetch(
-      `/api/orders/analytics?orderId=${encodeURIComponent(orderId)}`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
+        if (abort.signal.aborted || order.paymentStatus !== "VERIFIED") return;
+        const key = `aihaat_purchase_${order.eventId}`;
+        if (sessionStorage.getItem(key) === "meta") return;
+        const sent = trackPurchase({
+          transaction_id: order.orderNumber, value: order.totalBDT, currency: "BDT", event_id: order.eventId,
+          shipping: 0, tax: 0,
+          items: order.items.map((item) => sanitizeItem({
+            ...item, id: item.productId, variant: item.variationName, price: item.priceBDT,
+          })),
+        }, metaReady ? meta : undefined, !sessionStorage.getItem(key));
+        sessionStorage.setItem(key, sent ? "meta" : "seen");
+      } catch {
+        // Optional advertising and analytics never affect checkout.
       }
-    );
-
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    return data.order || null;
-  } catch {
-    return null;
-  }
+    }
+    void send();
+    return () => abort.abort();
+  }, [isEnabled, metaReady, orderId, status]);
+  return null;
 }

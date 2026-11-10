@@ -52,6 +52,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, isRestored]);
 
   const addToCart = (product: Product, variation: Variation, quantity = 1) => {
+    if (!Number.isInteger(quantity) || quantity < 1) return;
     setItems((prev) => {
       const existingIndex = prev.findIndex(
         (item) =>
@@ -60,7 +61,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (existingIndex > -1) {
         const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
+        updated[existingIndex] = { ...updated[existingIndex], quantity: updated[existingIndex].quantity + quantity };
         return updated;
       } else {
         const newItem: CartItem = {
@@ -77,7 +78,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const analyticsItem = sanitizeItem({
-        id: product.id,
+        id: variation.id === "default" ? product.id : `${product.id}:${variation.id}`,
         name: product.name,
         category: product.category,
         variant: variation.name,
@@ -93,7 +94,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const removedItem = items.find(i => i.id === itemId);
       if (removedItem) {
         const analyticsItem = sanitizeItem({
-          id: removedItem.product.id,
+          id: removedItem.selectedVariation.id === "default" ? removedItem.product.id : `${removedItem.product.id}:${removedItem.selectedVariation.id}`,
           name: removedItem.product.name,
           category: removedItem.product.category,
           variant: removedItem.selectedVariation.name,

@@ -32,6 +32,7 @@ import { SafeImage } from "@/components/SafeImage";
 import { COUPONS } from "@/data/coupons";
 import { Coupon } from "@/types";
 import { trackBeginCheckout, trackAddPaymentInfo } from "@/lib/analytics/client";
+import { useMetaCheckout } from "@/components/analytics/useMetaCheckout";
 import { sanitizeItem } from "@/lib/analytics/sanitize";
 import { getAttribution } from "@/lib/analytics/attribution";
 import { DigitalGiftingSection, GiftFormData } from "@/components/checkout/DigitalGiftingSection";
@@ -157,6 +158,11 @@ function CheckoutContent() {
   }, [isRenewalMode, items.length, searchParams, addToCart, showToast]);
 
   // Analytics: Track begin_checkout once on mount
+  useMetaCheckout(!!user?.id, items.map((item) => ({
+    productId: item.product.id,
+    variationId: item.selectedVariation.id === "default" ? null : item.selectedVariation.id,
+    quantity: item.quantity,
+  })), appliedCoupon?.code);
   const checkoutTrackedRef = useRef(false);
   useEffect(() => {
     if (checkoutTrackedRef.current || items.length === 0) return;

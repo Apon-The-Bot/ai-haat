@@ -177,6 +177,7 @@ export async function POST(req: NextRequest) {
       });
 
       // 2b. Attempt Instant Auto-Fulfillment (OUTSIDE transaction — non-critical)
+      await trackServerPurchase(cleanOrderId);
       await tryAutoFulfillOrder(cleanOrderId);
 
       // Process Affiliate Commission if applicable (non-blocking)
@@ -195,22 +196,6 @@ export async function POST(req: NextRequest) {
         console.warn("[Loyalty Coins Warning]:", coinErr);
       }
 
-      // Analytics: Fire server-side Purchase (non-blocking)
-      try {
-        const cookieHeader = req.headers.get("cookie") || "";
-        const cookies: Record<string, string> = {};
-        cookieHeader.split(";").forEach(c => {
-          const [k, v] = c.trim().split("=");
-          if (k && v) cookies[k] = decodeURIComponent(v);
-        });
-        trackServerPurchase(cleanOrderId, {
-          cookies,
-          ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined,
-          userAgent: req.headers.get("user-agent") || undefined,
-        }).catch(console.error);
-      } catch (analyticsErr) {
-        console.warn("[Analytics] Purchase tracking error (non-fatal):", analyticsErr);
-      }
     } catch (txError: any) {
       return NextResponse.json(
         { error: txError?.message || "Failed to process wallet payment." },

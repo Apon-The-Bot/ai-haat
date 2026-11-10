@@ -3,6 +3,7 @@ import { requireAdminMfa } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { logAdminAudit } from "@/lib/audit-logger";
 import { updateOrderStatus, deleteOrder } from "@/lib/orders-db";
+import { trackServerPurchase } from "@/lib/analytics/server";
 
 export const dynamic = "force-dynamic";
 
@@ -121,6 +122,9 @@ export async function POST(req: NextRequest) {
 
       // Synchronize with JSON fallback
       for (const order of existingOrders) {
+        if (normalizedPayment === "VERIFIED" && order.paymentStatus !== "VERIFIED") {
+          await trackServerPurchase(order.id);
+        }
         const jsonUpdates: any = {};
         if (normalizedPayment) {
           jsonUpdates.paymentStatus = normalizedPayment === "VERIFIED" ? "Completed" : normalizedPayment === "FAILED" ? "Failed" : "Pending";
