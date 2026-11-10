@@ -41,7 +41,6 @@ yarn-error.log*
 
 # local env files
 .env*.local
-.env
 production.env
 *.env
 
@@ -63,3 +62,7 @@ scratch/
 !prisma/migrations/**/*.sql
 .agents/
 
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+config.bat
