@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Product } from "@/types";
 import { PRODUCTS as fallbackProducts } from "@/data/products";
+import { requestCatalog } from "@/lib/commerce/catalog-request";
 
 interface ProductsContextType {
   products: Product[];
@@ -31,13 +32,8 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const refreshProducts = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/products");
-      if (res.ok) {
-        const data = await res.json();
-        if (data.products && Array.isArray(data.products) && data.products.length > 0) {
-          setProducts(data.products);
-        }
-      }
+      const catalog = await requestCatalog();
+      if (catalog) setProducts(catalog);
     } catch (err) {
       console.error("[ProductsContext Error]:", err);
     } finally {

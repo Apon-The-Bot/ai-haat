@@ -20,6 +20,7 @@ import { PRODUCTS, CATEGORIES } from "@/data/products";
 import { useCurrency } from "@/context/CurrencyContext";
 import { trackViewItemList, trackSearch } from "@/lib/analytics/client";
 import { sanitizeItem } from "@/lib/analytics/sanitize";
+import { requestCatalog } from "@/lib/commerce/catalog-request";
 
 const PRICE_PRESETS = [
   { label: "All Prices", min: 0, max: Infinity },
@@ -54,12 +55,9 @@ function ShopContent() {
   }, [products]);
 
   useEffect(() => {
-    fetch("/api/products")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.products && d.products.length > 0) {
-          setProducts(d.products);
-        }
+    requestCatalog()
+      .then((catalog) => {
+        if (catalog) setProducts(catalog);
       })
       .catch(() => {});
   }, []);

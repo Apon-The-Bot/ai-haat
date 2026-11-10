@@ -163,7 +163,7 @@ export async function getPublicProducts(filters: {
           },
           digitalStocks: {
             where: { status: "AVAILABLE" },
-            select: { id: true, variationId: true },
+            select: { variationId: true },
           },
         },
       }),
@@ -188,10 +188,18 @@ export async function getPublicProducts(filters: {
     const availableStocks = p.digitalStocks || [];
     const isAutoStock = p.fulfillmentType === "AUTO_STOCK";
     const totalAvailable = availableStocks.length;
+    const stockByVariation = new Map<string, number>();
+    let sharedStockCount = 0;
+    for (const { variationId } of availableStocks) {
+      if (!variationId) {
+        sharedStockCount++;
+      } else {
+        stockByVariation.set(variationId, (stockByVariation.get(variationId) ?? 0) + 1);
+      }
+    }
 
     const variations = p.variations.map((v) => {
-      const vStocks = availableStocks.filter((s) => s.variationId === v.id || !s.variationId);
-      const vStockCount = vStocks.length;
+      const vStockCount = sharedStockCount + (stockByVariation.get(v.id) ?? 0);
       const isVarInStock = isAutoStock ? vStockCount > 0 : v.inStock;
 
       return {
