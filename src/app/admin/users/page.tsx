@@ -34,6 +34,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import { BulkActionBar, BulkActionItem } from "@/components/admin/BulkActionBar";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { UserAvatar } from "@/components/admin/UserAvatar";
 
 interface AdminUserItem {
   id: string;
@@ -600,16 +601,7 @@ export default function AdminUsersPage() {
                         onChange={() => handleSelectUser(u.id)}
                         className="rounded border-gray-300 text-[#FC5C03] focus:ring-[#FC5C03] mt-0.5"
                       />
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FC5C03] to-[#FF8C4B] text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                        {u.name
-                          ? u.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .toUpperCase()
-                              .slice(0, 2)
-                          : "U"}
-                      </div>
+                      <UserAvatar name={u.name} email={u.email} image={u.image} />
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-bold text-gray-900 text-xs">{u.name || "Unnamed"}</span>
@@ -733,16 +725,7 @@ export default function AdminUsersPage() {
                       {/* Customer Profile Column */}
                       <td className="py-3.5 px-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FC5C03] to-[#FF8C4B] text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                            {u.name
-                              ? u.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")
-                                  .toUpperCase()
-                                  .slice(0, 2)
-                              : u.email.slice(0, 2).toUpperCase()}
-                          </div>
+                          <UserAvatar name={u.name} email={u.email} image={u.image} />
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <Link

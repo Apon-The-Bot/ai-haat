@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+const notificationDate = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+const notificationTime = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit" });
+
 export async function GET(req: NextRequest) {
   const auth = await requireAuth();
   if (auth instanceof NextResponse) return auth;
@@ -13,6 +16,16 @@ export async function GET(req: NextRequest) {
     const [notifications, unreadCount] = await Promise.all([
       prisma.notification.findMany({
         where: { userId: user.id },
+        select: {
+          id: true,
+          title: true,
+          message: true,
+          type: true,
+          isRead: true,
+          readAt: true,
+          link: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: "desc" },
         take: 50,
       }),
@@ -29,8 +42,8 @@ export async function GET(req: NextRequest) {
       isRead: n.isRead,
       readAt: n.readAt ? n.readAt.toISOString() : null,
       link: n.link || "/dashboard",
-      date: n.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      time: n.createdAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      date: notificationDate.format(n.createdAt),
+      time: notificationTime.format(n.createdAt),
       createdAt: n.createdAt.toISOString(),
     }));
 
