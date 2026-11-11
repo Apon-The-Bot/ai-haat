@@ -2,6 +2,7 @@ import { requireAdmin, requireAdminMfa, requireRecentMfa } from "@/lib/auth-guar
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logAdminAudit } from "@/lib/audit-logger";
+import { sanitizeProfileImageUrl } from "@/lib/profile-image";
 import {
   getUserEffectiveStatus,
   SYSTEM_FEATURES,
@@ -196,7 +197,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         email: user.email,
         phone: user.phone || "N/A",
         role: user.role,
-        image: user.image || null,
+        image: sanitizeProfileImageUrl(user.image),
         emailVerified: user.emailVerified ? user.emailVerified.toISOString() : null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
@@ -345,6 +346,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const { id: userId } = await params;
     const body = await req.json();
     const { name, email, phone, role, image } = body;
+    const safeImage = image === undefined ? undefined : sanitizeProfileImageUrl(image);
+    if (image !== undefined && image !== null && !safeImage) {
+      return NextResponse.json({ error: "Profile image URL is not allowed" }, { status: 400 });
+    }
 
     const existingUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!existingUser) {
@@ -397,10 +402,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
 
     // 5. Image change
-    if (image !== undefined && image !== existingUser.image) {
+    if (safeImage !== undefined && safeImage !== existingUser.image) {
       beforeState.image = existingUser.image;
-      afterState.image = image;
-      updateData.image = image;
+      afterState.image = safeImage;
+      updateData.image = safeImage;
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -443,7 +448,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         email: updatedUser.email,
         phone: updatedUser.phone,
         role: updatedUser.role,
-        image: updatedUser.image,
+        image: sanitizeProfileImageUrl(updatedUser.image),
       },
     });
   } catch (err: any) {

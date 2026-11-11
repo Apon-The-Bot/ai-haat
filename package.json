@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/db-env-guard.mjs --mode=dev",
-    "dev": "next dev",
-    "build": "node scripts/build.mjs",
-    "start": "next start",
+    "dev": "node init && next dev",
+    "build": "node init && node scripts/build.mjs",
+    "start": "node init && next start",
     "db:guard": "node scripts/db-env-guard.mjs --mode=dev",
     "db:migrate:dev": "node scripts/db-env-guard.mjs --mode=dev-only && prisma migrate dev",
     "db:push": "node scripts/db-env-guard.mjs --mode=dev-only && prisma db push",

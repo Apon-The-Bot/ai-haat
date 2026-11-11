@@ -21,6 +21,7 @@ import {
   LogIn,
   Bell,
   Layers,
+  Boxes,
   FolderTree,
   RotateCcw,
   TrendingUp,
@@ -46,6 +47,7 @@ import { Logo } from "@/components/Logo";
 import { SafeImage } from "@/components/SafeImage";
 import { useAuth } from "@/context/AuthContext";
 import { useNotification } from "@/context/NotificationContext";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -98,6 +100,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
       items: [
         { name: "Orders", href: "/admin/orders", icon: ShoppingBag },
         { name: "Digital Vault Pools", href: "/admin/inventory", icon: Layers },
+        { name: "Inventory Batches", href: "/admin/inventory/batches", icon: Boxes },
         { name: "Coupons", href: "/admin/coupons", icon: Tag },
         { name: "Replacements", href: "/admin/replacements", icon: RotateCcw },
         { name: "Refunds", href: "/admin/refunds", icon: Undo2 },
@@ -227,18 +230,16 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
 
         <div className="flex items-center gap-3">
           {/* Notification Bell */}
-          <Link
-            href="/admin/orders"
-            className="relative p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-black border border-slate-200 transition-all flex items-center justify-center cursor-pointer"
-            title="Live Orders & Alerts"
-          >
-            <Bell className="w-4 h-4 text-slate-600" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FC5C03] text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">
-                {unreadCount}
-              </span>
-            )}
-          </Link>
+          <Tooltip content="Open live order and support alerts">
+            <Link
+              href="/admin/orders"
+              className="relative p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-black border border-slate-200 transition-all flex items-center justify-center cursor-pointer"
+              aria-label="Live orders and alerts"
+            >
+              <Bell className="w-4 h-4 text-slate-600" />
+              {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FC5C03] text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">{unreadCount}</span>}
+            </Link>
+          </Tooltip>
 
           <Link
             href="/"
@@ -299,20 +300,22 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                      isActive
-                        ? "bg-[#FFF2E8] text-[#FC5C03] shadow-2xs"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
-                      <span>{item.name}</span>
-                    </div>
-                  </Link>
+                  <Tooltip key={item.name} content={item.name === "Inventory Batches" ? "Manage inventory batches, stock records, and related batch operations." : item.name}>
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                        isActive
+                          ? "bg-[#FFF2E8] text-[#FC5C03] shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
+                        <span>{item.name}</span>
+                      </div>
+                    </Link>
+                  </Tooltip>
                 );
               })}
             </div>
@@ -366,12 +369,9 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                 <Logo size="sm" showSubtitle={false} />
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-black cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <Tooltip content="Close the navigation menu">
+                  <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close navigation menu" className="p-1.5 rounded-lg text-slate-500 hover:text-black cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"><X className="w-5 h-5" /></button>
+                </Tooltip>
               </div>
 
               {navigation.map((group) => {
@@ -401,27 +401,24 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                           const showBadge = (item.name === "Orders" || item.name === "Support Queue") && unreadCount > 0;
                           
                           return (
-                            <Link
-                              key={item.name}
-                              href={item.href}
-                              onClick={() => setIsMobileMenuOpen(false)}
-                              className={`flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all ${
-                                isActive
-                                  ? "bg-[#FFF2E8] text-[#FC5C03]"
-                                  : "text-slate-600 hover:text-black hover:bg-slate-50"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
-                                <span>{item.name}</span>
-                              </div>
-                              
-                              {showBadge && (
-                                <span className="w-5 h-5 bg-[#FC5C03] text-white text-[10px] font-black rounded-full flex items-center justify-center">
-                                  {unreadCount > 99 ? '99+' : unreadCount}
-                                </span>
-                              )}
-                            </Link>
+                            <Tooltip key={item.name} content={item.name === "Inventory Batches" ? "Manage inventory batches, stock records, and related batch operations." : item.name}>
+                              <Link
+                                key={item.name}
+                                href={item.href}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={`flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all ${
+                                  isActive
+                                    ? "bg-[#FFF2E8] text-[#FC5C03]"
+                                    : "text-slate-600 hover:text-black hover:bg-slate-50"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
+                                  <span>{item.name}</span>
+                                </div>
+                                {showBadge && <span className="w-5 h-5 bg-[#FC5C03] text-white text-[10px] font-black rounded-full flex items-center justify-center">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                              </Link>
+                            </Tooltip>
                           );
                         })}
                       </div>

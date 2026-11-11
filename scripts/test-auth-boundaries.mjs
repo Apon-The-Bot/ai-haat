@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { gzipSync } from "node:zlib";
 import ts from "typescript";
 
 function loadModule(path, dependencies, fetchMock) {
@@ -217,3 +218,80 @@ assert.equal((await webhook.POST(webhookRequest())).status, 200);
 assert.equal(order.paymentStatus, "VERIFIED");
 assert.equal(fulfillmentCalls, 1);
 console.log("Purchase boundary tests passed.");
+
+// Compare the notification feed against the real list handler with the same data.
+const fixtureTime = new Date("2025-07-01T09:30:00Z");
+const pollOrders = Array.from({ length: 30 }, (_, index) => ({
+  id: `internal-${index}`,
+  orderNumber: `AH-${index}`,
+  userId: index % 3 === 0 ? null : index % 3 === 1 ? "buyer" : "other",
+  customerEmail: "buyer@example.test", // A linked order must never match by email alone.
+  customerName: "Fixture Buyer", customerPhone: "01700000000",
+  paymentMethod: "gateway", paymentStatus: "VERIFIED",
+  deliveryStatus: index % 2 === 0 ? "DELIVERED" : "ORDER_PLACED",
+  totalBDT: 100, subtotalBDT: 100, discountBDT: 0,
+  items: [{ id: `item-${index}`, productName: "Fixture Subscription", quantity: 1, priceBDT: 100 }],
+  deliveredKeys: [], notes: "Fixture notes",
+  createdAt: fixtureTime, updatedAt: fixtureTime,
+}));
+const matchesOwner = (row, where) => !where.OR || where.OR.some((condition) =>
+  Object.entries(condition).every(([key, value]) => row[key] === value));
+let pollQueries = [];
+let pollDatabaseOffline = false;
+const pollPrisma = { order: {
+  count: async ({ where }) => {
+    pollQueries.push("count");
+    return pollOrders.filter((row) => matchesOwner(row, where)).length;
+  },
+  findMany: async ({ where, select, include, take, orderBy }) => {
+    pollQueries.push(select ? "projection" : "full list");
+    assert.deepEqual(orderBy, { createdAt: "desc" });
+    if (pollDatabaseOffline) throw new Error("Fixture: database offline");
+    const rows = pollOrders.filter((row) => matchesOwner(row, where)).slice(0, take);
+    if (include) return rows;
+    return rows.map((row) => Object.fromEntries(Object.keys(select).filter((field) => select[field])
+      .map((field) => [field, row[field]])));
+  },
+} };
+const pollDeps = {
+  "@/lib/prisma": { prisma: pollPrisma },
+  "@/lib/orders-db": { getAllOrders: () => pollOrders },
+};
+const listForPoll = loadModule("../src/app/api/orders/route.ts", {
+  ...common, ...pollDeps,
+  "@/utils/telegram": {}, "@/lib/commerce/pricing": {}, "@/lib/audit-logger": {},
+  "@/lib/gifting/product-gifting": {}, "@/lib/analytics/meta-consent": {}, "@/lib/analytics/server": {},
+});
+const pollService = loadModule("../src/lib/commerce/order-notification-feed.ts", pollDeps);
+const pollFeed = loadModule("../src/app/api/orders/notification-feed/route.ts", {
+  ...common, "@/lib/commerce/order-notification-feed": pollService,
+});
+assert.equal((await pollFeed.GET()).status, 401);
+assert.deepEqual(pollQueries, []);
+for (const role of ["USER", "ADMIN"]) {
+  session = { user: { id: "buyer", role, email: "buyer@example.test" } };
+  const listRequest = new Request("https://example.test/api/orders");
+  const before = (await listForPoll.GET(listRequest)).body;
+  const after = (await pollFeed.GET()).body;
+  assert.deepEqual(pollQueries.splice(0), ["count", "full list", "projection"]);
+  assert.equal(after.orders.length, role === "ADMIN" ? 25 : 20);
+  assert.deepEqual(after.orders, before.orders.map((row) => ({
+    id: row.orderNumber || row.id, delivered: row.deliveryStatus === "Delivered",
+    ...(role === "ADMIN" && {
+      customerName: row.customerName, totalBDT: row.totalBDT, paymentMethod: row.paymentMethod,
+    }),
+  })));
+  const raw = [before, after].map((body) => Buffer.from(JSON.stringify(body)));
+  console.log(`${role} poll bytes: ${raw[0].length} -> ${raw[1].length}; gzip: ${gzipSync(raw[0]).length} -> ${gzipSync(raw[1]).length}`);
+}
+session = { user: { id: "buyer", role: "USER", email: "buyer@example.test" } };
+pollDatabaseOffline = true;
+try {
+  const fallback = (await pollFeed.GET()).body;
+  assert.deepEqual(fallback.orders, pollOrders.filter((row) => row.userId !== "other").map((row) => ({
+    id: row.orderNumber, delivered: row.deliveryStatus === "DELIVERED",
+  })));
+} finally {
+  pollDatabaseOffline = false;
+}
+console.log("Order notification feed boundary, parity and fallback checks passed.");

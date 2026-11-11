@@ -46,6 +46,7 @@ import {
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import UserIntelligencePanel from "@/components/admin/UserIntelligencePanel";
+import { UserAvatar } from "@/components/admin/UserAvatar";
 
 interface UserProfile360 {
   id: string;
@@ -215,6 +216,7 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
     image: "",
   });
   const [isSavingPersonal, setIsSavingPersonal] = useState(false);
+  const [showAvatarPreview, setShowAvatarPreview] = useState(false);
 
   // Status Action Modal
   const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -626,16 +628,7 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
               <ChevronLeft className="w-5 h-5" />
             </Link>
 
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#FC5C03] to-[#FF8C4B] text-white font-extrabold flex items-center justify-center text-xl shrink-0 shadow-md">
-              {user.name
-                ? user.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2)
-                : user.email.slice(0, 2).toUpperCase()}
-            </div>
+            <UserAvatar name={user.name} email={user.email} image={user.image} size="lg" onClick={() => setShowAvatarPreview(true)} />
 
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -734,6 +727,15 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </div>
+
+      {showAvatarPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setShowAvatarPreview(false)}>
+          <div className="rounded-3xl bg-white p-4 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <UserAvatar name={user.name} email={user.email} image={user.image} size="lg" />
+            <button type="button" onClick={() => setShowAvatarPreview(false)} className="mt-4 w-full rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-white">Close preview</button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Financial & Engagement KPI Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
