@@ -1,9 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useCallback, useContext, useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { playOrderChime, playSuccessChime } from "@/utils/audio";
+import type { OrderNotification } from "@/lib/commerce/order-notification-feed";
 
 export interface InAppNotification {
   id: string;
@@ -39,6 +40,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const isFirstPollRef = useRef(true);
 
   const isAdmin = user?.role === "ADMIN";
+  const userId = user?.id;
+  const email = user?.email;
 
   // Check browser Notification API permission on mount
   useEffect(() => {
@@ -58,7 +61,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  const triggerBrowserPush = (title: string, body: string, url?: string) => {
+  const triggerBrowserPush = useCallback((title: string, body: string, url?: string) => {
     if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
       try {
         const notif = new Notification(title, {
@@ -76,9 +79,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         console.debug("Browser push notification error:", e);
       }
     }
-  };
+  }, []);
 
-  const addNotification = (n: Omit<InAppNotification, "id" | "date" | "isRead">) => {
+  const addNotification = useCallback((n: Omit<InAppNotification, "id" | "date" | "isRead">) => {
     const newItem: InAppNotification = {
       ...n,
       id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
@@ -86,7 +89,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       isRead: false,
     };
     setNotifications((prev) => [newItem, ...prev]);
-  };
+  }, []);
 
   const markAsRead = (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
@@ -98,31 +101,29 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Real-Time Poller for Admin & User
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
+    if (!email) return;
+    let activeRequest: AbortController | undefined;
+    let stopped = false;
 
     const pollOrders = async () => {
+      if (stopped || activeRequest) return;
+      const controller = new AbortController();
+      activeRequest = controller;
+      const deadline = setTimeout(() => controller.abort(), 60_000);
       try {
-        // If admin, fetch all orders. If customer, fetch user orders.
-        const endpoint = isAdmin
-          ? "/api/orders"
-          : user?.email
-          ? `/api/orders?email=${encodeURIComponent(user.email)}`
-          : null;
-
-        if (!endpoint) return;
-
-        const res = await fetch(endpoint);
+        const res = await fetch("/api/orders/notification-feed", { signal: controller.signal });
         if (!res.ok) return;
 
-        const data = await res.json();
-        const orders: any[] = data.orders || [];
+        const data: { orders: OrderNotification[] } = await res.json();
+        if (controller.signal.aborted) return;
+        const orders = data.orders;
 
         if (isFirstPollRef.current) {
           // Initialize known orders without ringing on page load
           orders.forEach((o) => {
-            const id = o.orderNumber || o.id;
+            const id = o.id;
             knownOrderIdsRef.current.add(id);
-            if (o.deliveryStatus === "Delivered" || o.deliveryStatus === "DELIVERED") {
+            if (o.delivered) {
               knownDeliveredIdsRef.current.add(id);
             }
           });
@@ -133,7 +134,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         // 1. ADMIN CHECK: Detect newly placed orders
         if (isAdmin) {
           orders.forEach((o) => {
-            const id = o.orderNumber || o.id;
+            const id = o.id;
             if (!knownOrderIdsRef.current.has(id)) {
               knownOrderIdsRef.current.add(id);
 
@@ -160,11 +161,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
 
         // 2. USER CHECK: Detect delivery completion
-        if (user && !isAdmin) {
+        if (!isAdmin) {
           orders.forEach((o) => {
-            const id = o.orderNumber || o.id;
-            const isDelivered = o.deliveryStatus === "Delivered" || o.deliveryStatus === "DELIVERED";
-            if (isDelivered && !knownDeliveredIdsRef.current.has(id)) {
+            const id = o.id;
+            if (o.delivered && !knownDeliveredIdsRef.current.has(id)) {
               knownDeliveredIdsRef.current.add(id);
 
               // Success Chime!
@@ -189,16 +189,23 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           });
         }
       } catch (err) {
-        console.debug("Order poller error:", err);
+        if (!stopped) console.debug("Order poller error:", err);
+      } finally {
+        clearTimeout(deadline);
+        activeRequest = undefined;
       }
     };
 
     // Run poll every 30 seconds to optimize server resources
-    intervalId = setInterval(pollOrders, 30000);
+    const intervalId = setInterval(pollOrders, 30000);
     pollOrders();
 
-    return () => clearInterval(intervalId);
-  }, [user, isAdmin]);
+    return () => {
+      clearInterval(intervalId);
+      stopped = true;
+      activeRequest?.abort();
+    };
+  }, [userId, email, isAdmin, addNotification, showToast, triggerBrowserPush]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 

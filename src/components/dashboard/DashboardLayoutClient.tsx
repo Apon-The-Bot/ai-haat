@@ -32,6 +32,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { SafeImage } from "@/components/SafeImage";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 /**
  * Bottom navigation tab definition
@@ -474,13 +475,9 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
               <h3 className="text-base font-black text-[#1A1D26]">
                 {isBn ? "আরও অপশন" : "More Options"}
               </h3>
-              <button
-                onClick={() => setIsMoreOpen(false)}
-                className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <Tooltip content={isBn ? "আরও অপশন বন্ধ করুন" : "Close more options"}>
+                <button onClick={() => setIsMoreOpen(false)} className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer" aria-label="Close more options"><X className="w-5 h-5" /></button>
+              </Tooltip>
             </div>
 
             {/* Menu Items */}

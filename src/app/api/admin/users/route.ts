@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logAdminAudit } from "@/lib/audit-logger";
 import { getUserEffectiveStatus, logUserActivity } from "@/lib/user-control/user-control-service";
 import crypto from "crypto";
+import { sanitizeProfileImageUrl } from "@/lib/profile-image";
 
 export const dynamic = "force-dynamic";
 
@@ -147,7 +148,7 @@ export async function GET(req: NextRequest) {
         email: u.email,
         phone: u.phone || "N/A",
         role: u.role,
-        image: u.image || null,
+        image: sanitizeProfileImageUrl(u.image),
         walletBalanceBDT: u.walletBalanceBDT || 0,
         coinBalance: u.coinBalance || 0,
         status: activeStatus,
