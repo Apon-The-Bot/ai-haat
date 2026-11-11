@@ -14,6 +14,7 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { getBackupEncryptionKey, parseDatabaseUrl } from "./backup-production-db";
+import { verifyEncryptedBackupFile } from "./lib/prisma-sql-dump";
 
 export interface RestoreResult {
   status: "SUCCESS" | "REFUSED" | "FAILED";
@@ -150,8 +151,16 @@ function executeImport(dbConfig: ReturnType<typeof parseDatabaseUrl>, sqlBuffer:
 
 if (require.main === module) {
   const [,, fileArg, targetUrlArg] = process.argv;
+  if (fileArg === "--verify-only" && targetUrlArg) {
+    const encPath = targetUrlArg;
+    const metaPath = encPath.replace(/\.sql\.enc$/, ".meta.json");
+    const report = verifyEncryptedBackupFile(encPath, metaPath, getBackupEncryptionKey());
+    console.log("[Backup Verification Report]", JSON.stringify(report, null, 2));
+    process.exit(report.validChecksum && report.validDecryption && report.criticalTablesPresent ? 0 : 1);
+  }
   if (!fileArg || !targetUrlArg) {
     console.error("Usage: ALLOW_RESTORE=true npx tsx scripts/restore-production-backup.ts <backup-file.enc> <target-db-url>");
+    console.error("   or: npx tsx scripts/restore-production-backup.ts --verify-only <backup-file.enc>");
     process.exit(1);
   }
 

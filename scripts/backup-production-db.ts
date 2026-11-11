@@ -12,10 +12,11 @@
  * 6. Overlap prevention via .backup.lock with stale lock detection.
  */
 
-import { exec, execSync, spawn } from "child_process";
+import { execSync, spawn } from "child_process";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { dumpDatabaseViaPrisma } from "./lib/prisma-sql-dump";
 
 export interface BackupMetadata {
   format: "AIHAAT_BACKUP_V1";
@@ -97,9 +98,14 @@ export async function createDatabaseBackup(options?: {
   try {
     console.log(`[Backup] Starting logical database backup for: ${dbConfig.database} @ ${dbConfig.host}`);
 
-    // 2. Execute mysqldump / mariadb-dump
+    // 2. Execute mysqldump / mariadb-dump (or Prisma SQL logical dump fallback)
     const dumpBinary = detectDumpBinary();
-    await executeDump(dumpBinary, dbConfig, tempSqlFile);
+    if (dumpBinary === "prisma-fallback") {
+      console.log("[Backup] Native mysqldump CLI not found on host; using Prisma logical SQL dump engine...");
+      await dumpDatabaseViaPrisma(tempSqlFile, options?.customDbUrl);
+    } else {
+      await executeDump(dumpBinary, dbConfig, tempSqlFile);
+    }
 
     const sqlStats = fs.statSync(tempSqlFile);
     if (sqlStats.size === 0) {
@@ -174,8 +180,7 @@ function detectDumpBinary(): string {
       execSync("mariadb-dump --version", { stdio: "ignore" });
       return "mariadb-dump";
     } catch {
-      // Fallback: If mysqldump CLI is missing in local environment, we note it
-      return "mysqldump";
+      return "prisma-fallback";
     }
   }
 }
