@@ -1,9 +1,12 @@
 import { prisma } from "../src/lib/prisma";
 import { finalizeWalletTopup } from "../src/lib/commerce/wallet-topup";
-import { createRefundRequest, reviewRefundRequest } from "../src/lib/commerce/refunds";
+import { createRefundRequest } from "../src/lib/commerce/refunds";
+import { reviewRefundRequest } from "../src/lib/commerce/refund-review";
 import { requestAffiliatePayout, reviewAffiliatePayout } from "../src/lib/commerce/affiliates";
 
 async function runFinancialTests() {
+  // These fixtures exercise refund execution. Approval claims have a separate mock suite.
+  const fixtureApproval = async () => {};
   console.log("=========================================================================");
   console.log("🧪 AI HAAT — PHASE 3 FINANCIAL CONCURRENCY, REFUND & AFFILIATE INTEGRITY SUITE");
   console.log("=========================================================================\n");
@@ -159,7 +162,7 @@ async function runFinancialTests() {
       adminEmail: "admin@aihaat.shop",
       action: "APPROVE",
       approvedAmount: 500,
-    });
+    }, fixtureApproval);
     assert(approvedRefund.success && approvedRefund.status === "APPROVED", "Admin approves refund for ৳500");
 
     // Test 2.4: Concurrent PROCESS_WALLET race condition (Simultaneous 10 requests)
@@ -168,7 +171,7 @@ async function runFinancialTests() {
         refundId: refundReq.id,
         adminEmail: "admin@aihaat.shop",
         action: "PROCESS_WALLET",
-      }).catch((e) => ({ success: false, error: e.message }))
+      }, fixtureApproval).catch((e) => ({ success: false, error: e.message }))
     );
 
     const burstResults = await Promise.all(refundBurstPromises);

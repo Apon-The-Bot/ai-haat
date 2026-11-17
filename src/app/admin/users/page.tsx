@@ -251,7 +251,7 @@ export default function AdminUsersPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast("Customer created successfully", "success");
+        showToast(data.pendingApproval ? "Customer created. Initial credit is pending approval." : "Customer created successfully", "success");
         setIsAddUserOpen(false);
         setNewUserData({ name: "", email: "", phone: "", role: "USER", initialWalletBDT: 0, tags: "" });
         fetchUsers();
@@ -329,7 +329,7 @@ export default function AdminUsersPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast(`Wallet ${walletAdjustmentType === "CREDIT" ? "credited" : "debited"} successfully`, "success");
+        showToast("Wallet adjustment sent to Admin Approvals.", "success");
         setWalletModalUser(null);
         setWalletAmount("");
         setWalletReason("");

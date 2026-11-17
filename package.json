@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/db-env-guard.mjs --mode=dev",
-    "dev": "node init && next dev",
-    "build": "node init && node scripts/build.mjs",
-    "start": "node init && next start",
+    "dev": "next dev",
+    "build": "node scripts/build.mjs",
+    "start": "next start",
     "db:guard": "node scripts/db-env-guard.mjs --mode=dev",
     "db:migrate:dev": "node scripts/db-env-guard.mjs --mode=dev-only && prisma migrate dev",
     "db:push": "node scripts/db-env-guard.mjs --mode=dev-only && prisma db push",
@@ -16,6 +16,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "architecture:check": "node scripts/check-source-file-length.mjs",
+    "smoke:admin": "node scripts/admin-browser-smoke-check.mjs",
     "backup:db": "npx tsx scripts/backup-production-db.ts",
     "backup:uploads": "npx tsx scripts/backup-uploads.ts"
   },

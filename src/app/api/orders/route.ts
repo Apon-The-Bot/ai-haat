@@ -14,6 +14,12 @@ import { trackServerPurchase } from "@/lib/analytics/server";
 
 export const dynamic = "force-dynamic";
 
+const legacyAdminNotePrefix = "Admin note added: ";
+
+function customerOrderNotes(notes: string | null) {
+  return notes?.split(/(?:^|\n)\[Admin Note [^\n]*?\]:/)[0] || null;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -134,7 +140,7 @@ export async function GET(req: NextRequest) {
                   ? "Preparing"
                   : "Order Placed",
               rawDeliveryStatus: rawDelivery,
-              timelineEvents: tracked.timelineEvents || [],
+              timelineEvents: tracked.timelineEvents.filter((event) => !event.note?.startsWith(legacyAdminNotePrefix)),
               isGift: tracked.isGift || false,
               recipientName: tracked.recipientName || null,
               giftClaimToken: null, // AUDIT-002: Never leak claim tokens in public tracking
@@ -296,7 +302,14 @@ export async function GET(req: NextRequest) {
       }
 
       const { metaConsentId, metaAttribution, ...visibleOrder } = orderDetail;
-      return NextResponse.json({ success: true, order: visibleOrder });
+      return NextResponse.json({
+        success: true,
+        order: isAdmin ? visibleOrder : {
+          ...visibleOrder,
+          notes: customerOrderNotes(visibleOrder.notes),
+          timelineEvents: visibleOrder.timelineEvents.filter((event) => !event.note?.startsWith(legacyAdminNotePrefix)),
+        },
+      });
     }
 
     // 4. Query Prisma MySQL Database with Multi-filtering & Server Pagination
@@ -419,7 +432,7 @@ export async function GET(req: NextRequest) {
             : "Order Placed",
         rawDeliveryStatus: o.deliveryStatus,
         rawPaymentStatus: o.paymentStatus,
-        notes: o.notes,
+        notes: isAdmin ? o.notes : customerOrderNotes(o.notes),
         hasDeliveredKeys: o.deliveredKeys.length > 0,
         isGift: o.isGift || false,
         recipientName: o.recipientName || null,

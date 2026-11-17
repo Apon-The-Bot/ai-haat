@@ -1,8 +1,11 @@
 import { requireAdminMfa } from "@/lib/auth-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { addStockItem, bulkImportStock, getStockSummary } from "@/lib/commerce/inventory";
-import { StockType, StockStatus } from "@prisma/client";
+import { addStockItem, bulkImportStock } from "@/lib/commerce/inventory";
+import { Prisma, StockType, StockStatus } from "@prisma/client";
+import { planStockImport, StockImportValidationError } from "./import-preview";
+import { commitReviewedStock } from "./commit-import";
+import { getVariationStock } from "./variation-stock";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +17,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const statusFilter = searchParams.get("status") as StockStatus | null;
     const productFilter = searchParams.get("productId");
+    const variationFilter = searchParams.get("variationId");
 
-    const summary = await getStockSummary();
+    const summary = await getVariationStock();
 
     const whereClause: any = {};
     if (statusFilter && statusFilter !== ("ALL" as any)) {
@@ -24,6 +28,7 @@ export async function GET(req: NextRequest) {
     if (productFilter && productFilter !== "ALL") {
       whereClause.productId = productFilter;
     }
+    if (variationFilter !== null) whereClause.variationId = variationFilter || null;
 
     const recentStocks = await prisma.digitalStock.findMany({
       where: whereClause,
@@ -66,12 +71,41 @@ export async function POST(req: NextRequest) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
 
+  let reviewed = false;
   try {
     const body = await req.json();
+    reviewed = body?.dryRun === true || body?.reviewedImport === true;
     const { productId, variationId, type, payload, lines, batchRef, costPriceBDT, notes } = body;
 
     if (!productId) {
       return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+    }
+
+    if (body.dryRun === true) {
+      const { preview } = await planStockImport(body);
+      return NextResponse.json({ success: true, preview });
+    }
+
+    if (body.reviewedImport === true) {
+      try {
+        const { importedCount, preview } = await commitReviewedStock(body);
+        if (!importedCount) {
+          return NextResponse.json({ success: false, error: "Review the import rows again.", preview }, { status: 400 });
+        }
+        return NextResponse.json({
+          success: true,
+          details: { importedCount, duplicateCount: preview.duplicateCount, invalidCount: preview.invalidCount },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          const conflict = error.code === "P2034";
+          return NextResponse.json({
+            success: false,
+            error: conflict ? "Stock changed during import. Preview again before retrying." : "Could not save stock.",
+          }, { status: conflict ? 409 : 500 });
+        }
+        throw error;
+      }
     }
 
     if (Array.isArray(lines) && lines.length > 0) {
@@ -114,6 +148,13 @@ export async function POST(req: NextRequest) {
       itemId: item.id,
     });
   } catch (error: any) {
+    if (reviewed) {
+      const validation = error instanceof StockImportValidationError;
+      return NextResponse.json({
+        success: false,
+        error: validation ? error.message : "Could not process stock import.",
+      }, { status: validation ? 400 : 500 });
+    }
     console.error("[Admin Inventory POST Error]:", error);
     return NextResponse.json({ success: false, error: error?.message || "Failed to add stock" }, { status: 400 });
   }
