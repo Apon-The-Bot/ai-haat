@@ -1,6 +1,7 @@
 import { requireAdminMfa, requireRecentMfa } from "@/lib/auth-guard";
 import { NextRequest, NextResponse } from "next/server";
-import { adjustUserWalletBalance } from "@/lib/user-control/user-control-service";
+import { requestAdminApproval } from "@/lib/admin-approvals";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -22,41 +23,41 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid type. Must be 'CREDIT' or 'DEBIT'" }, { status: 400 });
     }
 
-    const numericAmount = parseFloat(amountBDT);
-    if (isNaN(numericAmount) || numericAmount <= 0) {
+    const numericAmount = typeof amountBDT === "number" || typeof amountBDT === "string" ? Number(amountBDT) : NaN;
+    if (!Number.isFinite(numericAmount) || numericAmount < 0.01 || numericAmount > Number.MAX_SAFE_INTEGER / 100) {
       return NextResponse.json({ error: "Amount must be a positive number greater than 0" }, { status: 400 });
     }
 
-    if (!reason || !reason.trim()) {
+    if (typeof reason !== "string" || !reason.trim() || reason.length > 1000 ||
+      (reference != null && (typeof reference !== "string" || reference.length > 191)) ||
+      (internalNote != null && (typeof internalNote !== "string" || internalNote.length > 2000))) {
       return NextResponse.json({ error: "A mandatory financial audit reason must be provided" }, { status: 400 });
     }
 
     // High-value adjustments (> 1000 BDT) require recent Step-Up MFA verification
-    if (numericAmount >= 1000) {
+    const roundedAmount = Math.round(numericAmount * 100) / 100;
+    if (roundedAmount >= 1000) {
       const stepUp = await requireRecentMfa(5);
       if (stepUp instanceof NextResponse) return stepUp;
     }
 
-    const validCategories = ["BONUS", "MANUAL_ADJUSTMENT", "REFUND", "PENALTY", "CORRECTION"];
-    const chosenCategory = validCategories.includes(category) ? category : "MANUAL_ADJUSTMENT";
+    const chosenCategory = category === "BONUS" || category === "REFUND" ||
+      category === "PENALTY" || category === "CORRECTION" ? category : "MANUAL_ADJUSTMENT";
+    if (!await prisma.user.findUnique({ where: { id: userId }, select: { id: true } })) {
+      return NextResponse.json({ error: "Target customer not found." }, { status: 404 });
+    }
 
-    const result = await adjustUserWalletBalance({
-      userId,
-      type,
-      amountBDT: numericAmount,
-      category: chosenCategory,
-      reason: reason.trim(),
-      reference,
-      internalNote,
-      adminId: currentAdmin.id,
-      adminEmail: currentAdmin.email,
+    const approvalId = await requestAdminApproval(currentAdmin, {
+      kind: "WALLET",
+      input: { userId, type, amountBDT: roundedAmount, category: chosenCategory,
+        reason: reason.trim(), reference, internalNote },
     });
 
     return NextResponse.json({
       success: true,
-      message: `Wallet ${type === "CREDIT" ? "credited" : "debited"} successfully.`,
-      result,
-    });
+      pendingApproval: true,
+      approvalId,
+    }, { status: 202 });
   } catch (err: any) {
     console.error("[Admin User Wallet Adjustment Error]:", err);
     return NextResponse.json({ error: err.message || "Failed to adjust wallet balance" }, { status: 400 });

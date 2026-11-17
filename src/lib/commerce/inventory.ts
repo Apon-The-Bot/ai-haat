@@ -328,7 +328,7 @@ export async function claimAvailableStock(
 /**
  * Attempt automated instant delivery for eligible stocked products in multi-item orders
  */
-export async function tryAutoFulfillOrder(orderId: string): Promise<{
+export async function tryAutoFulfillOrder(orderId: string, options?: { exactId: boolean }): Promise<{
   success: boolean;
   totalItems: number;
   deliveredItemsCount: number;
@@ -336,9 +336,7 @@ export async function tryAutoFulfillOrder(orderId: string): Promise<{
 }> {
   try {
     const order = await prisma.order.findFirst({
-      where: {
-        OR: [{ orderNumber: orderId }, { id: orderId }],
-      },
+      where: options?.exactId ? { id: orderId } : { OR: [{ orderNumber: orderId }, { id: orderId }] },
       include: {
         items: true,
         deliveredKeys: true,

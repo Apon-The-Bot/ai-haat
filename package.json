@@ -16,6 +16,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "architecture:check": "node scripts/check-source-file-length.mjs",
+    "smoke:admin": "node scripts/admin-browser-smoke-check.mjs",
     "backup:db": "npx tsx scripts/backup-production-db.ts",
     "backup:uploads": "npx tsx scripts/backup-uploads.ts"
   },

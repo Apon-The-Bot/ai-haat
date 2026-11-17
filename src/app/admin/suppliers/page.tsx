@@ -1,5 +1,8 @@
 "use client";
 
+import { SupplierSyncStatus, type SupplierSync } from "./SupplierSyncStatus";
+import Link from "next/link";
+
 import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect } from "react";
@@ -56,6 +59,7 @@ interface Supplier {
   apiKey: string;
   apiSecret: string;
   createdAt: string;
+  recentSyncs?: SupplierSync[];
   lastPurchaseDate?: string;
   productsMappedCount?: number;
   productMappings?: ProductMapping[];
@@ -284,6 +288,9 @@ export default function AdminSuppliersPage() {
             <Plus className="w-4 h-4" />
             Add Supplier
           </button>
+          <Link href="/admin/suppliers/scorecard" className="flex items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100">
+            Scorecard
+          </Link>
         </div>
       </div>
 
@@ -369,6 +376,7 @@ export default function AdminSuppliersPage() {
                           {s.name}
                         </div>
                         <span className="text-xs text-gray-400 font-mono">Code: {s.code}</span>
+                        <SupplierSyncStatus syncs={s.recentSyncs ?? []} />
                       </div>
                     </div>
                   </td>

@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { OrderInvestigation } from "./OrderInvestigation";
+import { SavedOrderFilters } from "./SavedOrderFilters";
 import {
   ShoppingBag,
   Search,
@@ -24,7 +27,6 @@ import {
   ChevronRight,
   Filter,
   FileSpreadsheet,
-  Clock,
   ShieldCheck,
   User,
   CreditCard,
@@ -155,6 +157,8 @@ interface OrderDetailFull {
 export default function AdminOrdersPage() {
   const { formatPrice } = useCurrency();
   const { showToast } = useToast();
+  const accountId = useAuth().user?.id;
+  const detailRequest = useRef(0);
 
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,8 +169,12 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     const filters = new URLSearchParams(window.location.search);
-    setStatusFilter(filters.get("deliveryStatus") === "ORDER_PLACED" ? "ORDER_PLACED" : "ALL");
-    setPaymentFilter(filters.get("paymentStatus") === "VERIFIED" ? "VERIFIED" : "ALL");
+    const delivery = filters.get("deliveryStatus") ?? "";
+    const payment = filters.get("paymentStatus") ?? "";
+    const method = filters.get("paymentMethod") ?? "";
+    if (["ORDER_PLACED", "PROCESSING", "DELIVERED", "CANCELLED"].includes(delivery)) setStatusFilter(delivery);
+    if (["VERIFIED", "PENDING", "FAILED"].includes(payment)) setPaymentFilter(payment);
+    if (["bkash", "nagad", "rocket", "wallet"].includes(method)) setPaymentMethodFilter(method);
   }, []);
 
   // Pagination states
@@ -194,9 +202,6 @@ export default function AdminOrdersPage() {
   const [cancellingOrder, setCancellingOrder] = useState<AdminOrder | OrderDetailFull | null>(null);
   const [cancelReason, setCancelReason] = useState("Invalid TrxID / Payment Not Received");
 
-  // Internal Note Input in Drawer
-  const [adminNoteText, setAdminNoteText] = useState("");
-  const [isSavingNote, setIsSavingNote] = useState(false);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -276,28 +281,33 @@ export default function AdminOrdersPage() {
   }, [fetchOrders]);
 
   // Fetch Full Order Details for Drawer
-  const openOrderDetail = async (orderNumberOrId: string) => {
+  const openOrderDetail = useCallback(async (orderNumberOrId: string) => {
+    const request = ++detailRequest.current;
     setSelectedOrderNumber(orderNumberOrId);
+    setOrderDetail(null);
     setLoadingDetail(true);
     try {
       const res = await fetch(`/api/orders?orderId=${encodeURIComponent(orderNumberOrId)}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.order) {
-          setOrderDetail(data.order);
-        }
-      }
-    } catch (err) {
-      showToast("অর্ডার ডিটেইল লোড করা যায়নি", "error");
+      if (!res.ok) throw new Error("Order detail unavailable");
+      const data = await res.json();
+      if (request === detailRequest.current && data.success && data.order) setOrderDetail(data.order);
+    } catch {
+      if (request === detailRequest.current) showToast("অর্ডার ডিটেইল লোড করা যায়নি", "error");
     } finally {
-      setLoadingDetail(false);
+      if (request === detailRequest.current) setLoadingDetail(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("orderId");
+    if (id) void openOrderDetail(id);
+  }, [openOrderDetail]);
 
   const closeOrderDetail = () => {
+    detailRequest.current += 1;
     setSelectedOrderNumber(null);
     setOrderDetail(null);
-    setAdminNoteText("");
+    setLoadingDetail(false);
   };
 
   const handleCopy = (id: string, text: string) => {
@@ -443,31 +453,6 @@ export default function AdminOrdersPage() {
     }
   };
 
-  // Add Internal Admin Note
-  const handleAddAdminNote = async () => {
-    if (!adminNoteText.trim() || !selectedOrderNumber) return;
-    setIsSavingNote(true);
-    try {
-      const res = await fetch("/api/orders", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderNumber: selectedOrderNumber,
-          adminNote: adminNoteText.trim(),
-        }),
-      });
-
-      if (res.ok) {
-        showToast("এডমিন নোট যুক্ত হয়েছে।", "success");
-        setAdminNoteText("");
-        openOrderDetail(selectedOrderNumber);
-      }
-    } catch {
-      showToast("নোট সেভ করতে সমস্যা হয়েছে", "error");
-    } finally {
-      setIsSavingNote(false);
-    }
-  };
 
   // Safe Export Orders to CSV (Zero secrets)
   const handleExportCSV = () => {
@@ -747,6 +732,20 @@ export default function AdminOrdersPage() {
             </button>
           ))}
         </div>
+
+        {accountId && <SavedOrderFilters
+          key={accountId}
+          accountId={accountId}
+          filters={{ deliveryStatus: statusFilter, paymentStatus: paymentFilter, paymentMethod: paymentMethodFilter }}
+          onApply={(filters) => {
+            setStatusFilter(filters.deliveryStatus);
+            setPaymentFilter(filters.paymentStatus);
+            setPaymentMethodFilter(filters.paymentMethod);
+            setSearch("");
+            setCurrentPage(1);
+            setSelectedOrderIds([]);
+          }}
+        />}
 
         {/* Search & Secondary Filter Dropdowns */}
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1393,62 +1392,7 @@ export default function AdminOrdersPage() {
                     </div>
                   )}
 
-                  {/* Order Timeline Events */}
-                  <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-2xs">
-                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                      <Clock className="w-4 h-4 text-slate-500" />
-                      <span>Order Timeline & Event History</span>
-                    </h4>
-
-                    {orderDetail.timelineEvents && orderDetail.timelineEvents.length > 0 ? (
-                      <div className="space-y-2.5">
-                        {orderDetail.timelineEvents.map((ev) => (
-                          <div key={ev.id} className="flex items-start gap-2.5 text-xs">
-                            <div className="w-2 h-2 rounded-full bg-[#FC5C03] mt-1.5 shrink-0" />
-                            <div>
-                              <p className="text-slate-800 font-semibold">{ev.note || ev.status}</p>
-                              <span className="text-[10px] text-slate-400">
-                                {ev.actor} ({ev.actorEmail || "System"}) • {new Date(ev.createdAt).toLocaleString()}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-400">No previous status timeline logged.</p>
-                    )}
-                  </div>
-
-                  {/* Internal Admin Notes */}
-                  <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-2xs">
-                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                      <Edit3 className="w-4 h-4 text-slate-500" />
-                      <span>Internal Admin Notes (Never shown to customer)</span>
-                    </h4>
-
-                    {orderDetail.notes && (
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 whitespace-pre-wrap font-mono">
-                        {orderDetail.notes}
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Add internal note..."
-                        value={adminNoteText}
-                        onChange={(e) => setAdminNoteText(e.target.value)}
-                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:border-[#FC5C03]"
-                      />
-                      <button
-                        onClick={handleAddAdminNote}
-                        disabled={isSavingNote || !adminNoteText.trim()}
-                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                      >
-                        {isSavingNote ? "Saving..." : "Add Note"}
-                      </button>
-                    </div>
-                  </div>
+                  <OrderInvestigation key={orderDetail.id} id={orderDetail.id} legacy={orderDetail.timelineEvents ?? []} />
                 </>
               )}
             </div>

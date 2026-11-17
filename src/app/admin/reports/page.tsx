@@ -1,6 +1,7 @@
 "use client";
 
 import { MetricCard } from "@/components/admin/MetricCard";
+import Link from "next/link";
 
 import React, { useState, useEffect, useCallback } from "react";
 import {
@@ -88,6 +89,14 @@ export default function AdminReportsPage() {
   const profitAndMargin = report?.profitAndMargin;
   const supplierPerformance = report?.supplierPerformance;
   const inventoryValuation = report?.inventoryValuation;
+  const drilldown = (source: string, extra: Record<string, string> = {}) => {
+    const params = new URLSearchParams({ source, range, ...extra });
+    if (report?.filter?.range === range && report.filter.startDate && report.filter.endDate) {
+      params.set("from", report.filter.startDate);
+      params.set("to", report.filter.endDate);
+    }
+    return `/admin/reports/drilldown?${params}`;
+  };
 
   return (
     <div className="space-y-6 w-full pb-16">
@@ -107,6 +116,12 @@ export default function AdminReportsPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Link href="/admin/reconciliation" className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold hover:bg-slate-50">
+            Reconciliation
+          </Link>
+          <Link href="/admin/reports/scheduled" className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold hover:bg-slate-50">
+            Schedule draft
+          </Link>
           {/* Time Range Selector */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto">
             {[
@@ -181,7 +196,7 @@ export default function AdminReportsPage() {
           {/* Top KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Verified Revenue */}
-            <MetricCard label="Verified Revenue" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Verified Revenue" href={drilldown("verified")} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Verified Revenue</span>
                 <span className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">৳</span>
@@ -193,7 +208,7 @@ export default function AdminReportsPage() {
             </MetricCard>
 
             {/* Net Revenue */}
-            <MetricCard label="Net Revenue" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Net Revenue source records" href={drilldown("verified")} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Net Revenue</span>
                 <span className="p-2 bg-blue-50 text-blue-600 rounded-lg">৳</span>
@@ -205,7 +220,7 @@ export default function AdminReportsPage() {
             </MetricCard>
 
             {/* Total COGS */}
-            <MetricCard label="Delivered COGS" href="/admin/inventory/batches" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Delivered COGS" href={drilldown("stock")} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Delivered COGS</span>
                 <DollarSign className="w-4 h-4 text-amber-600" />
@@ -233,7 +248,7 @@ export default function AdminReportsPage() {
             </MetricCard>
 
             {/* Procurement Spend */}
-            <MetricCard label="Procurement Spend" href="/admin/inventory/batches" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Procurement Spend" href={drilldown("procurement")} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Procurement Spend</span>
                 <Building2 className="w-4 h-4 text-indigo-600" />
@@ -244,10 +259,10 @@ export default function AdminReportsPage() {
               <p className="text-xs text-slate-400 mt-2">Batch inventory purchases in period</p>
             </MetricCard>
 
-            {/* Completed Refunds */}
-            <MetricCard label="Completed Refunds" href="/admin/refunds" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            {/* Refund deductions */}
+            <MetricCard label="Refund Deductions" href={drilldown("refunds")} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider">Completed Refunds</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Refund Deductions</span>
                 <Undo2 className="w-4 h-4 text-rose-600" />
               </div>
               <div className="text-2xl font-black text-rose-600">
@@ -257,7 +272,7 @@ export default function AdminReportsPage() {
             </MetricCard>
 
             {/* Paid Orders */}
-            <MetricCard label="Paid Orders" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Paid Orders" href={drilldown("verified")} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Paid Orders</span>
                 <ShoppingBag className="w-4 h-4 text-purple-600" />
@@ -271,7 +286,7 @@ export default function AdminReportsPage() {
             </MetricCard>
 
             {/* Gross AOV */}
-            <MetricCard label="Gross AOV" href="/admin/orders?paymentStatus=VERIFIED" className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <MetricCard label="Gross AOV" href={drilldown("verified")} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Gross AOV</span>
                 <TrendingUp className="w-4 h-4 text-amber-600" />
@@ -525,8 +540,8 @@ export default function AdminReportsPage() {
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {report?.salesTimeSeries?.map((item: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50/50">
-                      <td className="py-3 px-4 font-bold text-slate-900">{item.date}</td>
-                      <td className="py-3 px-4 font-bold text-emerald-600">{formatPrice(item.verifiedRevenue)}</td>
+                      <td className="py-3 px-4 font-bold text-slate-900"><Link className="underline" href={drilldown("orders", { day: item.date })}>{item.date}</Link></td>
+                      <td className="py-3 px-4 font-bold text-emerald-600"><Link className="underline" href={drilldown("verified", { day: item.date })}>{formatPrice(item.verifiedRevenue)}</Link></td>
                       <td className="py-3 px-4 text-slate-700">{item.verifiedOrders}</td>
                       <td className="py-3 px-4 text-slate-400">{item.totalOrders}</td>
                     </tr>
@@ -638,7 +653,7 @@ export default function AdminReportsPage() {
       {activeTab === "PAYMENTS" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Payment Gateway Settlement & Health</h2>
+            <h2 className="text-lg font-bold text-slate-900">Order Payments by Method</h2>
             <button
               onClick={() => handleExportCSV("PAYMENTS")}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
@@ -654,7 +669,7 @@ export default function AdminReportsPage() {
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 text-xs uppercase font-bold tracking-wider">
                     <th className="py-3 px-4">Gateway</th>
-                    <th className="py-3 px-4 text-center">Attempts</th>
+                    <th className="py-3 px-4 text-center">Orders</th>
                     <th className="py-3 px-4 text-center">Verified</th>
                     <th className="py-3 px-4">Volume (BDT)</th>
                     <th className="py-3 px-4 text-center">Success Rate</th>
@@ -663,7 +678,7 @@ export default function AdminReportsPage() {
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {report?.paymentGateways?.map((g: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50/50">
-                      <td className="py-3 px-4 font-bold text-slate-900 uppercase">{g.gateway}</td>
+                      <td className="py-3 px-4 font-bold text-slate-900 uppercase"><Link className="underline" href={drilldown("orders", { method: g.gateway })}>{g.gateway}</Link></td>
                       <td className="py-3 px-4 text-center">{g.totalAttempts}</td>
                       <td className="py-3 px-4 text-center font-bold text-emerald-600">{g.verifiedCount}</td>
                       <td className="py-3 px-4 font-bold text-slate-900">{formatPrice(g.verifiedVolumeBDT)}</td>
@@ -781,11 +796,11 @@ export default function AdminReportsPage() {
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Refund Requests</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Total Claims:</span>
+                  <Link className="text-slate-600 underline" href={drilldown("claims")}>Total Claims</Link>
                   <span className="font-bold">{report?.afterSales?.refunds?.totalRequests || 0}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Completed Payouts:</span>
+                  <Link className="text-slate-600 underline" href={drilldown("payouts")}>Refund Deductions</Link>
                   <span className="font-bold text-rose-600">{formatPrice(report?.afterSales?.refunds?.completedAmountBDT || 0)}</span>
                 </div>
               </div>

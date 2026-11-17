@@ -1,10 +1,10 @@
 import { prisma } from "../src/lib/prisma";
+import { adjustUserWalletBalance } from "../src/lib/user-control/wallet-adjustment";
 import {
   getUserEffectiveStatus,
   setUserStatus,
   checkFeatureEntitlement,
   setFeatureRestriction,
-  adjustUserWalletBalance,
   logUserActivity,
   addAdminNote,
   setUserTags,
@@ -213,6 +213,7 @@ async function runMasterUserControlTestSuite() {
     console.log("\n--- Group 4: Wallet Financial Control & Ledger Integrity ---");
 
     // 4.1 Credit Wallet
+    const fixtureApproval = async () => {};
     const creditResult = await adjustUserWalletBalance({
       userId: testUserId,
       type: "CREDIT",
@@ -222,7 +223,7 @@ async function runMasterUserControlTestSuite() {
       reference: "TEST-BONUS-001",
       adminId,
       adminEmail,
-    });
+    }, fixtureApproval);
 
     const userAfterCredit = await prisma.user.findUnique({
       where: { id: testUserId },
@@ -251,7 +252,7 @@ async function runMasterUserControlTestSuite() {
       reference: "TEST-ADJ-002",
       adminId,
       adminEmail,
-    });
+    }, fixtureApproval);
 
     const userAfterDebit = await prisma.user.findUnique({
       where: { id: testUserId },
@@ -280,7 +281,7 @@ async function runMasterUserControlTestSuite() {
         reason: "Test excessive debit attempt",
         adminId,
         adminEmail,
-      });
+      }, fixtureApproval);
     } catch (err: any) {
       caughtInsufficientFunds = err.message.includes("Insufficient wallet balance");
     }

@@ -6,6 +6,7 @@
 
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
+import { calculateReplacementEligibility } from "../src/lib/commerce/warranty";
 
 const ROOT = join(__dirname, "..");
 let pass = 0;
@@ -60,9 +61,14 @@ assert(
 
 // ─── TEST 3: Duplicate Replacement Prevention ─────────────────────
 assert(
-  "Prevents multiple open replacement claims on the same delivery",
-  fileContains("src/app/api/replacements/request/route.ts", "existingOpen") &&
-  fileContains("src/app/api/replacements/request/route.ts", "status: { in: [\"REQUESTED\", \"UNDER_REVIEW\"] }")
+  "Rejects a replacement when that delivery already has an open claim",
+  fileContains("src/app/api/replacements/request/route.ts", "await createReplacementRequest(") &&
+  fileContains("src/lib/commerce/replacements.ts", "calculateReplacementEligibility(", "replacementsAsOriginal: delivery.replacementsAsOriginal") &&
+  ["REQUESTED", "UNDER_REVIEW"].every((status) => {
+    const eligibility = calculateReplacementEligibility({ replacementsAsOriginal: [{ status }] });
+    return eligibility.hasOpenRequest && !eligibility.isEligible;
+  }) &&
+  calculateReplacementEligibility({ replacementsAsOriginal: [{ status: "REJECTED" }] }).isEligible
 );
 
 // ─── TEST 4: Out of Warranty Handling & Admin Override ────────────
@@ -107,7 +113,7 @@ assert(
 // ─── TEST 10: Duplicate Wallet Refund Idempotency ─────────────────
 assert(
   "Wallet refund execution uses atomic transaction with status guard",
-  fileContains("src/lib/commerce/refunds.ts", "prisma.$transaction", "walletBalanceBDT", "type: \"REFUND\"")
+  fileContains("src/lib/commerce/refund-review.ts", "prisma.$transaction", "walletBalanceBDT", "type: \"REFUND\"")
 );
 
 // ─── TEST 11: Refund Limit Enforcement ────────────────────────────
@@ -126,7 +132,7 @@ assert(
 // ─── TEST 13: Multi-Item Partial Refund Isolation ─────────────────
 assert(
   "Refunding one OrderItem does not alter other OrderItems' delivery or financial state",
-  fileContains("src/lib/commerce/refunds.ts", "refund.orderItemId", "tx.orderItem.update") &&
+  fileContains("src/lib/commerce/refund-review.ts", "refund.orderItemId", "tx.orderItem.update") &&
   fileContains("prisma/schema.prisma", "orderItemId")
 );
 
@@ -145,8 +151,10 @@ assert(
 
 // ─── TEST 16: Fully Refunded Item Cannot Receive Replacement ──────
 assert(
-  "OrderItem marked isRefunded cannot have new replacement claims created",
-  fileContains("src/lib/commerce/replacements.ts", "isRefunded")
+  "Customer replacement eligibility rejects fully refunded order items",
+  fileContains("src/lib/commerce/replacements.ts", "calculateReplacementEligibility(", "delivery.orderItem", "!data.adminOverride && !eligibility.isEligible") &&
+  !calculateReplacementEligibility({}, { isRefunded: true }).isEligible &&
+  calculateReplacementEligibility({}, { isRefunded: false }).isEligible
 );
 
 // ─── TEST 17: Admin Authorization on Refund Approval ──────────────
@@ -179,7 +187,7 @@ assert(
 // ─── TEST 21: Manual MFS Refund Requires Transaction Reference ───
 assert(
   "Manual refund completion requires payoutTrxId / reference",
-  fileContains("src/lib/commerce/refunds.ts", "payoutTrxId")
+  fileContains("src/lib/commerce/refund-review.ts", "payoutTrxId")
 );
 
 // ─── TEST 22: Policy Snapshot Preserves Purchase-Time Warranty ────
@@ -197,9 +205,9 @@ assert(
 
 // ─── TEST 24: Admin After-Sales Dashboard & Abuse Signals ─────────
 assert(
-  "Admin refund portal provides KPIs, status filters, and 1-click execution",
+  "Admin refund portal provides KPIs, status filters, and an approval request",
   fileExists("src/app/admin/refunds/page.tsx") &&
-  fileContains("src/app/admin/refunds/page.tsx", "Pending Refund Requests")
+  fileContains("src/app/admin/refunds/page.tsx", "Pending Refund Requests", "pendingApproval")
 );
 
 // ─── TEST 25: Admin Replacements Dedicated Hub ───────────────────
