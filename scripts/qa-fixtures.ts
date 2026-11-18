@@ -40,8 +40,29 @@ export function createQATracker(): QATracker {
  */
 export function guardSafeTestDatabase() {
   const dbUrl = process.env.DATABASE_URL || "";
-  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_TEST_ON_PROD) {
-    console.warn("⚠️ Running QA suite in production mode with strict synthetic test fixtures only.");
+  if (!dbUrl) {
+    throw new Error("QA database guard: DATABASE_URL is required for isolated fixtures.");
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(dbUrl);
+  } catch {
+    throw new Error("QA database guard: DATABASE_URL is not a valid URL.");
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  const database = parsed.pathname.replace(/^\//, "").toLowerCase();
+  const localHost = host === "127.0.0.1" || host === "localhost" || host === "::1";
+  const isolatedName = /(^|[-_])(qa|test|dev|development|fixture)([-_]|$)/.test(database);
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("QA database guard: refusing to run fixtures with NODE_ENV=production.");
+  }
+  if (!localHost || !isolatedName) {
+    throw new Error(
+      `QA database guard: fixtures require a local isolated database (received ${host}/${database}).`
+    );
   }
 }
 

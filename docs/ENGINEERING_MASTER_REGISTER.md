@@ -13,6 +13,7 @@ Verification baseline: commit `f099ed8`, 2026-11-19. Existing unrelated working-
 | ENG-007 | Recommendations | Existing frequently-bought-together/product discovery components | P2 | Deterministic baseline exists | Engagement measurement pending |
 | ENG-008 | Performance | Sharp media optimizer and Next build | P3 | Existing optimizer retained | Build page-data blocked by missing `DATABASE_URL` |
 | ENG-009 | Production readiness | Prisma migrations and deployment checks | P0 | Blocked | Safe production DB credentials/backup window required |
+| ENG-010 | Isolated QA database | `scripts/qa-fixtures.ts` now requires local host + explicitly isolated database name and rejects production mode | P0 | Guard implemented; environment unavailable | No local MySQL/Docker detected |
 
 ## Acceptance gate
 
