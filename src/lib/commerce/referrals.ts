@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { randomBytes } from "crypto";
+import { getOrCreateAffiliateProfile } from "@/lib/commerce/affiliates";
 
 export interface ReferralMilestone {
   id: string;
@@ -57,53 +57,7 @@ export const REFERRAL_MILESTONES: ReferralMilestone[] = [
  * Get or automatically create user's affiliate/referral profile
  */
 export async function getOrCreateReferralProfile(userId: string) {
-  let profile = await prisma.affiliateProfile.findUnique({
-    where: { userId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          walletBalanceBDT: true,
-          coinBalance: true,
-        },
-      },
-    },
-  });
-
-  if (!profile) {
-    // Generate unique friendly code e.g. AH-9821
-    let code = `AH-${randomBytes(2).toString("hex").toUpperCase()}`;
-    let exists = await prisma.affiliateProfile.findUnique({ where: { referralCode: code } });
-    while (exists) {
-      code = `AH-${randomBytes(2).toString("hex").toUpperCase()}`;
-      exists = await prisma.affiliateProfile.findUnique({ where: { referralCode: code } });
-    }
-
-    profile = await prisma.affiliateProfile.create({
-      data: {
-        userId,
-        referralCode: code,
-        status: "ACTIVE",
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            walletBalanceBDT: true,
-            coinBalance: true,
-          },
-        },
-      },
-    });
-  }
-
-  return profile;
+  return getOrCreateAffiliateProfile(userId);
 }
 
 /**
