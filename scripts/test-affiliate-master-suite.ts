@@ -45,7 +45,7 @@ function fileContains(rel: string, ...patterns: string[]): boolean {
 }
 
 console.log("\n" + "═".repeat(75));
-console.log("  AI HAAT — AFFILIATE & PAYOUT MASTER SUBSYSTEM TEST SUITE (32 Tests)");
+console.log("  AI HAAT — AFFILIATE & PAYOUT MASTER SUBSYSTEM TEST SUITE (33 Tests)");
 console.log("═".repeat(75) + "\n");
 
 // ─── SECTION 1: DATABASE SCHEMA & MODELS ──────────────────────────────────────
@@ -387,6 +387,6 @@ if (fail > 0) {
   console.error(`\n  ⚠️  ${fail} affiliate tests FAILED. Review issues above.\n`);
   process.exit(1);
 } else {
-  console.log("\n  🎉 ALL 32/32 AFFILIATE & PAYOUT MASTER TESTS PASSED PERFECTLY!\n");
+  console.log("\n  🎉 ALL 33/33 AFFILIATE & PAYOUT MASTER TESTS PASSED PERFECTLY!\n");
   process.exit(0);
 }
