@@ -314,6 +314,7 @@ model User {
   deviceInstances    UserDeviceInstance[]
   technicalObservations UserTechnicalObservation[]
   consentRecords     UserConsentRecord[]
+  wishlistItems      WishlistItem[]
 
   @@map("users")
 }
@@ -413,11 +414,25 @@ model Product {
   bundleItems        BundleItem[]
   tieredPricingRules TieredPricingRule[]
   flashSaleItems     FlashSaleItem[]
+  wishlistItems      WishlistItem[]
 
   @@index([category])
   @@index([status, visibility])
   @@index([inStock, isFeatured])
   @@map("products")
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+  @@map("wishlist_items")
 }
 
 model Variation {

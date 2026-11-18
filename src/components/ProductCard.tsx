@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Star, Zap, ShoppingBag, AlertCircle, Bell } from "lucide-react";
+import { Star, Zap, ShoppingBag, AlertCircle, Bell, Heart } from "lucide-react";
 import { Product, Variation } from "@/types";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
@@ -30,6 +30,8 @@ export function ProductCard({ product }: ProductCardProps) {
       inStock: true,
     }
   );
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlistBusy, setWishlistBusy] = useState(false);
 
   const isOutOfStock = product.inStock === false || selectedVariation?.inStock === false;
   const isLowStock = !isOutOfStock && product.badge === "Limited Stock";
@@ -61,6 +63,22 @@ export function ProductCard({ product }: ProductCardProps) {
     setSelectedVariation(v);
   };
 
+  const handleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) { openLoginModal(`/product/${product.slug}`); return; }
+    if (wishlistBusy) return;
+    setWishlistBusy(true);
+    try {
+      const response = await fetch(`/api/wishlist${wishlisted ? `?productId=${encodeURIComponent(product.id)}` : ""}`, {
+        method: wishlisted ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: wishlisted ? undefined : JSON.stringify({ productId: product.id }),
+      });
+      if (response.ok) setWishlisted(!wishlisted);
+    } finally { setWishlistBusy(false); }
+  };
+
   return (
     <div className="group relative flex flex-col h-full bg-white rounded-2xl border border-[#E8E8EE] overflow-hidden hover:border-[#FC5C03]/60 hover:shadow-cardHover transition-all duration-200">
       <Link href={isOutOfStock ? `/product/${product.slug}#stock-alert` : `/product/${product.slug}`} className="flex flex-col h-full">
@@ -76,6 +94,9 @@ export function ProductCard({ product }: ProductCardProps) {
             }`}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
           />
+          <button type="button" onClick={handleWishlist} disabled={wishlistBusy} aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"} className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-[#1A1D26] shadow-sm transition hover:text-[#FC5C03] disabled:opacity-60">
+            <Heart className={`h-4 w-4 ${wishlisted ? "fill-[#FC5C03] text-[#FC5C03]" : ""}`} />
+          </button>
 
           {/* Badges on Top Left */}
           <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">

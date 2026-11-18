@@ -28,6 +28,7 @@ import {
   X,
   Gift,
   Settings,
+  Heart,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -122,6 +123,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
     { name: "Notifications", nameBn: "নোটিফিকেশন", href: "/dashboard/notifications", icon: Bell },
     { name: "Security", nameBn: "সিকিউরিটি", href: "/dashboard/security", icon: ShieldCheck },
     { name: "Profile settings", nameBn: "প্রোফাইল সেটিংস", href: "/dashboard/settings", icon: Settings },
+    { name: "Wishlist", nameBn: "উইশলিস্ট", href: "/dashboard/wishlist", icon: Heart },
     { name: "Email Preferences", nameBn: "ইমেইল প্রেফারেন্স", href: "/dashboard/preferences", icon: Mail },
     { name: "Support & Help", nameBn: "সাপোর্ট ও সহায়তা", href: "/dashboard/support", icon: LifeBuoy },
     { name: "Affiliate Program", nameBn: "অ্যাফিলিয়েট প্রোগ্রাম", href: "/dashboard/affiliate", icon: Share2 },
@@ -139,6 +141,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
     { name: isBn ? "নোটিফিকেশন" : "Notifications", href: "/dashboard/notifications", icon: Bell },
     { name: isBn ? "সিকিউরিটি" : "Security", href: "/dashboard/security", icon: ShieldCheck },
     { name: isBn ? "প্রোফাইল সেটিংস" : "Profile settings", href: "/dashboard/settings", icon: Settings },
+    { name: isBn ? "উইশলিস্ট" : "Wishlist", href: "/dashboard/wishlist", icon: Heart },
     { name: isBn ? "ইমেইল প্রেফারেন্স" : "Email Preferences", href: "/dashboard/preferences", icon: Mail },
     { name: isBn ? "সাপোর্ট ও সহায়তা" : "Support & Help", href: "/dashboard/support", icon: LifeBuoy },
     { name: isBn ? "অ্যাফিলিয়েট প্রোগ্রাম" : "Affiliate Program", href: "/dashboard/affiliate", icon: Share2 },
