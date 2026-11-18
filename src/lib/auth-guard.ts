@@ -36,8 +36,8 @@ export async function requireAuth(): Promise<AuthResult | NextResponse> {
             : `Account is temporarily suspended: ${effectiveStatus.reason || "Administrative review"}`
         }, { status: 403 });
       }
-    } catch (e) {
-      // Fail safely without blocking on non-critical status lookup error
+    } catch {
+      return NextResponse.json({ error: "Unable to verify account status" }, { status: 503 });
     }
   }
   

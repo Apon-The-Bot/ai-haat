@@ -25,6 +25,12 @@ export interface IngestSupplierStockParams {
 
 import { safeEqualSecret } from "@/lib/cron-auth";
 
+export class SupplierStockScopeError extends Error {
+  constructor(public readonly status: 400 | 409) {
+    super(status === 400 ? "Invalid product or variation" : "Batch reference conflicts with the supplied stock");
+  }
+}
+
 export async function validateSupplierAuth(apiKey: string, apiSecret?: string) {
   if (!apiKey || typeof apiKey !== "string") {
     return { isValid: false, error: "Missing or invalid API key" };
@@ -60,12 +66,16 @@ export async function ingestSupplierStock(params: IngestSupplierStockParams) {
     where: { id: params.productId },
     include: { productSuppliers: true }
   });
-  if (!product) throw new Error("Product not found");
+  if (!product) throw new SupplierStockScopeError(400);
 
   let variationName: string | undefined = undefined;
   if (params.variationId) {
-    const variation = await prisma.variation.findUnique({ where: { id: params.variationId } });
-    if (variation) variationName = variation.name;
+    const variation = await prisma.variation.findFirst({
+      where: { id: params.variationId, productId: params.productId },
+      select: { name: true },
+    });
+    if (!variation) throw new SupplierStockScopeError(400);
+    variationName = variation.name;
   }
 
   const currency = (params.currency || "BDT").toUpperCase();
@@ -115,6 +125,14 @@ export async function ingestSupplierStock(params: IngestSupplierStockParams) {
       notes: params.notes || "Supplier Ingestion Batch",
     }
   });
+
+  // Check the row returned by the upsert so concurrent claims of a new
+  // reference cannot attach stock to a batch belonging to another scope.
+  if (batch.supplierId !== supplier.id
+    || batch.productId !== product.id
+    || batch.variationId !== (params.variationId || null)) {
+    throw new SupplierStockScopeError(409);
+  }
 
   let importedCount = 0;
   let duplicateCount = 0;

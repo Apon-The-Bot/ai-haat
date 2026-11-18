@@ -1,0 +1,1 @@
+ALTER TABLE `User` ADD COLUMN `sessionRevokedAt` DATETIME(3) NULL;

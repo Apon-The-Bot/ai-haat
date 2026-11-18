@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateSupplierAuth, ingestSupplierStock } from "@/lib/commerce/suppliers";
+import { validateSupplierAuth, ingestSupplierStock, SupplierStockScopeError } from "@/lib/commerce/suppliers";
 
 export const dynamic = "force-dynamic";
 
@@ -40,8 +40,11 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, result });
-  } catch (error: any) {
-    console.error("Supplier Webhook Error:", error);
-    return NextResponse.json({ success: false, error: error.message || "Internal Server Error" }, { status: 500 });
+  } catch (error) {
+    if (error instanceof SupplierStockScopeError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    }
+    console.error("Supplier stock ingestion failed");
+    return NextResponse.json({ success: false, error: "Unable to ingest supplier stock" }, { status: 500 });
   }
 }

@@ -99,6 +99,14 @@ function WalletContent() {
       if (typeof window !== "undefined") {
         window.history.replaceState({}, "", window.location.pathname);
       }
+    } else if (topupStatus === "pending") {
+      showToast(
+        isBn ? "পেমেন্ট যাচাই হচ্ছে। কিছুক্ষণ পর ব্যালেন্স দেখুন।" : "Payment is being verified. Check your balance shortly.",
+        "info"
+      );
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
     }
   }, [searchParams, fetchTransactions, isBn, refreshUser, showToast]);
 

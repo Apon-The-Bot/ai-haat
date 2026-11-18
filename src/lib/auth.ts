@@ -112,6 +112,9 @@ export const authOptions: NextAuthOptions = {
             token.walletBalanceBDT = dbUser.walletBalanceBDT || 0;
             token.mfaRequired = dbUser.security?.totpEnabled ?? false;
             token.picture = dbUser.image || token.picture;
+            if (dbUser.sessionRevokedAt && typeof token.iat === "number" && dbUser.sessionRevokedAt.getTime() > token.iat * 1000) {
+              throw new Error("Session revoked");
+            }
           } else {
             delete token.appUserId;
             delete token.id;

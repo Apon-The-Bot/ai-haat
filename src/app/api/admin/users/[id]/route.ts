@@ -486,8 +486,11 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     }
 
     // 1. Invalidate all active sessions
-    await prisma.session.deleteMany({ where: { userId } });
-    await prisma.mfaSession.deleteMany({ where: { userId } });
+    await prisma.$transaction([
+      prisma.session.deleteMany({ where: { userId } }),
+      prisma.mfaSession.deleteMany({ where: { userId } }),
+      prisma.user.update({ where: { id: userId }, data: { sessionRevokedAt: new Date() } }),
+    ]);
 
     // 2. Set Status to DEACTIVATED
     await prisma.userStatusRecord.create({

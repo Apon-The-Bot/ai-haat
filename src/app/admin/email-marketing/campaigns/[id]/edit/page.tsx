@@ -1,5 +1,6 @@
 "use client";
 
+import { EmailHtmlPreview } from "@/components/admin/EmailHtmlPreview";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -404,15 +405,13 @@ export default function EditCampaignPage() {
               <div className="bg-[#0F172A] p-4 text-center border-b-2 border-[#FC5C03]">
                 <div className="font-black text-white text-base">AI <span className="text-[#FC5C03]">HAAT</span></div>
               </div>
-              <div
+              <EmailHtmlPreview
                 className="p-4 space-y-2 min-h-[160px] leading-relaxed"
-                dangerouslySetInnerHTML={{
-                  __html: contentHtml
-                    ? contentHtml
-                        .replace(/\{\{first_name\}\}/g, "John")
-                        .replace(/\{\{customer_name\}\}/g, "John Doe")
-                    : '<p style="color: #94a3b8; text-align: center; padding: 40px 0;">Compose HTML...</p>',
-                }}
+                html={contentHtml
+                ? contentHtml
+                    .replace(/\{\{first_name\}\}/g, "John")
+                    .replace(/\{\{customer_name\}\}/g, "John Doe")
+                : '<p style="color: #94a3b8; text-align: center; padding: 40px 0;">Compose HTML...</p>'}
               />
               <div className="bg-slate-900 p-3 text-center text-[10px] text-slate-400">
                 <p className="margin: 0">AI Haat — Bangladesh&apos;s #1 Digital Marketplace</p>
