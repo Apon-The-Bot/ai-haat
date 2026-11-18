@@ -103,6 +103,15 @@ The percentage is a prioritization signal, not a market ranking. It uses source-
 
 Repository inspection was performed against source code and local documentation. Production checkout, payment callbacks, supplier webhooks, background workers, and authenticated customer journeys were not executed against live customer data. Competitor cost and adoption scoring was excluded until equivalent scope and current official pricing could be collected.
 
+## Remediation register update
+
+| Feature ID | Change | Acceptance evidence | Status |
+|---|---|---|---|
+| MKT-02 | Added private wishlist persistence with unique user/product ownership, authenticated GET/POST/DELETE API, dashboard view, product-card toggle, empty/loading states, and product availability display | `src/app/api/wishlist/route.ts`, `src/app/dashboard/wishlist/page.tsx`, `src/components/ProductCard.tsx`, migration `20261119090000_wishlist_items`, `npx prisma validate`, `npm run typecheck` | Implemented and source-verified |
+| PAY-01 | No gateway adapter was added | Merchant agreements and gateway capabilities remain unverified | Open |
+| DP-02 | No simulated recurring billing was added | Existing subscription paths require provider capability verification | Open |
+| API-01 | No public API was exposed | Existing internal routes remain protected | Open |
+
 ## Official benchmark sources
 
 - [WooCommerce REST API](https://developer.woocommerce.com/docs/apis/rest-api/)
