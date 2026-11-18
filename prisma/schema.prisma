@@ -1132,6 +1132,7 @@ model AffiliateCommission {
   rejectionReason       String?
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
+  sourceKey             String?           @unique
 
   affiliateProfile      AffiliateProfile  @relation(fields: [affiliateProfileId], references: [id], onDelete: Cascade)
   order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)

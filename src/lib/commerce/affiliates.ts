@@ -436,11 +436,14 @@ export async function attributeOrderToAffiliate(
   // Round to 2 decimal places
   totalCommissionBDT = Math.round(totalCommissionBDT * 100) / 100;
 
-  const commission = await prisma.$transaction(async (tx) => {
+  let commission;
+  try {
+    commission = await prisma.$transaction(async (tx) => {
     const comm = await tx.affiliateCommission.create({
       data: {
         affiliateProfileId: affiliate.id,
         orderId: order.id,
+        sourceKey: `affiliate:${affiliate.id}:order:${order.id}`,
         orderTotalBDT: order.totalBDT,
         commissionRatePercent: tierInfo.ratePercent,
         commissionAmountBDT: totalCommissionBDT,
@@ -465,7 +468,13 @@ export async function attributeOrderToAffiliate(
     }
 
     return comm;
-  });
+    });
+  } catch (error: any) {
+    if (error?.code !== "P2002") throw error;
+    const existing = await prisma.affiliateCommission.findUnique({ where: { sourceKey: `affiliate:${affiliate.id}:order:${order.id}` } });
+    if (!existing) throw error;
+    return { success: true, commissionId: existing.id, commissionAmountBDT: existing.commissionAmountBDT, ratePercent: existing.commissionRatePercent, status: existing.status, isExisting: true };
+  }
 
   return {
     success: true,
