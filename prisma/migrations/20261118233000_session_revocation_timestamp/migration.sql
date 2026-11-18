@@ -1,1 +1,1 @@
-ALTER TABLE `User` ADD COLUMN `sessionRevokedAt` DATETIME(3) NULL;
+ALTER TABLE `users` ADD COLUMN `sessionRevokedAt` DATETIME(3) NULL;
