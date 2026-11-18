@@ -4,7 +4,7 @@ Verification date: 2026-11-19
 
 ## Scope and method
 
-This report uses the repository at commit `0fb241c` plus the current uncommitted workspace state as the project source of truth. A feature is marked verified only when a route, API handler, service, Prisma model, or executable script provides direct evidence. A UI label alone is not counted as a working feature. WooCommerce was selected as the primary benchmark because it is the closest extensible WordPress commerce reference. Shopify is used as a secondary product practice reference. Easy Digital Downloads and SureCart were not scored in this pass because current official feature evidence and a comparable pricing scope were not collected.
+This report uses the repository at commit `f099ed8` plus the current uncommitted workspace state as the project source of truth. A feature is marked verified only when a route, API handler, service, Prisma model, or executable script provides direct evidence. A UI label alone is not counted as a working feature. WooCommerce was selected as the primary benchmark because it is the closest extensible WordPress commerce reference. Shopify is used as a secondary product practice reference. Easy Digital Downloads and SureCart were not scored in this pass because current official feature evidence and a comparable pricing scope were not collected.
 
 WooCommerce's official documentation confirms separate management and shopper APIs, REST API keys, webhooks with signed delivery and logs, and subscription-linked downloads. Sources were checked on 2026-11-19.
 
@@ -38,7 +38,7 @@ WooCommerce's official documentation confirms separate management and shopper AP
 | Email marketing | campaigns, templates, contacts, segments, suppressions, logs and cron queue | Implemented but independently verified only at source level | 3 |
 | SMS, push and WhatsApp | no complete provider-backed implementation was verified | Missing or unverified | 0 |
 | Reviews | review model, storefront reviews and admin moderation surfaces | Implemented but independently verified only at source level | 2 |
-| Wishlist | no wishlist route, model, or API found | Missing | 0 |
+| Wishlist | private wishlist model, API, dashboard view and product-card toggle | Implemented and source-verified | 3 |
 | Search and comparison | shop search/filter code and `/compare` route exist, advanced search service was not verified | Partially implemented | 2 |
 | Analytics and attribution | checkout analytics, Meta integration, retry route and reporting screens | Implemented but independently verified only at source level | 2 |
 | SEO | canonical helpers, robots, sitemap, JSON-LD and metadata routes | Fully implemented at source level | 3 |
@@ -68,7 +68,7 @@ Scores use a target maturity from 0 to 5. Project score is capped at the target 
 | CRM-01 | Customer | Tags, notes, restrictions, activity | 3/4 | Extensions | AI Haat has useful native admin controls | Advantage | — | Add customer timeline UI verification |
 | CRM-02 | Customer | Address and saved payment methods | 0/3 | Native/extensions | Missing for future physical or hybrid commerce | Medium | Medium | Add only if business scope requires it |
 | MKT-01 | Marketing | Email campaigns and segmentation | 3/4 | Extensions | AI Haat has substantial native workflow surface | Advantage | — | Verify queue delivery and suppression paths |
-| MKT-02 | Marketing | Wishlist and recommendations | 0/3 | Extensions | Storefront conversion gap | High | Medium | Add wishlist first, recommendations later |
+| MKT-02 | Marketing | Wishlist and recommendations | 1/3 | Extensions | Wishlist is implemented; recommendations remain a gap | High | Medium | Verify wishlist and add recommendations later |
 | STO-01 | Storefront | Search, filters, compare, reviews | 2/4 | Native/extensions | Basic capability exists, discoverability depth needs work | High | Medium | Add verified search/filter coverage |
 | ANA-01 | Analytics | Revenue, profit and operational reports | 2/4 | Analytics extensions | Dashboard exists, metric definitions and reconciliation need proof | Critical | High | Document metric formulas and fixtures |
 | API-01 | Extensibility | Public authenticated API | 2/4 | REST API native | AI Haat internal APIs are broader than its documented public contract | High | High | Publish versioned API and webhook contract |
