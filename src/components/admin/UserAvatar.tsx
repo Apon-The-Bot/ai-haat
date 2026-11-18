@@ -8,7 +8,7 @@ interface UserAvatarProps {
   name?: string | null;
   email?: string | null;
   image?: string | null;
-  size?: "sm" | "lg";
+  size?: "sm" | "md" | "lg";
   onClick?: () => void;
 }
 
@@ -24,10 +24,11 @@ function initials(name?: string | null, email?: string | null) {
 
 export function UserAvatar({ name, email, image, size = "sm", onClick }: UserAvatarProps) {
   const [imageFailed, setImageFailed] = useState(false);
-  const dimensions = size === "lg" ? "h-20 w-20 text-2xl rounded-2xl" : "h-9 w-9 text-xs rounded-full";
+  const dimensions = size === "lg" ? "h-20 w-20 text-2xl" : size === "md" ? "h-12 w-12 text-lg" : "h-9 w-9 text-xs";
+  const validImage = image && /^https?:\/\//i.test(image);
   const avatar = (
-    <div className={`${dimensions} relative shrink-0 overflow-hidden bg-gradient-to-tr from-[#FC5C03] to-[#FF8C4B] text-white font-bold flex items-center justify-center shadow-2xs`}>
-      {image && !imageFailed ? (
+    <div className={`${dimensions} relative shrink-0 overflow-hidden rounded-full bg-[#FC5C03] text-white font-bold flex items-center justify-center shadow-2xs`}>
+      {validImage && !imageFailed ? (
         <img
           src={image}
           alt={`${name || "Customer"} profile`}
