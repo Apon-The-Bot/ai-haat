@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, ShoppingBag, Menu, X, ChevronRight, Gift, User, ShieldCheck } from "lucide-react";
+import { Search, ShoppingBag, Menu, X, ChevronRight, Gift, ShieldCheck } from "lucide-react";
+import { UserAvatar } from "@/components/admin/UserAvatar";
 import { Logo } from "@/components/Logo";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -272,7 +273,7 @@ export function Header() {
                   className="flex items-center gap-1.5 h-8 px-3.5 bg-[#1A1D26] hover:bg-black text-white text-xs font-bold rounded-full transition-all"
                   title="Dashboard"
                 >
-                  <User className="w-3.5 h-3.5 text-[#FC5C03]" />
+                  <UserAvatar name={user.name} email={user.email} image={user.avatar} size="xs" />
                   <span>{isBn ? "ড্যাশবোর্ড" : "Dashboard"}</span>
                 </Link>
                 {user.role === "ADMIN" && (
@@ -454,8 +455,9 @@ export function Header() {
               </div>
 
               {user ? (
-                <div className="p-3 bg-white rounded-xl border border-gray-200 flex items-center justify-between">
-                  <div>
+                <div className="p-3 bg-white rounded-xl border border-gray-200 flex items-center justify-between gap-2">
+                  <UserAvatar name={user.name} email={user.email} image={user.avatar} />
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold text-[#1A1D26]">{user.name}</p>
                     <p className="text-xs text-[#FC5C03] font-bold">
                       Wallet: {formatPrice(user.walletBalanceBDT)}
