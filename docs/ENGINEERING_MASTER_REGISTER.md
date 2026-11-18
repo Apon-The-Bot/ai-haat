@@ -5,7 +5,7 @@ Verification baseline: commit `f099ed8`, 2026-11-19. Existing unrelated working-
 | ID | Domain | Evidence | Priority | Status | Verification |
 |---|---|---|---|---|---|
 | ENG-001 | Affiliate consolidation | `AffiliateProfile`, affiliate ledger/payout APIs, canonical dashboard; historical referrals redirect | P0 | Implemented in safe compatibility phase | 25/25 + 33/33 affiliate assertions passed |
-| ENG-002 | Payment integrity | Payment create/callback/webhook routes and idempotency checks | P0 | Audit required | Production gateway/database blocked |
+| ENG-002 | Payment integrity | Payment create/callback/webhook routes and idempotency checks | P0 | Audit required | Production gateway/database blocked; lint and source checks pass |
 | ENG-003 | Wallet integrity | Wallet ledger and affiliate wallet transfer path | P0 | Existing implementation retained | Source-level only; fixture DB required |
 | ENG-004 | Subscription lifecycle | Subscription models, reminder cron and dashboard routes | P1 | Partial | Recurring provider capability unverified |
 | ENG-005 | Notifications | In-app, email, Telegram event/template services | P1 | Existing centralized paths retained | Source-level only |
@@ -18,3 +18,5 @@ Verification baseline: commit `f099ed8`, 2026-11-19. Existing unrelated working-
 ## Acceptance gate
 
 No financial migration, payout, recurring billing, or production deployment is declared complete until it has an isolated database fixture, reconciliation evidence, and rollback procedure.
+
+Latest non-database verification: lint completed with existing warnings, secret scan reported 0 findings, affiliate suites passed 25/25 and 33/33. Financial fixture execution remains blocked because no local MySQL/Docker environment is available.
