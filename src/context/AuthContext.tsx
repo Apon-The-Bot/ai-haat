@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { User } from "@/types";
 import { useToast } from "@/context/ToastContext";
@@ -28,7 +28,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const sessionUser = session?.user as (NonNullable<typeof session>["user"] & {
+    id?: string;
+    role?: User["role"];
+    walletBalanceBDT?: number;
+  }) | undefined;
+  const accountId = status === "authenticated" ? sessionUser?.id : undefined;
+  const refreshVersion = useRef(0);
+  const signingOut = useRef(false);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -41,27 +49,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const email = user?.email || session?.user?.email;
-      if (!email) return;
+      if (!accountId || signingOut.current) return;
+      const version = ++refreshVersion.current;
 
       const res = await fetch("/api/auth/me", {
         cache: "no-store",
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.user) {
-          setUser((prev) => {
-            const next = {
-              ...(prev || {}),
-              ...data.user,
-              avatar: data.user.avatar || prev?.avatar || undefined,
-            };
-            if (typeof window !== "undefined") {
-              localStorage.setItem("aihaat_user", JSON.stringify(next));
-            }
-            return next;
-          });
-        }
+        if (version !== refreshVersion.current || data.user?.id !== accountId) return;
+        setUser({ ...data.user, avatar: data.user.avatar ?? undefined });
         if (data.mfaRequired !== undefined) {
           setMfaRequired(!!data.mfaRequired);
         } else if (data.totpEnabled !== undefined) {
@@ -74,33 +71,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.debug("Refresh user error:", e);
     }
-  }, [user?.email, session?.user?.email]);
+  }, [accountId]);
 
   // Sync NextAuth Google session with AuthContext
   useEffect(() => {
-    if (session?.user) {
-      const sessionUser = session.user;
-      setUser((prev) => ({
-        id: (sessionUser as any).id || prev?.id || `google-${sessionUser.email}`,
-        name: sessionUser.name || prev?.name || "AI Haat Member",
-        email: sessionUser.email || prev?.email || "",
-        phone: prev?.phone || "",
-        avatar: sessionUser.image || prev?.avatar || undefined,
-        role: (sessionUser as any).role || "USER",
-        walletBalanceBDT: prev?.walletBalanceBDT ?? (sessionUser as any).walletBalanceBDT ?? 0,
-      }));
+    if (accountId && sessionUser && !signingOut.current) {
+      setUser((prev) => prev?.id === accountId ? prev : {
+        id: accountId,
+        name: sessionUser.name || "AI Haat Member",
+        email: sessionUser.email || "",
+        phone: "",
+        avatar: sessionUser.image ?? undefined,
+        role: sessionUser.role || "USER",
+        walletBalanceBDT: sessionUser.walletBalanceBDT ?? 0,
+      });
       refreshUser();
     } else {
-      try {
-        const savedUser = localStorage.getItem("aihaat_user");
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
-      } catch (e) {
-        console.error(e);
-      }
+      setUser(null);
+      setMfaRequired(false);
+      setMfaVerified(false);
     }
-  }, [session, refreshUser]);
+    return () => { refreshVersion.current++; };
+  }, [accountId, sessionUser, refreshUser]);
 
   const openLoginModal = (redirectUrl?: any) => {
     setRedirectCallbackUrl(typeof redirectUrl === "string" ? redirectUrl : null);
@@ -123,22 +115,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    if (signingOut.current) return;
+    signingOut.current = true;
+    refreshVersion.current++;
     try {
-      await fetch('/api/security/sessions/revoke', { method: 'POST' });
+      await fetch('/api/security/sessions/revoke', {
+        method: 'POST',
+        signal: AbortSignal.timeout(5000),
+      });
     } catch (e) {
       console.debug("Logout session revoke error:", e);
     }
-    setUser(null);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("aihaat_user");
-      sessionStorage.clear();
-    }
     try {
-      await signOut({ callbackUrl: "/", redirect: true });
-    } catch {
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
+      await signOut({ callbackUrl: "/", redirect: false });
+      const response = await fetch("/api/auth/session", { cache: "no-store" });
+      if (!response.ok || (await response.json())?.user) {
+        throw new Error("Session still active");
       }
+      setUser(null);
+      window.location.assign("/");
+    } catch {
+      signingOut.current = false;
+      showToast("Could not confirm sign-out. Please try again.", "error");
     }
   };
 
@@ -149,14 +147,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       walletBalanceBDT: user.walletBalanceBDT + amountBDT,
     };
     setUser(updated);
-    localStorage.setItem("aihaat_user", JSON.stringify(updated));
     showToast(`৳${amountBDT.toLocaleString()} ওয়ালেটে যোগ হয়েছে।`, "success");
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: user?.id === accountId ? user : null,
         isAuthModalOpen,
         setIsAuthModalOpen,
         authMode,
