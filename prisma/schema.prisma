@@ -272,6 +272,8 @@ model User {
   email            String              @unique
   emailVerified    DateTime?
   image            String?
+  googleImage      String?
+  profileImageSource String?
   phone            String?
   role             Role                @default(USER)
   walletBalanceBDT Float               @default(0.0)

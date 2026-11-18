@@ -48,6 +48,8 @@ export const authOptions: NextAuthOptions = {
                   email,
                   name: user.name || null,
                   image: user.image || null,
+                  googleImage: user.image || null,
+                  profileImageSource: user.image ? "GOOGLE" : null,
                   role: "USER",
                   walletBalanceBDT: 0,
                 },
@@ -57,8 +59,12 @@ export const authOptions: NextAuthOptions = {
             } else {
               // Update user name/image and admin role if needed
               const updateData: any = {};
-              if (user.image && user.image !== dbUser.image) {
+              if (user.image && dbUser.profileImageSource !== "CUSTOM") {
                 updateData.image = user.image;
+                updateData.googleImage = user.image;
+                updateData.profileImageSource = "GOOGLE";
+              } else if (user.image && dbUser.googleImage !== user.image) {
+                updateData.googleImage = user.image;
               }
               if (user.name && !dbUser.name) {
                 updateData.name = user.name;
