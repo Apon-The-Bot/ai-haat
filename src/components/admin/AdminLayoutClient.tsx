@@ -16,7 +16,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { SafeImage } from "@/components/SafeImage";
+import { UserAvatar } from "@/components/admin/UserAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { useNotification } from "@/context/NotificationContext";
 import { AdminMobileNavigation } from "./AdminMobileNavigation";
@@ -158,21 +158,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
           </Link>
 
           <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
-            {user?.avatar ? (
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 shrink-0">
-                <SafeImage
-                  src={user.avatar}
-                  alt={user.name || "Admin"}
-                  aspectRatio="1/1"
-                  objectFit="cover"
-                  sizes="32px"
-                />
-              </div>
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-[#FC5C03] text-white flex items-center justify-center font-bold text-xs shrink-0">
-                {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
-              </div>
-            )}
+            <UserAvatar name={user?.name} email={user?.email} image={user?.avatar} />
             <div className="hidden sm:block text-left">
               <span className="text-xs font-bold text-slate-900 block leading-tight">
                 {user?.name || "Admin"}

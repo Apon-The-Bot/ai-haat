@@ -111,6 +111,7 @@ export const authOptions: NextAuthOptions = {
             token.role = dbUser.role;
             token.walletBalanceBDT = dbUser.walletBalanceBDT || 0;
             token.mfaRequired = dbUser.security?.totpEnabled ?? false;
+            token.picture = dbUser.image || token.picture;
           } else {
             delete token.appUserId;
             delete token.id;

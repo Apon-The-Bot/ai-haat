@@ -31,7 +31,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { SafeImage } from "@/components/SafeImage";
+import { UserAvatar } from "@/components/admin/UserAvatar";
 import { Tooltip } from "@/components/ui/Tooltip";
 
 /**
@@ -230,21 +230,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
             {/* User Profile Card */}
             <div className="bg-white rounded-3xl border border-[#E8E8EE] p-5 shadow-2xs space-y-3.5">
               <div className="flex items-center gap-3">
-                {user?.avatar ? (
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#FC5C03] bg-[#FFF2E8] shrink-0">
-                    <SafeImage
-                      src={user.avatar}
-                      alt={user.name || "User Avatar"}
-                      aspectRatio="1/1"
-                      objectFit="cover"
-                      sizes="48px"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#FE7113] to-[#FC5C03] text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-xs border-2 border-white">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : "U")}
-                  </div>
-                )}
+                <UserAvatar name={user?.name} email={user?.email} image={user?.avatar} size="md" />
                 <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-bold text-[#1A1D26] truncate">
                     {user?.name || "Member"}
