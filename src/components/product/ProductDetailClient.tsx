@@ -968,32 +968,32 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               <div className="w-10 h-10 rounded-xl bg-[#FFF2E8] text-[#FC5C03] flex items-center justify-center mx-auto mb-3 shadow-2xs">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <h4 className="text-xs sm:text-sm font-black text-[#1A1D26]">১০০% আসল প্রোডাক্ট</h4>
-              <p className="text-[11px] text-[#7A8190] mt-1">অফিসিয়াল লাইসেন্স ও প্রিমিয়াম এক্সেস</p>
+              <h4 className="text-xs sm:text-sm font-black text-[#1A1D26]">পণ্যের পরিষ্কার তথ্য</h4>
+              <p className="text-[11px] text-[#7A8190] mt-1">লাইসেন্স, প্ল্যান ও ব্যবহারের তথ্য দেখুন</p>
             </div>
 
             <div className="p-5 bg-white rounded-2xl border border-[#E8E8EE] shadow-2xs hover:shadow-sm transition-all text-center">
               <div className="w-10 h-10 rounded-xl bg-[#FFF2E8] text-[#FC5C03] flex items-center justify-center mx-auto mb-3 shadow-2xs">
                 <Zap className="w-5 h-5" />
               </div>
-              <h4 className="text-xs sm:text-sm font-black text-[#1A1D26]">ইনস্ট্যান্ট ডেলিভারি</h4>
-              <p className="text-[11px] text-[#7A8190] mt-1">পেমেন্টের পর ৫-১৫ মিনিটে ডেলিভারি</p>
+              <h4 className="text-xs sm:text-sm font-black text-[#1A1D26]">ডেলিভারি তথ্য আগে থেকেই</h4>
+              <p className="text-[11px] text-[#7A8190] mt-1">এই পণ্যের delivery time ও পদ্ধতি দেখুন</p>
             </div>
 
             <div className="p-5 bg-white rounded-2xl border border-[#E8E8EE] shadow-2xs hover:shadow-sm transition-all text-center">
               <div className="w-10 h-10 rounded-xl bg-[#FFF2E8] text-[#FC5C03] flex items-center justify-center mx-auto mb-3 shadow-2xs">
                 <Headphones className="w-5 h-5" />
               </div>
-              <h4 className="text-xs sm:text-sm font-black text-[#1A1D26]">২৪/৭ লাইভ সাপোর্ট</h4>
-              <p className="text-[11px] text-[#7A8190] mt-1">হোয়াটসঅ্যাপে দ্রুত সমাধান</p>
+              <h4 className="text-xs sm:text-sm font-black text-[#1A1D26]">সহায়তা দরকার?</h4>
+              <p className="text-[11px] text-[#7A8190] mt-1">প্রশ্ন থাকলে support টিমে যোগাযোগ করুন</p>
             </div>
 
             <div className="p-5 bg-white rounded-2xl border border-[#E8E8EE] shadow-2xs hover:shadow-sm transition-all text-center">
               <div className="w-10 h-10 rounded-xl bg-[#FFF2E8] text-[#FC5C03] flex items-center justify-center mx-auto mb-3 shadow-2xs">
                 <RotateCcw className="w-5 h-5" />
               </div>
-              <h4 className="text-xs sm:text-sm font-black text-[#1A1D26]">রিপ্লেসমেন্ট গ্যারান্টি</h4>
-              <p className="text-[11px] text-[#7A8190] mt-1">মেয়াদকালীন সম্পূর্ণ নিরাপত্তা</p>
+              <h4 className="text-xs sm:text-sm font-black text-[#1A1D26]">পলিসি সহজে বুঝুন</h4>
+              <p className="text-[11px] text-[#7A8190] mt-1">warranty ও replacement শর্ত product অনুযায়ী</p>
             </div>
           </div>
         </div>
