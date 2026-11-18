@@ -1,5 +1,5 @@
 // ─── AI Haat — Affiliate, Referral & Payout Operations Master Test Suite ─────
-// 32 Comprehensive Test Assertions verifying Multi-tier & Product-Specific Commissions,
+// 33 Comprehensive Test Assertions verifying Multi-tier & Product-Specific Commissions,
 // Coupon-Affiliate Linking, Fraud Guard Self-Referral Prevention, 7-Day Holding Period,
 // Min ৳500 Payout Validation, Admin Review Workflow, Central Notification Integration,
 // Customer Dashboard & Admin UI Portals.
@@ -265,7 +265,7 @@ assert(
     "src/app/api/affiliate/payout/route.ts",
     "requireAuth",
     "MIN_PAYOUT_AMOUNT_BDT",
-    "rateLimitMap"
+    "checkRateLimit"
   )
 );
 
@@ -375,8 +375,8 @@ assert(
 );
 
 assert(
-  "Admin layout contains Affiliates navigation route link (/admin/affiliates)",
-  fileContains("src/components/admin/AdminLayoutClient.tsx", "/admin/affiliates")
+  "Admin navigation registry contains Affiliates navigation route link (/admin/affiliates)",
+  fileContains("src/components/admin/admin-navigation.ts", "/admin/affiliates")
 );
 
 console.log("\n" + "─".repeat(75));
