@@ -191,7 +191,8 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
   }
 
   // Execute reward dispatch in atomic transaction
-  await prisma.$transaction(async (tx) => {
+  try {
+    await prisma.$transaction(async (tx) => {
     if (milestone.rewardType === "WALLET_CASH") {
       await tx.user.update({
         where: { id: userId },
@@ -208,6 +209,7 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
           method: "system",
           status: "APPROVED",
           note: `Milestone Claim: ${milestone.id}`,
+          referenceKey: `referral-milestone:${userId}:${milestone.id}`,
         },
       });
     } else if (milestone.rewardType === "COINS") {
@@ -225,6 +227,7 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
           amount: milestone.rewardValue,
           type: "BONUS",
           description: `Milestone Claim: ${milestone.id}`,
+          referenceKey: `referral-milestone:${userId}:${milestone.id}`,
         },
       });
     } else if (milestone.rewardType === "VIP_BADGE") {
@@ -244,6 +247,7 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
           method: "system",
           status: "APPROVED",
           note: `Milestone Claim: ${milestone.id}`,
+          referenceKey: `referral-milestone:${userId}:${milestone.id}`,
         },
       });
     }
@@ -258,7 +262,11 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
         link: "/dashboard/referrals",
       },
     });
-  });
+    });
+  } catch (error: any) {
+    if (error?.code === "P2002") return { success: false, error: "You have already claimed this milestone reward!" };
+    throw error;
+  }
 
   return {
     success: true,

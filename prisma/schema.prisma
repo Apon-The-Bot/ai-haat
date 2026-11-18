@@ -620,6 +620,7 @@ model WalletTransaction {
   note         String?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
+  referenceKey String?           @unique
 
   user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1693,6 +1694,7 @@ model CoinTransaction {
   orderId     String?
   couponId    String?
   description String              @db.VarChar(255)
+  referenceKey String?            @unique
   createdAt   DateTime            @default(now())
 
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
