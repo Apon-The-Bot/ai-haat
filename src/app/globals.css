@@ -1,8 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss' source(none);
+@config '../../tailwind.config.ts';
+@source './';
+@source '../components';
+
+@layer base {
+  *, ::before, ::after, ::backdrop, ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
+  button:not(:disabled), [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 :root {
   --primary-orange: #FC5C03;
