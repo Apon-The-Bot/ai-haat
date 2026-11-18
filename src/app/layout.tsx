@@ -10,11 +10,11 @@ validateEnv();
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "AI Haat — Bangladesh's #1 Digital Products & Software Marketplace",
+    default: "AI Haat — AI Tools, Software & Digital Products in Bangladesh",
     template: "%s | AI Haat",
   },
   description:
-    "Buy premium AI subscriptions (ChatGPT Plus, Claude, Midjourney), VPNs, Windows licenses, developer tools & digital accounts at lowest BDT prices with instant delivery in Bangladesh.",
+    "Shop AI tools, software subscriptions, VPNs and digital products for work, learning and creating in Bangladesh.",
   keywords: [
     "AI Tools Bangladesh",
     "ChatGPT Plus buy BD",

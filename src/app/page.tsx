@@ -9,16 +9,16 @@ import {
 } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "AI Haat — Bangladesh's #1 Digital Products & Software Marketplace",
+  title: "AI Haat — AI Tools, Software & Digital Products in Bangladesh",
   description:
-    "Buy genuine AI subscriptions (ChatGPT Plus, Claude Pro, Midjourney), VPNs, Windows 11 retail keys, Office 365 & developer subscriptions with instant bKash, Nagad delivery in BDT.",
+    "Find AI tools, software subscriptions, VPNs and digital products for work, learning and creating in Bangladesh. Pay in BDT and access your order from your account.",
   alternates: {
     canonical: SITE_URL,
   },
   openGraph: {
-    title: "AI Haat — Premium Digital Products & Software Marketplace in Bangladesh",
-    description:
-      "Instant delivery of verified AI subscriptions, Windows license keys, VPNs, and OTT accounts in BDT with local payment.",
+        title: "AI Haat — Find Your Next Digital Upgrade",
+        description:
+          "AI tools, software subscriptions and digital products for Bangladesh-based creators, students, developers and teams.",
     url: SITE_URL,
     siteName: "AI Haat",
     images: [
