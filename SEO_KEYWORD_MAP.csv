@@ -1,0 +1,6 @@
+Route,Target topic,Search intent,Primary keyword,Supporting keywords,Proposed title,Implementation status
+/,AI tools and digital products in Bangladesh,Commercial,AI tools Bangladesh,software subscriptions Bangladesh; digital products Bangladesh,AI Haat — AI Tools Software & Digital Products in Bangladesh,Implemented metadata
+/shop,Digital product catalogue,Transactional,buy digital products Bangladesh,AI subscriptions BD; software marketplace Bangladesh,Shop Digital Products & AI Tools in Bangladesh | AI Haat,Existing metadata audited
+/product/[slug],Product-specific purchase,Transactional,[product] subscription Bangladesh,[product] price BD; [product] delivery,Dynamic product title | AI Haat,Dynamic template preserved
+/about,Brand and trust,Informational,AI Haat Bangladesh,digital marketplace BD; customer support,About AI Haat | Bangladesh Digital Marketplace,Pending route audit
+/order-tracking,Order status,Navigational,AI Haat order tracking,track digital order BD,Track Your AI Haat Order,Existing route preserved
