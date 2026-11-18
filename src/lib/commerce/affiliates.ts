@@ -391,12 +391,11 @@ export async function attributeOrderToAffiliate(
     };
   }
 
-  // Check if commission already attributed for this order
+  // Default policy is one affiliate commission per order. This prevents a
+  // referral cookie and affiliate coupon from stacking financial rewards.
   const existingCommission = await prisma.affiliateCommission.findFirst({
-    where: {
-      orderId: order.id,
-      affiliateProfileId: affiliate.id,
-    },
+    where: { orderId: order.id },
+    orderBy: { createdAt: "asc" },
   });
 
   if (existingCommission) {
@@ -404,6 +403,7 @@ export async function attributeOrderToAffiliate(
       success: true,
       commissionAmountBDT: existingCommission.commissionAmountBDT,
       isExisting: true,
+      attributionLocked: existingCommission.affiliateProfileId !== affiliate.id,
     };
   }
 
