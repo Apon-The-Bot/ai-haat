@@ -435,7 +435,7 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
 
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast(`Wallet ${walletType === "CREDIT" ? "credited" : "debited"} successfully`, "success");
+        showToast("Wallet adjustment sent to Admin Approvals.", "success");
         setWalletModalOpen(false);
         setWalletAmount("");
         setWalletReason("");

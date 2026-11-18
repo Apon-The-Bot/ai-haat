@@ -1,8 +1,8 @@
 "use client";
 
-import { MetricCard } from "@/components/admin/MetricCard";
+import { VariationStockTable, type VariationStock } from "./VariationStockTable";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useCallback, useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -34,19 +34,6 @@ import { BulkActionBar, BulkActionItem } from "@/components/admin/BulkActionBar"
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { useToast } from "@/context/ToastContext";
 import { StockWaitlistAdminTab } from "@/components/admin/StockWaitlistAdminTab";
-
-interface StockSummary {
-  productId: string;
-  productName: string;
-  variationId: string | null;
-  variationName: string;
-  availableCount: number;
-  reservedCount: number;
-  deliveredCount: number;
-  invalidCount: number;
-  totalCount: number;
-  lowStockAlert: boolean;
-}
 
 interface StockItem {
   id: string;
@@ -102,7 +89,7 @@ function AdminInventoryContent() {
 
   const [activeTab, setActiveTab] = useState<"stocks" | "replacements" | "waitlist">("stocks");
   const [waitlistCount, setWaitlistCount] = useState<number>(0);
-  const [summary, setSummary] = useState<StockSummary[]>([]);
+  const [summary, setSummary] = useState<VariationStock[]>([]);
   const [stocks, setStocks] = useState<StockItem[]>([]);
   const [replacements, setReplacements] = useState<ReplacementItem[]>([]);
   const [productsList, setProductsList] = useState<any[]>([]);
@@ -111,6 +98,7 @@ function AdminInventoryContent() {
   // Filters
   const [statusFilter, setStatusFilter] = useState(searchParams?.get("status") === "AVAILABLE" ? "AVAILABLE" : "ALL");
   const [productFilter, setProductFilter] = useState(productParam || "ALL");
+  const [variationFilter, setVariationFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modals
@@ -132,6 +120,23 @@ function AdminInventoryContent() {
   // Bulk Import Form State
   const [bulkLines, setBulkLines] = useState("");
   const [bulkResult, setBulkResult] = useState<any>(null);
+  const [bulkPreview, setBulkPreview] = useState<{
+    request: string;
+    validCount: number;
+    duplicateCount: number;
+    invalidCount: number;
+    issues: { row: number; reason: string }[];
+  } | null>(null);
+  const bulkRequest = JSON.stringify({
+    productId: selectedProduct,
+    variationId: selectedVariation || null,
+    type: stockType,
+    lines: bulkLines.split("\n"),
+    batchRef: batchRef || null,
+    costPriceBDT: costPrice || undefined,
+    notes,
+  });
+  const currentPreview = bulkPreview?.request === bulkRequest ? bulkPreview : null;
 
   // Bulk Selection State
   const [selectedStockIds, setSelectedStockIds] = useState<Set<string>>(new Set());
@@ -154,16 +159,18 @@ function AdminInventoryContent() {
   useEffect(() => {
     if (productParam) {
       setProductFilter(productParam);
+      setVariationFilter(null);
       setSelectedProduct(productParam);
     }
   }, [productParam]);
 
-  const fetchInventory = async () => {
+  const fetchInventory = useCallback(async () => {
     try {
       setLoading(true);
       const url = new URL("/api/admin/inventory", window.location.origin);
       if (statusFilter !== "ALL") url.searchParams.set("status", statusFilter);
       if (productFilter !== "ALL") url.searchParams.set("productId", productFilter);
+      if (variationFilter !== null) url.searchParams.set("variationId", variationFilter);
 
       const res = await fetch(url.toString());
       if (res.ok) {
@@ -199,7 +206,7 @@ function AdminInventoryContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, productFilter, variationFilter]);
 
   const fetchWaitlistCount = async () => {
     try {
@@ -216,7 +223,8 @@ function AdminInventoryContent() {
   useEffect(() => {
     fetchInventory();
     fetchWaitlistCount();
-  }, [statusFilter, productFilter]);
+    setSelectedStockIds(new Set());
+  }, [fetchInventory]);
 
   const handleRevealStock = async (stockId: string) => {
     try {
@@ -274,29 +282,26 @@ function AdminInventoryContent() {
     e.preventDefault();
     if (!selectedProduct || !bulkLines.trim()) return;
 
-    const lines = bulkLines.split("\n").filter((l) => l.trim().length > 0);
+    if (submitting) return;
+    const commit = Boolean(currentPreview?.validCount && !currentPreview.invalidCount);
 
     setSubmitting(true);
     try {
       const res = await fetch("/api/admin/inventory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: selectedProduct,
-          variationId: selectedVariation || null,
-          type: stockType,
-          lines,
-          batchRef: batchRef || null,
-          costPriceBDT: costPrice ? Number(costPrice) : undefined,
-          notes,
-        }),
+        body: JSON.stringify({ ...JSON.parse(bulkRequest), dryRun: !commit, reviewedImport: commit }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (res.ok && data.success && !commit) {
+        setBulkPreview({ ...data.preview, request: bulkRequest });
+      } else if (res.ok && data.success) {
+        setBulkPreview(null);
         setBulkResult(data.details);
         setBulkLines("");
         fetchInventory();
       } else {
+        setBulkPreview(data.preview ? { ...data.preview, request: bulkRequest } : null);
         alert(data.error || "Failed to import stock");
       }
     } catch (err: any) {
@@ -372,82 +377,24 @@ function AdminInventoryContent() {
     setSelectedStockIds(new Set());
   };
 
-  // CSV Exporter for Selected Stock
-  const exportSelectedCSV = async () => {
+  const requestStockExport = async () => {
     const stockIds = Array.from(selectedStockIds);
     if (stockIds.length === 0) return;
+    const reason = window.prompt("Why are you requesting this stock export?")?.trim();
+    if (!reason) return;
 
     try {
       setBulkActionLoading(true);
       const res = await fetch("/api/admin/inventory/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "EXPORT", stockIds }),
+        body: JSON.stringify({ action: "EXPORT", stockIds, reason }),
       });
-
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        showToast(data.error || "Failed to export stock items", "error");
-        return;
-      }
-
-      const rows: any[] = data.items || [];
-      if (rows.length === 0) {
-        showToast("No data to export", "info");
-        return;
-      }
-
-      // Convert rows to CSV
-      const headers = [
-        "Stock ID",
-        "Product Name",
-        "Variation",
-        "Type",
-        "Status",
-        "Batch Ref",
-        "Cost Price (BDT)",
-        "Credential / Key",
-        "Assigned Order",
-        "Customer Email",
-        "Delivered At",
-        "Created At",
-      ];
-
-      const csvContent = [
-        headers.join(","),
-        ...rows.map((r) =>
-          [
-            `"${r.id}"`,
-            `"${(r.productName || "").replace(/"/g, '""')}"`,
-            `"${(r.variationName || "").replace(/"/g, '""')}"`,
-            `"${r.type || ""}"`,
-            `"${r.status || ""}"`,
-            `"${(r.batchRef || "").replace(/"/g, '""')}"`,
-            `"${r.costPriceBDT !== undefined && r.costPriceBDT !== null ? r.costPriceBDT : ""}"`,
-            `"${(r.credentialOrPayload || "").replace(/"/g, '""')}"`,
-            `"${r.assignedOrder || ""}"`,
-            `"${(r.customerEmail || "").replace(/"/g, '""')}"`,
-            `"${r.deliveredAt || ""}"`,
-            `"${r.createdAt || ""}"`,
-          ].join(",")
-        ),
-      ].join("\r\n");
-
-      // Trigger download in browser
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `digital-vault-export-${new Date().toISOString().split("T")[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      showToast(`Exported ${rows.length} stock item(s) to CSV!`, "success");
-    } catch (err: any) {
-      console.error("Export error:", err);
-      showToast(err.message || "Export error occurred", "error");
+      if (!res.ok || !data.pendingApproval) throw new Error(data.error || "Failed to request export.");
+      showToast("Export sent to Admin Approvals for second-admin review.", "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Failed to request export.", "error");
     } finally {
       setBulkActionLoading(false);
     }
@@ -561,10 +508,10 @@ function AdminInventoryContent() {
     },
     {
       id: "export-csv",
-      label: "Export CSV",
+      label: "Request CSV Export",
       icon: Download,
       variant: "default",
-      onClick: exportSelectedCSV,
+      onClick: requestStockExport,
       disabled: bulkActionLoading,
     },
     {
@@ -606,6 +553,7 @@ function AdminInventoryContent() {
           <button
             onClick={() => {
               setBulkResult(null);
+              setBulkPreview(null);
               setShowBulkModal(true);
             }}
             className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer"
@@ -681,46 +629,17 @@ function AdminInventoryContent() {
 
       {activeTab === "stocks" ? (
         <>
-          {/* Stock KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {(Array.isArray(summary) ? summary : []).slice(0, 4).map((s, idx) => (
-              <MetricCard
-                key={`${s.productId}:${s.variationId ?? idx}`}
-                label={`View stock for ${s.productName} — ${s.variationName}`}
-                onClick={() => {
-                  setSearchQuery("");
-                  setStatusFilter("ALL");
-                  setProductFilter(s.productId);
-                }}
-                className={`p-5 rounded-2xl border shadow-xs transition-all ${
-                  s.lowStockAlert
-                    ? "bg-amber-50/70 border-amber-300"
-                    : "bg-white border-slate-200/80"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    {s.variationName}
-                  </span>
-                  {s.lowStockAlert && (
-                    <span className="px-2 py-0.5 bg-amber-200 text-amber-900 text-[10px] font-black rounded-md animate-pulse">
-                      Low Stock
-                    </span>
-                  )}
-                </div>
-                <h3 className="text-sm font-bold text-slate-900 mt-1 truncate">{s.productName}</h3>
-                <div className="mt-3 flex items-baseline justify-between">
-                  <div>
-                    <span className="text-2xl font-black text-slate-900">{s.availableCount}</span>
-                    <span className="text-xs text-slate-500 font-medium ml-1">Available</span>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-600">
-                    {s.deliveredCount} Delivered
-                  </span>
-                </div>
-              </MetricCard>
-            ))}
-          </div>
+          <VariationStockTable rows={summary} onSelect={(row) => {
+            setSearchQuery("");
+            setStatusFilter("ALL");
+            setProductFilter(row.productId);
+            setVariationFilter(row.variationId ?? "");
+          }} />
+          {variationFilter !== null && (
+            <button className="text-sm text-indigo-700 underline" onClick={() => setVariationFilter(null)}>
+              সব ভ্যারিয়েশনের স্টক দেখুন
+            </button>
+          )}
 
           {/* Filters Bar */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -751,7 +670,10 @@ function AdminInventoryContent() {
 
               <select
                 value={productFilter}
-                onChange={(e) => setProductFilter(e.target.value)}
+                onChange={(e) => {
+                  setProductFilter(e.target.value);
+                  setVariationFilter(null);
+                }}
                 className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none max-w-xs"
               >
                 <option value="ALL">সকল প্রোডাক্ট (All Products)</option>
@@ -974,6 +896,7 @@ function AdminInventoryContent() {
           onAddStockForProduct={(pId) => {
             setSelectedProduct(pId);
             setProductFilter(pId);
+            setVariationFilter(null);
             setShowAddModal(true);
           }}
         />
@@ -1104,8 +1027,9 @@ function AdminInventoryContent() {
       {/* Bulk Import Modal */}
       {showBulkModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl border border-slate-100 space-y-5 relative">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl border border-slate-100 space-y-5 relative max-h-[90vh] overflow-y-auto">
             <button
+              disabled={submitting}
               onClick={() => setShowBulkModal(false)}
               className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 rounded-full bg-slate-50 hover:bg-slate-100"
             >
@@ -1140,6 +1064,7 @@ function AdminInventoryContent() {
               </div>
             ) : (
               <form onSubmit={handleBulkImport} className="space-y-4">
+                <fieldset disabled={submitting} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700">প্রোডাক্ট নির্বাচন করুন:</label>
                   <select
@@ -1147,12 +1072,7 @@ function AdminInventoryContent() {
                     value={selectedProduct}
                     onChange={(e) => {
                       setSelectedProduct(e.target.value);
-                      const prod = productsList.find((p) => p.id === e.target.value);
-                      if (prod?.variations?.length) {
-                        setSelectedVariation(prod.variations[0].id);
-                      } else {
-                        setSelectedVariation("");
-                      }
+                      setSelectedVariation("");
                     }}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
                   >
@@ -1165,6 +1085,19 @@ function AdminInventoryContent() {
                   </select>
                 </div>
 
+                <label className="block text-xs font-bold text-slate-700">
+                  ভ্যারিয়েশন
+                  <select
+                    value={selectedVariation}
+                    onChange={(e) => setSelectedVariation(e.target.value)}
+                    className="mt-1 w-full rounded-xl bg-slate-50 p-2.5 text-slate-900"
+                  >
+                    <option value="">Standard / ভ্যারিয়েশন নির্বাচন করুন</option>
+                    {productsList.find((p) => p.id === selectedProduct)?.variations?.map((v: { id: string; name: string }) => (
+                      <option key={v.id} value={v.id}>{v.name}</option>
+                    ))}
+                  </select>
+                </label>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-slate-700">
@@ -1203,16 +1136,27 @@ function AdminInventoryContent() {
                     মোট সারি: {bulkLines.split("\n").filter((l) => l.trim().length > 0).length} টি আইটেম
                   </div>
                 </div>
+                </fieldset>
+
+                {currentPreview && (
+                  <div aria-live="polite" className="rounded-xl bg-slate-50 p-3 text-xs text-slate-800">
+                    <p>{currentPreview.validCount} প্রস্তুত · {currentPreview.duplicateCount} ডুপ্লিকেট · {currentPreview.invalidCount} অবৈধ</p>
+                    <ul className="mt-2 max-h-32 overflow-y-auto">
+                      {currentPreview.issues.map(({ row, reason }) => <li key={row}>সারি {row} · {reason}</li>)}
+                    </ul>
+                    {currentPreview.validCount === 0 && <p>ইমপোর্ট করার মতো সারি নেই।</p>}
+                  </div>
+                )}
 
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || Boolean(currentPreview && (!currentPreview.validCount || currentPreview.invalidCount))}
                   className="w-full py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {submitting ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
-                    "বাল্ক যাচাই ও ইমপোর্ট করুন"
+                    currentPreview ? "যাচাইকৃত স্টক ইমপোর্ট করুন" : "ইমপোর্ট প্রিভিউ দেখুন"
                   )}
                 </button>
               </form>

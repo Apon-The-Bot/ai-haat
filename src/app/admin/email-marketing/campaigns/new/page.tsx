@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Send,
   Sparkles,
@@ -43,6 +43,7 @@ interface Segment {
 
 export default function CreateCampaignWizardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showToast } = useToast();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -88,6 +89,14 @@ export default function CreateCampaignWizardPage() {
   const [segments, setSegments] = useState<Segment[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+
+  useEffect(() => {
+    const recipient = searchParams?.get("recipient")?.trim();
+    if (recipient) {
+      setAudienceType("MANUAL");
+      setManualEmails(recipient);
+    }
+  }, [searchParams]);
 
   // Load auxiliary data
   useEffect(() => {

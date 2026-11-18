@@ -4,42 +4,14 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Package,
-  ShoppingBag,
-  Tag,
-  Wallet,
-  Users,
-  FileText,
-  ShieldCheck,
-  Settings,
   Store,
   Menu,
-  X,
   ExternalLink,
   ShieldAlert,
   LogIn,
   Bell,
-  Layers,
-  Boxes,
-  FolderTree,
-  RotateCcw,
-  TrendingUp,
-  Activity,
   LogOut,
   Mail,
-  Send,
-  Inbox,
-  FileCode,
-  UserCheck,
-  CalendarClock,
-  Sliders,
-  ShieldBan,
-  Radio,
-  LifeBuoy,
-  Undo2,
-  Truck,
-  Share2,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -47,6 +19,8 @@ import { Logo } from "@/components/Logo";
 import { SafeImage } from "@/components/SafeImage";
 import { useAuth } from "@/context/AuthContext";
 import { useNotification } from "@/context/NotificationContext";
+import { AdminMobileNavigation } from "./AdminMobileNavigation";
+import { adminNavigation as navigation } from "./admin-navigation";
 import { Tooltip } from "@/components/ui/Tooltip";
 
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
@@ -87,81 +61,6 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
       setMfaLoading(false);
     }
   }, [isAdmin]);
-
-  const navigation = [
-    {
-      group: "DASHBOARD",
-      items: [
-        { name: "Overview", href: "/admin", icon: LayoutDashboard },
-      ],
-    },
-    {
-      group: "COMMERCE",
-      items: [
-        { name: "Orders", href: "/admin/orders", icon: ShoppingBag },
-        { name: "Digital Vault Pools", href: "/admin/inventory", icon: Layers },
-        { name: "Inventory Batches", href: "/admin/inventory/batches", icon: Boxes },
-        { name: "Coupons", href: "/admin/coupons", icon: Tag },
-        { name: "Replacements", href: "/admin/replacements", icon: RotateCcw },
-        { name: "Refunds", href: "/admin/refunds", icon: Undo2 },
-        { name: "Suppliers", href: "/admin/suppliers", icon: Truck },
-      ],
-    },
-    {
-      group: "PRODUCTS & CATALOG",
-      items: [
-        { name: "All Products", href: "/admin/products", icon: Package },
-        { name: "Add New Product", href: "/admin/products/new", icon: Tag },
-        { name: "Categories & Brands", href: "/admin/categories", icon: FolderTree },
-      ],
-    },
-    {
-      group: "CUSTOMERS & FINANCE",
-      items: [
-        { name: "Users & Customers", href: "/admin/users", icon: Users },
-        { name: "Wallet Transactions", href: "/admin/wallet", icon: Wallet },
-        { name: "Affiliates & Payouts", href: "/admin/affiliates", icon: Share2 },
-        { name: "Support Queue", href: "/admin/support", icon: LifeBuoy },
-      ],
-    },
-    {
-      group: "EMAIL & REACH MARKETING",
-      items: [
-        { name: "Marketing Dashboard", href: "/admin/email-marketing", icon: LayoutDashboard },
-        { name: "Create Campaign", href: "/admin/email-marketing/campaigns/new", icon: Send },
-        { name: "Campaigns", href: "/admin/email-marketing/campaigns", icon: Radio },
-        { name: "Email Templates", href: "/admin/email-marketing/templates", icon: FileCode },
-        { name: "Audience & Contacts", href: "/admin/email-marketing/contacts", icon: UserCheck },
-        { name: "Segments", href: "/admin/email-marketing/segments", icon: Layers },
-        { name: "Scheduled Emails", href: "/admin/email-marketing/scheduled", icon: CalendarClock },
-        { name: "Suppression List", href: "/admin/email-marketing/suppressions", icon: ShieldBan },
-        { name: "Email Logs", href: "/admin/email-marketing/logs", icon: Inbox },
-        { name: "Email Settings", href: "/admin/email-marketing/settings", icon: Sliders },
-      ],
-    },
-    {
-      group: "CONTENT & PROOF",
-      items: [
-        { name: "Articles & Guides", href: "/admin/blogs", icon: FileText },
-        { name: "Delivery Proofs", href: "/admin/proofs", icon: ShieldCheck },
-      ],
-    },
-    {
-      group: "ANALYTICS & REPORTS",
-      items: [
-        { name: "Reports & Insights", href: "/admin/reports", icon: TrendingUp },
-      ],
-    },
-    {
-      group: "SYSTEM & AUDIT",
-      items: [
-        { name: "Site Settings", href: "/admin/settings", icon: Settings },
-        { name: "Meta Tracking", href: "/admin/integrations/meta", icon: Settings },
-        { name: "Notification Logs", href: "/admin/notifications", icon: Bell },
-        { name: "Audit Logs", href: "/admin/audit-logs", icon: Activity },
-      ],
-    },
-  ];
 
   if (!mounted || mfaLoading) {
     return (
@@ -356,92 +255,15 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
 
       </div>
 
-      {/* MOBILE DRAWER */}
       {isMobileMenuOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex animate-in fade-in duration-150"
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          <div 
-            className="w-72 bg-white h-full p-5 flex flex-col justify-between shadow-2xl overflow-y-auto animate-in slide-in-from-left duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-                <Logo size="sm" showSubtitle={false} />
-                <Tooltip content="Close the navigation menu">
-                  <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close navigation menu" className="p-1.5 rounded-lg text-slate-500 hover:text-black cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"><X className="w-5 h-5" /></button>
-                </Tooltip>
-              </div>
-
-              {navigation.map((group) => {
-                const isExpanded = expandedGroups[group.group] || false;
-                
-                return (
-                  <div key={group.group} className="space-y-1">
-                    <button
-                      onClick={() => setExpandedGroups(prev => ({ ...prev, [group.group]: !prev[group.group] }))}
-                      className="w-full flex items-center justify-between px-3 py-2 cursor-pointer rounded-xl hover:bg-slate-50 transition-colors min-h-[44px]"
-                    >
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        {group.group}
-                      </span>
-                      {isExpanded ? (
-                        <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                      )}
-                    </button>
-                    
-                    {isExpanded && (
-                      <div className="space-y-0.5 mt-1">
-                        {group.items.map((item) => {
-                          const Icon = item.icon;
-                          const isActive = pathname === item.href;
-                          const showBadge = (item.name === "Orders" || item.name === "Support Queue") && unreadCount > 0;
-                          
-                          return (
-                            <Tooltip key={item.name} content={item.name === "Inventory Batches" ? "Manage inventory batches, stock records, and related batch operations." : item.name}>
-                              <Link
-                                key={item.name}
-                                href={item.href}
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className={`flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all ${
-                                  isActive
-                                    ? "bg-[#FFF2E8] text-[#FC5C03]"
-                                    : "text-slate-600 hover:text-black hover:bg-slate-50"
-                                }`}
-                              >
-                                <div className="flex items-center gap-2.5">
-                                  <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
-                                  <span>{item.name}</span>
-                                </div>
-                                {showBadge && <span className="w-5 h-5 bg-[#FC5C03] text-white text-[10px] font-black rounded-full flex items-center justify-center">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                              </Link>
-                            </Tooltip>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="pt-4 border-t border-slate-200 mt-6">
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  logout();
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 min-h-[44px] text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <AdminMobileNavigation
+          pathname={pathname}
+          unreadCount={unreadCount}
+          expandedGroups={expandedGroups}
+          setExpandedGroups={setExpandedGroups}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
+          logout={logout}
+        />
       )}
 
     </div>

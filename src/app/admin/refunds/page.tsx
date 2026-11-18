@@ -100,7 +100,7 @@ export default function AdminRefundsPage() {
       let action = "APPROVE";
       if (actionModal === "REJECT") action = "REJECT";
       if (actionModal === "WALLET") action = "PROCESS_WALLET";
-      if (actionModal === "MANUAL") action = "PROCESS_MANUAL";
+      if (actionModal === "MANUAL") action = "COMPLETE_MANUAL";
 
       const res = await fetch("/api/admin/refunds", {
         method: "POST",
@@ -108,7 +108,7 @@ export default function AdminRefundsPage() {
         body: JSON.stringify({
           refundId: selectedRequest.id,
           action,
-          approvedAmount: Number(modalAmount) || selectedRequest.requestedAmountBDT,
+          approvedAmount: Number(modalAmount),
           adminNotes: modalAdminNotes,
           customerMessage: modalCustomerMessage,
           payoutTrxId: modalPayoutTrxId,
@@ -118,6 +118,7 @@ export default function AdminRefundsPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
+        if (data.pendingApproval) alert("অনুরোধটি Admin Approvals-এ পাঠানো হয়েছে। অন্য একজন অ্যাডমিন সিদ্ধান্ত দেবেন।");
         setActionModal(null);
         await fetchRefunds();
       } else {
@@ -343,26 +344,19 @@ export default function AdminRefundsPage() {
               <div className="flex items-center justify-end gap-2.5 pt-1 flex-wrap">
                 {req.status === "REQUESTED" || req.status === "UNDER_REVIEW" ? (
                   <>
-                    <button
+                    {req.refundMethod === "WALLET" && <button
                       onClick={() => handleOpenModal("WALLET", req)}
                       className="px-4 py-2 text-xs font-bold text-white bg-[#FC5C03] hover:bg-[#EC4001] rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>১-ক্লিক ইনস্ট্যান্ট ওয়ালেট রিফান্ড</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleOpenModal("MANUAL", req)}
-                      className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
-                    >
-                      ম্যানুয়াল MFS পে-আউট
-                    </button>
+                      <span>ওয়ালেট রিফান্ডের অনুরোধ</span>
+                    </button>}
 
                     <button
                       onClick={() => handleOpenModal("APPROVE", req)}
                       className="px-3.5 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-200 cursor-pointer"
                     >
-                      অনুমোদন
+                      অনুমোদনের অনুরোধ
                     </button>
 
                     <button
@@ -374,10 +368,10 @@ export default function AdminRefundsPage() {
                   </>
                 ) : req.status === "APPROVED" ? (
                   <button
-                    onClick={() => handleOpenModal("MANUAL", req)}
+                    onClick={() => handleOpenModal(req.refundMethod === "WALLET" ? "WALLET" : "MANUAL", req)}
                     className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-xs cursor-pointer"
                   >
-                    পে-আউট সম্পন্ন করুন
+                    {req.refundMethod === "WALLET" ? "ওয়ালেট রিফান্ডের অনুরোধ" : "পে-আউট সম্পন্ন করার অনুরোধ"}
                   </button>
                 ) : (
                   <div className="text-xs font-bold text-slate-500 bg-slate-100 px-4 py-2 rounded-xl">
@@ -402,7 +396,7 @@ export default function AdminRefundsPage() {
             </button>
 
             <h3 className="text-lg font-black text-slate-900">
-              {actionModal === "WALLET" && "ইনস্ট্যান্ট ওয়ালেট রিফান্ড নিশ্চিতকরণ"}
+              {actionModal === "WALLET" && "ওয়ালেট রিফান্ডের অনুরোধ"}
               {actionModal === "MANUAL" && "ম্যানুয়াল MFS রিফান্ড প্রসেস"}
               {actionModal === "APPROVE" && "রিফান্ড রিকোয়েস্ট অনুমোদন"}
               {actionModal === "REJECT" && "রিফান্ড রিকোয়েস্ট প্রত্যাখ্যান"}
@@ -412,7 +406,7 @@ export default function AdminRefundsPage() {
               {actionModal === "WALLET" && (
                 <div className="space-y-3">
                   <p className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-100 leading-relaxed font-medium">
-                    আপনি কি নিশ্চিত যে আপনি <b>৳{selectedRequest.requestedAmountBDT}</b> সরাসরি কাস্টমারের ওয়ালেটে জমা করতে চান? এটি সাথে সাথে ব্যালেন্স আপডেট করবে।
+                    অন্য একজন অ্যাডমিন অনুমোদন করার পর গ্রাহকের ওয়ালেটে রিফান্ড যোগ হবে।
                   </p>
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-700">অনুমোদিত টাকা (BDT):</label>

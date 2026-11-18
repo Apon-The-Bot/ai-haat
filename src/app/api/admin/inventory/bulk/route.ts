@@ -1,7 +1,8 @@
 import { requireAdminMfa } from "@/lib/auth-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { decryptCredential } from "@/lib/mfa/crypto";
+import { requestAdminApproval } from "@/lib/admin-approvals";
+import { stockVersion } from "@/lib/admin-stock-export";
 import { StockStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -99,57 +100,24 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "EXPORT") {
-      const items = await prisma.digitalStock.findMany({
-        where: { id: { in: stockIds } },
-        include: {
-          product: { select: { name: true, slug: true } },
-          variation: { select: { name: true } },
-          order: { select: { orderNumber: true, customerEmail: true } },
-        },
-        orderBy: { createdAt: "desc" },
+      const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+      if (!reason || reason.length > 500 || stockIds.length > 500 ||
+        stockIds.some((id: unknown) => typeof id !== "string" || !/^[a-z0-9_-]{1,64}$/i.test(id))) {
+        return NextResponse.json({ error: "Provide an export reason and select up to 500 valid stock items." }, { status: 400 });
+      }
+      const ids = Array.from(new Set<string>(stockIds)).sort();
+      const selected = await prisma.digitalStock.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, updatedAt: true },
+        orderBy: { id: "asc" },
       });
-
-      const exportRows = items.map((item) => {
-        let plaintextPayload = "";
-        try {
-          plaintextPayload = decryptCredential(item.payloadEncrypted);
-        } catch {
-          plaintextPayload = "[Encrypted/Unreadable]";
-        }
-
-        return {
-          id: item.id,
-          productName: item.product.name,
-          variationName: item.variation?.name || "Standard",
-          type: item.type,
-          status: item.status,
-          batchRef: item.batchRef || "",
-          costPriceBDT: item.costPriceBDT !== null && item.costPriceBDT !== undefined ? item.costPriceBDT : "",
-          credentialOrPayload: plaintextPayload,
-          assignedOrder: item.order?.orderNumber || "",
-          customerEmail: item.order?.customerEmail || "",
-          deliveredAt: item.deliveredAt ? item.deliveredAt.toISOString() : "",
-          createdAt: item.createdAt.toISOString(),
-        };
+      if (selected.length !== ids.length) {
+        return NextResponse.json({ error: "One or more stock items no longer exist." }, { status: 409 });
+      }
+      const approvalId = await requestAdminApproval(user, {
+        kind: "STOCK_EXPORT", ids, version: stockVersion(selected), reason,
       });
-
-      await prisma.securityAuditLog.create({
-        data: {
-          userId: user.id,
-          event: "STEP_UP_OK",
-          success: true,
-          metadata: JSON.stringify({
-            action: "ADMIN_STOCK_BULK_EXPORT",
-            exportedCount: exportRows.length,
-            adminEmail: user.email,
-          }),
-        },
-      }).catch(console.error);
-
-      return NextResponse.json({
-        success: true,
-        items: exportRows,
-      });
+      return NextResponse.json({ success: true, pendingApproval: true, approvalId }, { status: 202 });
     }
 
     return NextResponse.json(

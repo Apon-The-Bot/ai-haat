@@ -226,7 +226,7 @@ export default function AdminWalletPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast(data.message || "Wallet balance adjusted successfully!", "success");
+        showToast("Wallet adjustment sent to Admin Approvals.", "success");
         setIsAdjustmentModalOpen(false);
         setAdjUserEmail("");
         setAdjUserId("");

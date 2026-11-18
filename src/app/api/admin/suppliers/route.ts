@@ -15,7 +15,25 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const supplierId = searchParams.get("id");
 
-    const suppliersWithMetrics = await getSupplierPerformanceMetrics(supplierId || undefined);
+    const [metrics, activity] = await Promise.all([
+      getSupplierPerformanceMetrics(supplierId || undefined),
+      prisma.supplier.findMany({
+        where: supplierId ? { id: supplierId } : undefined,
+        select: {
+          id: true,
+          webhookLogs: {
+            take: 5,
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: { id: true, status: true, createdAt: true, itemsTotal: true, itemsAdded: true, itemsSkipped: true },
+          },
+        },
+      }),
+    ]);
+    const activityBySupplier = new Map(activity.map((supplier) => [supplier.id, supplier.webhookLogs]));
+    const suppliersWithMetrics = metrics.map((supplier) => ({
+      ...supplier,
+      recentSyncs: activityBySupplier.get(supplier.id) ?? [],
+    }));
 
     if (supplierId) {
       if (suppliersWithMetrics.length === 0) {

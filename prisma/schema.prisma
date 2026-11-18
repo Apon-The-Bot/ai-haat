@@ -3,6 +3,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model ProviderCatalogSnapshot {
+  providerId String   @id @db.VarChar(64)
+  products   Json
+  fetchedAt  DateTime
+
+  @@map("provider_catalog_snapshots")
+}
+
+model ProviderCatalogSync {
+  id          String    @id @default(cuid())
+  providerId  String    @db.VarChar(64)
+  activeKey   String?   @unique @db.VarChar(64)
+  actorId     String
+  status      String    @db.VarChar(16)
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  productCount Int?
+  error       String?   @db.VarChar(255)
+
+  @@index([providerId, startedAt])
+  @@map("provider_catalog_syncs")
+}
+
 generator client {
   provider = "prisma-client-js"
 }
