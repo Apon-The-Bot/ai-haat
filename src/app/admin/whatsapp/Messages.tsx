@@ -42,6 +42,8 @@ export function Messages({accountId}:{accountId:string}) {
     const form=event.currentTarget;
     const data=new FormData(form);
     const due=data.get("due");
+    const submitter=(event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const action=submitter?.value === "send-now" ? "send-now" : "send";
     const timezone=data.get("timezone");
     if(!isZone(timezone)) return;
     const weekdays=data.getAll("weekday").reduce<number>((mask,day)=>mask | (1<<Number(day)),0);
@@ -55,9 +57,9 @@ export function Messages({accountId}:{accountId:string}) {
       for(let i=0;i<bytes.length;i+=8192) binary+=String.fromCharCode(...Array.from(bytes.subarray(i,i+8192)));
       media={filename:file.name,base64:btoa(binary)};
     }
-    if (!recipient || !window.confirm("Queue this message for "+recipient.label+"?\n\n"+draft+
+    if (!recipient || !window.confirm((action === "send-now" ? "Send this test message now to " : "Queue this message for ")+recipient.label+"?\n\n"+draft+
         (media?"\nAttachment: "+media.filename:""))) return;
-    if (await act({action:"send",id:requestId,media,body:data.get("body"),contactId:data.get("contactId"),
+    if (await act({action,id:requestId,media,body:data.get("body"),contactId:data.get("contactId"),
       timezone,weekdays,recurrence:data.get("recurrence"),intervalDays:data.get("intervalDays"),due:due?String(due)+":00"+zones[timezone]:null})) {
       setRequestId(crypto.randomUUID());form.reset();setDraft("");
     }
@@ -93,7 +95,10 @@ export function Messages({accountId}:{accountId:string}) {
         <label>Custom interval in days <input name="intervalDays" type="number" defaultValue={1} min={1} max={365}/></label>
         <fieldset><legend>Days for weekday recurrence</legend>{["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>
           <label key={d} className="mr-2"><input name="weekday" type="checkbox" value={i}/>{d}</label>)}</fieldset>
-        <button disabled={pending || !contacts.some(c=>c.consent)}>Queue message</button>
+        <div className="flex flex-wrap gap-3">
+          <button name="delivery" value="send" disabled={pending || !contacts.some(c=>c.consent)}>Schedule message</button>
+          <button name="delivery" value="send-now" type="submit" disabled={pending || !contacts.some(c=>c.consent)}>Send test now</button>
+        </div>
       </form>
     </section>
     <section><h2 className="text-xl font-semibold">Message Templates</h2>

@@ -7,6 +7,7 @@ import { validateMedia } from "@/lib/whatsapp/media";
 import {isZone,zoneOffset} from "@/lib/whatsapp/zones";
 import {checkRateLimit} from "@/lib/rate-limit";
 import {logAdminAudit} from "@/lib/audit-logger";
+import {runDueBatch} from "@/lib/whatsapp/cron";
 
 export const dynamic = "force-dynamic";
 async function guard() {
@@ -68,7 +69,7 @@ export async function POST(req:NextRequest) {
     const data={label:input.label.trim(),consent:input.consent,actor:auth.user.id};
     await prisma.whatsappContact.upsert({where:{accountId_address:{accountId,address}},
       create:{...data,accountId,address},update:data});
-  } else if (input.action === "send") {
+  } else if (input.action === "send" || input.action === "send-now") {
     if (process.env.WHATSAPP_SENDING_ENABLED !== "true") return invalid("Sending is disabled");
     const due = input.due ? new Date(input.due) : new Date();
     const recurrence=input.recurrence ?? "none";
@@ -90,6 +91,7 @@ export async function POST(req:NextRequest) {
     await prisma.whatsappJob.upsert({where:{id:input.id},create:{id:input.id,contact:{connect:{id:contact.id}},
       body:input.body,due,recurrence,intervalDays,timezone,weekdays,anchorDay:new Date(due.getTime()+zoneOffset(timezone)).getUTCDate(),
       ...(media?{media:{create:media}}:{})},update:{}});
+    if (input.action === "send-now") return NextResponse.json({ok:true, dispatch:await runDueBatch()});
   } else if (["edit","duplicate"].includes(input.action) && typeof input.id === "string") {
     const job=await prisma.whatsappJob.findFirst({where:{id:input.id,contact:{accountId}}});
     if (!job) return invalid("Message is unavailable");
