@@ -89,6 +89,11 @@ export async function connect(accountId: string, attempt = 0, pairingPhone?:stri
           transportCode: /^[A-Z0-9_]+$/.test(failure?.code || "") ? failure?.code : null,
           causeCode: /^[A-Z0-9_]+$/.test(failure?.cause?.code || "") ? failure?.cause?.code : null,
           internalReason: knownReasons.includes(failure?.message || "") ? failure?.message : null,
+          typeErrorMessage: failure instanceof TypeError ? failure.message
+            .replace(/https?:\/\/\S+/g, "[url]")
+            .replace(/[A-Za-z0-9+\/_=-]{24,}/g, "[redacted]").slice(0, 240) : null,
+          frames: failure instanceof TypeError ? failure.stack?.split("\n").slice(1, 5)
+            .map(frame => frame.replace(/https?:\/\/\S+/g, "[url]")) : undefined,
         });
         const expired = code === DisconnectReason.loggedOut;
         const retry = !expired && !stopping && !timedOut && attempt < 2;
