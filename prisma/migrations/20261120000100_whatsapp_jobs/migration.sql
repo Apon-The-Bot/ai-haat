@@ -1,0 +1,13 @@
+CREATE TABLE whatsapp_contacts (
+  id VARCHAR(64) PRIMARY KEY, accountId VARCHAR(64) NOT NULL,
+  address VARCHAR(191) NOT NULL, label VARCHAR(120) NOT NULL,
+  consent BOOLEAN NOT NULL DEFAULT FALSE, actor VARCHAR(191) NOT NULL,
+  updatedAt DATETIME(3) NOT NULL, UNIQUE INDEX(accountId,address),
+  FOREIGN KEY(accountId) REFERENCES whatsapp_accounts(id) ON DELETE CASCADE ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE TABLE whatsapp_jobs (
+  id VARCHAR(64) PRIMARY KEY, contactId VARCHAR(64) NOT NULL, body TEXT NOT NULL,
+  status VARCHAR(24) NOT NULL DEFAULT 'Scheduled', due DATETIME(3) NOT NULL,
+  submittedAt DATETIME(3), messageId VARCHAR(191), INDEX(status,due),
+  FOREIGN KEY(contactId) REFERENCES whatsapp_contacts(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

@@ -3,6 +3,93 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model WhatsappAccount {
+  id        String @id @default(cuid()) @db.VarChar(64)
+  label     String @db.VarChar(120)
+  state     String @default("Disconnected") @db.VarChar(32)
+  leaseId   String? @db.VarChar(64)
+  leaseEnds DateTime?
+  keys      WhatsappSessionRecord[]
+  contacts  WhatsappContact[]
+  templates WhatsappTemplate[]
+  createdAt DateTime @default(now())
+
+  @@map("whatsapp_accounts")
+}
+
+model WhatsappContact {
+  id String @id @default(cuid()) @db.VarChar(64)
+  accountId String @db.VarChar(64)
+  address String @db.VarChar(191)
+  label String @db.VarChar(120)
+  consent Boolean @default(false)
+  actor String
+  updatedAt DateTime @updatedAt
+  account WhatsappAccount @relation(fields:[accountId], references:[id], onDelete:Cascade)
+  jobs WhatsappJob[]
+  @@unique([accountId,address])
+  @@map("whatsapp_contacts")
+}
+
+model WhatsappTemplate {
+  id String @id @default(cuid()) @db.VarChar(64)
+  accountId String @db.VarChar(64)
+  name String @db.VarChar(100)
+  body String @db.Text
+  account WhatsappAccount @relation(fields:[accountId], references:[id], onDelete:Cascade)
+  @@unique([accountId,name])
+  @@map("whatsapp_templates")
+}
+
+model WhatsappMedia {
+  id String @id @default(cuid()) @db.VarChar(64)
+  mime String @db.VarChar(64)
+  filename String @db.VarChar(120)
+  content Bytes @db.LongBlob
+  jobs WhatsappJob[]
+  @@map("whatsapp_media")
+}
+
+model WhatsappJob {
+  id String @id @db.VarChar(64)
+  contactId String @db.VarChar(64)
+  body String @db.Text
+  status String @default("Scheduled") @db.VarChar(24)
+  due DateTime
+  recurrence String @default("none") @db.VarChar(16)
+  timezone String @default("Asia/Dhaka") @db.VarChar(32)
+  weekdays Int @default(0)
+  intervalDays Int @default(1)
+  anchorDay Int?
+  submittedAt DateTime?
+  messageId String? @db.VarChar(191)
+  destination String? @db.VarChar(191)
+  groupReceipts Json?
+  claimToken String? @db.VarChar(64)
+  claimUntil DateTime?
+  mediaExpired Boolean @default(false)
+  @@index([submittedAt, destination])
+  attempts Int @default(0)
+  retryAt DateTime?
+  errorCode String? @db.VarChar(64)
+  mediaId String? @db.VarChar(64)
+  media WhatsappMedia? @relation(fields:[mediaId],references:[id],onDelete:Restrict)
+  @@index([messageId])
+  contact WhatsappContact @relation(fields:[contactId], references:[id], onDelete:Restrict)
+  @@index([status,due])
+  @@map("whatsapp_jobs")
+}
+
+model WhatsappSessionRecord {
+  accountId String @db.VarChar(64)
+  recordId  String @db.VarChar(191)
+  payload   Bytes @db.LongBlob
+  account   WhatsappAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, recordId])
+  @@map("whatsapp_session_records")
+}
+
 model ProviderCatalogSnapshot {
   providerId String   @id @db.VarChar(64)
   products   Json

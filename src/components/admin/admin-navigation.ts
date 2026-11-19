@@ -43,6 +43,7 @@ export const adminNavigation = [
         { name: "Command Center", href: "/admin/command-center", icon: LayoutDashboard },
         { name: "Action Queue", href: "/admin/operations", icon: Activity },
         { name: "Automated Alerts", href: "/admin/alerts", icon: Bell },
+        { name: "WhatsApp Automation", href: "/admin/whatsapp", icon: Send },
         { name: "Global Search", href: "/admin/search", icon: Search },
         { name: "Bulk Operations", href: "/admin/bulk-operations", icon: ListChecks },
       ],

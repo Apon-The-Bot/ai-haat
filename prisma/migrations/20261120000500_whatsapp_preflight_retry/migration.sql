@@ -1,0 +1,2 @@
+ALTER TABLE whatsapp_jobs ADD attempts INTEGER NOT NULL DEFAULT 0,
+  ADD retryAt DATETIME(3) NULL, ADD errorCode VARCHAR(64) NULL;

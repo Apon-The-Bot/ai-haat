@@ -1,0 +1,2 @@
+ALTER TABLE whatsapp_jobs ADD timezone VARCHAR(32) NOT NULL DEFAULT 'Asia/Dhaka',
+  ADD weekdays INTEGER NOT NULL DEFAULT 0;
