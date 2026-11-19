@@ -30,6 +30,7 @@
 !package.json
 !package-lock.json
 !tsconfig.json
+!/.eslintrc.json
 *Client ID Secret*.json
 client_secret*.json
 credentials*.json
@@ -42,6 +43,9 @@ yarn-error.log*
 
 # local env files
 .env*.local
+/.env
+/.env.*
+!/.env.development.example
 /production.env
 *.env
 !/.env.example

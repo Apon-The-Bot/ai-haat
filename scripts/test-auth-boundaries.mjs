@@ -44,16 +44,29 @@ const { GET } = loadModule("../src/app/api/auth/me/route.ts", {
 const profile = await GET(new Request("https://example.test/api/auth/me?email=admin@example.test"));
 assert.equal(profile.status, 401);
 
-const { requireAdmin, requireMfaVerified } = loadModule("../src/lib/auth-guard.ts", {
+let accountStatusUnavailable = false;
+const { requireAuth: requireVerifiedAccount, requireAdmin, requireMfaVerified } = loadModule("../src/lib/auth-guard.ts", {
   "next/server": server,
   "next-auth": nextAuth,
   "./auth": { authOptions: {} },
   "./mfa/session": {},
   "./prisma": { prisma: forbiddenDb },
-  "./user-control/user-control-service": { getUserEffectiveStatus: async () => ({ status: "ACTIVE" }) },
+  "./user-control/user-control-service": {
+    getUserEffectiveStatus: async () => {
+      if (accountStatusUnavailable) throw new Error("Fixture status lookup unavailable");
+      return { status: "ACTIVE" };
+    },
+  },
 });
 assert.equal((await requireAdmin()).status, 401);
 session = { user: { id: "fixture", email: "admin@example.test", role: "USER" } };
+assert.equal((await requireVerifiedAccount()).user.id, "fixture");
+accountStatusUnavailable = true;
+assert.deepEqual(await requireVerifiedAccount(), new JsonResponse(
+  { error: "Unable to verify account status" },
+  { status: 503 },
+));
+accountStatusUnavailable = false;
 assert.equal((await requireAdmin()).status, 403);
 session.user.role = "ADMIN";
 assert.equal((await requireAdmin()).user.id, "fixture");

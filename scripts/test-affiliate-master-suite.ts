@@ -1,5 +1,5 @@
 // ─── AI Haat — Affiliate, Referral & Payout Operations Master Test Suite ─────
-// 32 Comprehensive Test Assertions verifying Multi-tier & Product-Specific Commissions,
+// 33 Comprehensive Test Assertions verifying Multi-tier & Product-Specific Commissions,
 // Coupon-Affiliate Linking, Fraud Guard Self-Referral Prevention, 7-Day Holding Period,
 // Min ৳500 Payout Validation, Admin Review Workflow, Central Notification Integration,
 // Customer Dashboard & Admin UI Portals.
@@ -45,7 +45,7 @@ function fileContains(rel: string, ...patterns: string[]): boolean {
 }
 
 console.log("\n" + "═".repeat(75));
-console.log("  AI HAAT — AFFILIATE & PAYOUT MASTER SUBSYSTEM TEST SUITE (32 Tests)");
+console.log("  AI HAAT — AFFILIATE & PAYOUT MASTER SUBSYSTEM TEST SUITE (33 Tests)");
 console.log("═".repeat(75) + "\n");
 
 // ─── SECTION 1: DATABASE SCHEMA & MODELS ──────────────────────────────────────
@@ -265,7 +265,7 @@ assert(
     "src/app/api/affiliate/payout/route.ts",
     "requireAuth",
     "MIN_PAYOUT_AMOUNT_BDT",
-    "rateLimitMap"
+    "checkRateLimit"
   )
 );
 
@@ -375,8 +375,8 @@ assert(
 );
 
 assert(
-  "Admin layout contains Affiliates navigation route link (/admin/affiliates)",
-  fileContains("src/components/admin/AdminLayoutClient.tsx", "/admin/affiliates")
+  "Admin navigation registry contains Affiliates navigation route link (/admin/affiliates)",
+  fileContains("src/components/admin/admin-navigation.ts", "/admin/affiliates")
 );
 
 console.log("\n" + "─".repeat(75));
@@ -387,6 +387,6 @@ if (fail > 0) {
   console.error(`\n  ⚠️  ${fail} affiliate tests FAILED. Review issues above.\n`);
   process.exit(1);
 } else {
-  console.log("\n  🎉 ALL 32/32 AFFILIATE & PAYOUT MASTER TESTS PASSED PERFECTLY!\n");
+  console.log("\n  🎉 ALL 33/33 AFFILIATE & PAYOUT MASTER TESTS PASSED PERFECTLY!\n");
   process.exit(0);
 }

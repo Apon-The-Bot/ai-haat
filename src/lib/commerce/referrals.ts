@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { randomBytes } from "crypto";
+import { getOrCreateAffiliateProfile } from "@/lib/commerce/affiliates";
 
 export interface ReferralMilestone {
   id: string;
@@ -57,53 +57,7 @@ export const REFERRAL_MILESTONES: ReferralMilestone[] = [
  * Get or automatically create user's affiliate/referral profile
  */
 export async function getOrCreateReferralProfile(userId: string) {
-  let profile = await prisma.affiliateProfile.findUnique({
-    where: { userId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          walletBalanceBDT: true,
-          coinBalance: true,
-        },
-      },
-    },
-  });
-
-  if (!profile) {
-    // Generate unique friendly code e.g. AH-9821
-    let code = `AH-${randomBytes(2).toString("hex").toUpperCase()}`;
-    let exists = await prisma.affiliateProfile.findUnique({ where: { referralCode: code } });
-    while (exists) {
-      code = `AH-${randomBytes(2).toString("hex").toUpperCase()}`;
-      exists = await prisma.affiliateProfile.findUnique({ where: { referralCode: code } });
-    }
-
-    profile = await prisma.affiliateProfile.create({
-      data: {
-        userId,
-        referralCode: code,
-        status: "ACTIVE",
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            walletBalanceBDT: true,
-            coinBalance: true,
-          },
-        },
-      },
-    });
-  }
-
-  return profile;
+  return getOrCreateAffiliateProfile(userId);
 }
 
 /**
@@ -237,7 +191,8 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
   }
 
   // Execute reward dispatch in atomic transaction
-  await prisma.$transaction(async (tx) => {
+  try {
+    await prisma.$transaction(async (tx) => {
     if (milestone.rewardType === "WALLET_CASH") {
       await tx.user.update({
         where: { id: userId },
@@ -254,6 +209,7 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
           method: "system",
           status: "APPROVED",
           note: `Milestone Claim: ${milestone.id}`,
+          referenceKey: `referral-milestone:${userId}:${milestone.id}`,
         },
       });
     } else if (milestone.rewardType === "COINS") {
@@ -271,6 +227,7 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
           amount: milestone.rewardValue,
           type: "BONUS",
           description: `Milestone Claim: ${milestone.id}`,
+          referenceKey: `referral-milestone:${userId}:${milestone.id}`,
         },
       });
     } else if (milestone.rewardType === "VIP_BADGE") {
@@ -290,6 +247,7 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
           method: "system",
           status: "APPROVED",
           note: `Milestone Claim: ${milestone.id}`,
+          referenceKey: `referral-milestone:${userId}:${milestone.id}`,
         },
       });
     }
@@ -304,7 +262,11 @@ export async function claimReferralMilestone(userId: string, milestoneId: string
         link: "/dashboard/referrals",
       },
     });
-  });
+    });
+  } catch (error: any) {
+    if (error?.code === "P2002") return { success: false, error: "You have already claimed this milestone reward!" };
+    throw error;
+  }
 
   return {
     success: true,

@@ -23,9 +23,11 @@ function report(path, rule, line) {
   console.error(`${JSON.stringify(path)}${line ? `:${line}` : ""} [${rule}]`);
 }
 
+const envExamples = new Set([".env.example", ".env.development.example"]);
+
 for (const path of new Set(paths)) {
   if (/(?:^|\/)(?:\.env(?:\..+)?|[^/]+\.env)$/i.test(path) &&
-      !/(?:^|\/)\.env\.example$/i.test(path)) {
+      !envExamples.has(path)) {
     report(path, "private-env-file");
     continue;
   }
@@ -45,9 +47,11 @@ for (const path of new Set(paths)) {
       if (path === "scripts/check-secrets.mjs") continue;
       if (pattern.test(line)) report(path, name, index + 1);
     }
-    if (/(?:^|\/)\.env\.example$/i.test(path) &&
+    if (envExamples.has(path) &&
         /^(?!NEXT_PUBLIC_)[A-Z0-9_]*(?:SECRET|PASSWORD|PASS|KEY|PEPPER|TOKEN|DATABASE_URL)=\S/.test(line) &&
-        line !== "DATABASE_URL=mysql://user:password@host:3306/dbname") {
+        line !== (path === ".env.development.example"
+          ? "DATABASE_URL=mysql://aihaat_dev:password@127.0.0.1:3306/aihaat_dev"
+          : "DATABASE_URL=mysql://user:password@host:3306/dbname")) {
       report(path, "non-empty-example-secret", index + 1);
     }
   });

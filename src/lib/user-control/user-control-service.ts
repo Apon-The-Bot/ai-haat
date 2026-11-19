@@ -343,8 +343,11 @@ export async function setUserStatus(params: {
 
   // If Banned or Suspended, invalidate all user sessions immediately!
   if (status === "BANNED" || status === "SUSPENDED") {
-    await prisma.session.deleteMany({ where: { userId } });
-    await prisma.mfaSession.deleteMany({ where: { userId } });
+    await prisma.$transaction([
+      prisma.session.deleteMany({ where: { userId } }),
+      prisma.mfaSession.deleteMany({ where: { userId } }),
+      prisma.user.update({ where: { id: userId }, data: { sessionRevokedAt: new Date() } }),
+    ]);
   }
 
   // Log admin audit
@@ -568,8 +571,11 @@ export async function setFeatureRestriction(params: {
  */
 export async function revokeAllUserSessions(userId: string, adminId: string, adminEmail: string) {
   const sessionCount = await prisma.session.count({ where: { userId } });
-  await prisma.session.deleteMany({ where: { userId } });
-  await prisma.mfaSession.deleteMany({ where: { userId } });
+  await prisma.$transaction([
+    prisma.session.deleteMany({ where: { userId } }),
+    prisma.mfaSession.deleteMany({ where: { userId } }),
+    prisma.user.update({ where: { id: userId }, data: { sessionRevokedAt: new Date() } }),
+  ]);
 
   await logAdminAudit({
     actorId: adminId,

@@ -1,5 +1,6 @@
 "use client";
 
+import { EmailHtmlPreview } from "@/components/admin/EmailHtmlPreview";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -875,19 +876,17 @@ export default function CreateCampaignWizardPage() {
                 </div>
 
                 {/* Simulated Body */}
-                <div
+                <EmailHtmlPreview
                   className="p-4 space-y-2 min-h-[160px] leading-relaxed"
-                  dangerouslySetInnerHTML={{
-                    __html: contentHtml
-                      ? contentHtml
-                          .replace(/\{\{first_name\}\}/g, "John")
-                          .replace(/\{\{customer_name\}\}/g, "John Doe")
-                          .replace(/\{\{email\}\}/g, "john@example.com")
-                          .replace(/\{\{site_name\}\}/g, "AI Haat")
-                          .replace(/\{\{site_url\}\}/g, "https://aihaat.shop")
-                          .replace(/\{\{coupon_code\}\}/g, "SPECIAL30")
-                      : '<p style="color: #94a3b8; text-align: center; padding: 40px 0;">Compose HTML or pick a template on the left to see live preview.</p>',
-                  }}
+                  html={contentHtml
+                  ? contentHtml
+                      .replace(/\{\{first_name\}\}/g, "John")
+                      .replace(/\{\{customer_name\}\}/g, "John Doe")
+                      .replace(/\{\{email\}\}/g, "john@example.com")
+                      .replace(/\{\{site_name\}\}/g, "AI Haat")
+                      .replace(/\{\{site_url\}\}/g, "https://aihaat.shop")
+                      .replace(/\{\{coupon_code\}\}/g, "SPECIAL30")
+                  : '<p style="color: #94a3b8; text-align: center; padding: 40px 0;">Compose HTML or pick a template on the left to see live preview.</p>'}
                 />
 
                 {/* Simulated Footer */}

@@ -1,5 +1,6 @@
 "use client";
 
+import { EmailHtmlPreview } from "@/components/admin/EmailHtmlPreview";
 import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -421,10 +422,8 @@ export default function CampaignAnalyticsDetailPage() {
         {showHtmlPreview && (
           <div className="p-6 border-t border-slate-100 bg-slate-50 space-y-4">
             <div className="bg-white rounded-2xl p-6 border border-slate-200 max-w-2xl mx-auto shadow-xs text-xs">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: campaign.contentHtml || "<p>No content</p>",
-                }}
+              <EmailHtmlPreview
+                html={campaign.contentHtml || "<p>No content</p>"}
               />
             </div>
           </div>

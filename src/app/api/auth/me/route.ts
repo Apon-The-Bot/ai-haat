@@ -40,6 +40,8 @@ export async function GET() {
             email: cleanEmail,
             name: session?.user?.name || email.split("@")[0],
             image: session?.user?.image || null,
+            googleImage: session?.user?.image || null,
+            profileImageSource: session?.user?.image ? "GOOGLE" : null,
             role: "USER",
             walletBalanceBDT: 0,
           },
@@ -49,8 +51,12 @@ export async function GET() {
         });
       } else {
         const updateData: any = {};
-        if (session?.user?.image && dbUser.image !== session.user.image) {
+        if (session?.user?.image && dbUser.profileImageSource !== "CUSTOM" && dbUser.image !== session.user.image) {
           updateData.image = session.user.image;
+          updateData.googleImage = session.user.image;
+          updateData.profileImageSource = "GOOGLE";
+        } else if (session?.user?.image && dbUser.googleImage !== session.user.image) {
+          updateData.googleImage = session.user.image;
         }
         if (session?.user?.name && !dbUser.name) {
           updateData.name = session.user.name;
@@ -90,6 +96,7 @@ export async function GET() {
         name: dbUser?.name || cleanEmail.split("@")[0],
         email: cleanEmail,
         avatar: dbUser?.image,
+        profileImageSource: dbUser?.profileImageSource || null,
         phone: dbUser?.phone || "",
         role: effectiveRole,
         walletBalanceBDT: walletBalance,

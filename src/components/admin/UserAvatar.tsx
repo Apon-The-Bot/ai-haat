@@ -3,12 +3,13 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useState } from "react";
+import { sanitizeProfileImageUrl } from "@/lib/profile-image";
 
 interface UserAvatarProps {
   name?: string | null;
   email?: string | null;
   image?: string | null;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   onClick?: () => void;
 }
 
@@ -23,19 +24,24 @@ function initials(name?: string | null, email?: string | null) {
 }
 
 export function UserAvatar({ name, email, image, size = "sm", onClick }: UserAvatarProps) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const dimensions = size === "lg" ? "h-20 w-20 text-2xl" : size === "md" ? "h-12 w-12 text-lg" : "h-9 w-9 text-xs";
-  const validImage = image && /^https?:\/\//i.test(image);
+  const [failedImage, setFailedImage] = useState<string | null>(null);
+  const dimensions = {
+    xs: "h-5 w-5 text-[9px]",
+    sm: "h-9 w-9 text-xs",
+    md: "h-12 w-12 text-lg",
+    lg: "h-20 w-20 text-2xl",
+  }[size];
+  const validImage = sanitizeProfileImageUrl(image);
   const avatar = (
     <div className={`${dimensions} relative shrink-0 overflow-hidden rounded-full bg-[#FC5C03] text-white font-bold flex items-center justify-center shadow-2xs`}>
-      {validImage && !imageFailed ? (
+      {validImage && failedImage !== validImage ? (
         <img
-          src={image}
+          src={validImage}
           alt={`${name || "Customer"} profile`}
           loading="lazy"
           referrerPolicy="no-referrer"
           className="h-full w-full object-cover"
-          onError={() => setImageFailed(true)}
+          onError={() => setFailedImage(validImage)}
         />
       ) : (
         initials(name, email)

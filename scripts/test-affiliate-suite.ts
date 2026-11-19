@@ -192,8 +192,8 @@ assert(
 
 // ─── TEST 24: Navigation Link in Admin Panel ──────────────────────
 assert(
-  "Affiliates navigation link is configured in AdminLayoutClient",
-  fileContains("src/components/admin/AdminLayoutClient.tsx", "/admin/affiliates")
+  "Affiliates navigation link is configured in the admin navigation registry",
+  fileContains("src/components/admin/admin-navigation.ts", "/admin/affiliates")
 );
 
 // ─── TEST 25: TypeScript Exports & Type Safety ────────────────────

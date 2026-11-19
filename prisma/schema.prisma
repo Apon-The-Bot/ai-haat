@@ -359,6 +359,8 @@ model User {
   email            String              @unique
   emailVerified    DateTime?
   image            String?
+  googleImage      String?
+  profileImageSource String?
   phone            String?
   role             Role                @default(USER)
   walletBalanceBDT Float               @default(0.0)
@@ -366,6 +368,7 @@ model User {
   lifetimeCoinsEarned Int              @default(0)
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
+  sessionRevokedAt DateTime?
 
   accounts         Account[]
   sessions         Session[]
@@ -398,6 +401,7 @@ model User {
   deviceInstances    UserDeviceInstance[]
   technicalObservations UserTechnicalObservation[]
   consentRecords     UserConsentRecord[]
+  wishlistItems      WishlistItem[]
 
   @@map("users")
 }
@@ -497,11 +501,25 @@ model Product {
   bundleItems        BundleItem[]
   tieredPricingRules TieredPricingRule[]
   flashSaleItems     FlashSaleItem[]
+  wishlistItems      WishlistItem[]
 
   @@index([category])
   @@index([status, visibility])
   @@index([inStock, isFeatured])
   @@map("products")
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+  @@map("wishlist_items")
 }
 
 model Variation {
@@ -689,6 +707,7 @@ model WalletTransaction {
   note         String?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
+  referenceKey String?           @unique
 
   user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1201,6 +1220,7 @@ model AffiliateCommission {
   rejectionReason       String?
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
+  sourceKey             String?           @unique
 
   affiliateProfile      AffiliateProfile  @relation(fields: [affiliateProfileId], references: [id], onDelete: Cascade)
   order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -1761,6 +1781,7 @@ model CoinTransaction {
   orderId     String?
   couponId    String?
   description String              @db.VarChar(255)
+  referenceKey String?            @unique
   createdAt   DateTime            @default(now())
 
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -27,6 +27,8 @@ import {
   MoreHorizontal,
   X,
   Gift,
+  Settings,
+  Heart,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -115,11 +117,13 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
 
   // ──── "MORE" MENU ITEMS ────
   const moreItems: MoreMenuItem[] = [
-    { name: "Give ৳50, Get ৳50", nameBn: "রেফার ও রিওয়ার্ডস (৳৫০)", href: "/dashboard/referrals", icon: Gift },
     { name: "Warranty Claims", nameBn: "ওয়ারেন্টি ক্লেইমস", href: "/dashboard/replacements", icon: RotateCcw },
     { name: "Refund Requests", nameBn: "রিফান্ড রিকোয়েস্ট", href: "/dashboard/refunds", icon: Banknote },
     { name: "Notifications", nameBn: "নোটিফিকেশন", href: "/dashboard/notifications", icon: Bell },
     { name: "Security", nameBn: "সিকিউরিটি", href: "/dashboard/security", icon: ShieldCheck },
+    { name: "Profile settings", nameBn: "প্রোফাইল সেটিংস", href: "/dashboard/settings", icon: Settings },
+    { name: "Wishlist", nameBn: "উইশলিস্ট", href: "/dashboard/wishlist", icon: Heart },
+    { name: "Earn & Refer", nameBn: "আয় ও রেফার", href: "/dashboard/earn", icon: Gift },
     { name: "Email Preferences", nameBn: "ইমেইল প্রেফারেন্স", href: "/dashboard/preferences", icon: Mail },
     { name: "Support & Help", nameBn: "সাপোর্ট ও সহায়তা", href: "/dashboard/support", icon: LifeBuoy },
     { name: "Affiliate Program", nameBn: "অ্যাফিলিয়েট প্রোগ্রাম", href: "/dashboard/affiliate", icon: Share2 },
@@ -130,12 +134,14 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
     { name: isBn ? "ওভারভিউ" : "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: isBn ? "আমার অর্ডার" : "My Orders", href: "/dashboard/orders", icon: ShoppingBag },
     { name: isBn ? "ডিজিটাল ভল্ট" : "Digital Vault", href: "/dashboard/keys", icon: KeyRound },
-    { name: isBn ? "রেফার ও রিওয়ার্ডস (৳৫০)" : "Give ৳50, Get ৳50", href: "/dashboard/referrals", icon: Gift },
     { name: isBn ? "ওয়ারেন্টি ক্লেইমস" : "Warranty Claims", href: "/dashboard/replacements", icon: RotateCcw },
     { name: isBn ? "রিফান্ড রিকোয়েস্ট" : "Refund Requests", href: "/dashboard/refunds", icon: Banknote },
     { name: isBn ? "ওয়ালেট" : "Wallet", href: "/dashboard/wallet", icon: Wallet },
     { name: isBn ? "নোটিফিকেশন" : "Notifications", href: "/dashboard/notifications", icon: Bell },
     { name: isBn ? "সিকিউরিটি" : "Security", href: "/dashboard/security", icon: ShieldCheck },
+    { name: isBn ? "প্রোফাইল সেটিংস" : "Profile settings", href: "/dashboard/settings", icon: Settings },
+    { name: isBn ? "উইশলিস্ট" : "Wishlist", href: "/dashboard/wishlist", icon: Heart },
+    { name: isBn ? "আয় ও রেফার" : "Earn & Refer", href: "/dashboard/earn", icon: Gift },
     { name: isBn ? "ইমেইল প্রেফারেন্স" : "Email Preferences", href: "/dashboard/preferences", icon: Mail },
     { name: isBn ? "সাপোর্ট ও সহায়তা" : "Support & Help", href: "/dashboard/support", icon: LifeBuoy },
     { name: isBn ? "অ্যাফিলিয়েট প্রোগ্রাম" : "Affiliate Program", href: "/dashboard/affiliate", icon: Share2 },

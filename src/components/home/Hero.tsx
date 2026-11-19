@@ -33,10 +33,10 @@ export function Hero() {
             <div>
               <h1 className="text-[28px] sm:text-[34px] md:text-4xl lg:text-[44px] xl:text-[48px] font-black text-[#1A1D26] tracking-tight space-y-2 sm:space-y-2.5">
                 <span className="block leading-[1.35] sm:leading-[1.4]">
-                  প্রিমিয়াম <span className="text-[#FC5C03]">ডিজিটাল প্রোডাক্টস</span>
+                  তোমার কাজের <span className="text-[#FC5C03]">ডিজিটাল আপগ্রেড</span>
                 </span>
                 <span className="block text-[#1A1D26] leading-[1.35] sm:leading-[1.4] pt-0.5 sm:pt-1">
-                  এক জায়গায়, নিশ্চিন্তে
+                  এক জায়গায়, সহজে
                 </span>
               </h1>
               <span className="w-16 sm:w-20 h-1.5 bg-[#FC5C03] rounded-full mt-3.5 sm:mt-4 block" />
@@ -44,7 +44,7 @@ export function Hero() {
 
             {/* Supporting Text */}
             <p className="text-[13px] sm:text-sm text-[#4B5563] max-w-xl leading-relaxed pt-1">
-              ChatGPT, Canva Pro, Microsoft 365, VPN এবং গেম টপ-আপের শতভাগ আসল সাবস্ক্রিপশন। পেমেন্টের ৫-১৫ মিনিটে অটোমেটেড দ্রুত ডেলিভারি ও ফুল রিপ্লেসমেন্ট ওয়ারেন্টি।
+              AI tools, software subscriptions, VPN আর দরকারি digital products—তোমার কাজ, শেখা ও create করার জন্য যা লাগে, তা এক জায়গায় খুঁজে নাও।
             </p>
 
             {/* CTA Buttons */}
@@ -53,7 +53,7 @@ export function Hero() {
                 href="/shop"
                 className="inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-3 bg-[#FC5C03] hover:bg-[#EC4001] text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all min-h-touch touch-action-manipulation"
               >
-                <span>সব প্রোডাক্ট দেখুন</span>
+                <span>টুল খুঁজে নিন</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
@@ -69,15 +69,15 @@ export function Hero() {
             <div className="pt-2 sm:pt-3 flex flex-wrap items-center gap-2 text-[10.5px] sm:text-[11px] font-semibold text-[#7A8190]">
               <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-[#E8E8EE] shadow-2xs">
                 <Zap className="w-3.5 h-3.5 text-[#FC5C03]" />
-                <span>ইনস্ট্যান্ট ডেলিভারি</span>
+                <span>ডিজিটাল ডেলিভারি</span>
               </div>
               <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-[#E8E8EE] shadow-2xs">
                 <Shield className="w-3.5 h-3.5 text-[#FC5C03]" />
-                <span>১০০% রিপ্লেসমেন্ট ওয়ারেন্টি</span>
+                <span>স্বচ্ছ পলিসি</span>
               </div>
               <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-[#E8E8EE] shadow-2xs">
                 <Headphones className="w-3.5 h-3.5 text-[#FC5C03]" />
-                <span>ডেডিকেটেড কাস্টমার সাপোর্ট</span>
+                <span>মানুষের সহায়তা</span>
               </div>
             </div>
 

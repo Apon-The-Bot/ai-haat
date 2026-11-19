@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { updateOrderStatus } from "@/lib/orders-db";
 import { creditLocalWalletBalance, recordLocalTransaction } from "@/lib/wallet-db";
 import { tryAutoFulfillOrder } from "@/lib/commerce/inventory";
+import { SITE_URL } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +13,7 @@ export async function GET(req: NextRequest) {
   const orderId = (searchParams.get("orderId") || searchParams.get("order_id") || "").trim();
   const transactionRef = (searchParams.get("transaction_ref") || searchParams.get("pp_id") || "").trim();
 
-  // Dynamic host determination
-  const host = req.headers.get("host") || "aihaat.shop";
-  const proto = req.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
-  const siteUrl = `${proto}://${host}`;
+  const siteUrl = new URL("/", SITE_URL).origin;
 
   const isWalletTopup = orderId.startsWith("WT-");
 
@@ -143,13 +141,18 @@ export async function GET(req: NextRequest) {
           } else if (topupResult.success) {
             console.log(`[PaymentAudit] WALLET_CREDITED: ৳${verifiedAmount} for user ${user.email} via callback`);
           }
+          if (topupResult.success) {
+            return NextResponse.redirect(
+              `${siteUrl}/dashboard/wallet?topup=success&amount=${encodeURIComponent(String(topupResult.amountBDT))}&trxId=${encodeURIComponent(topupResult.trxId)}`
+            );
+          }
         }
       } catch (wErr) {
         console.error("[Wallet Topup Callback Error]:", wErr);
       }
 
       return NextResponse.redirect(
-        `${siteUrl}/dashboard/wallet?topup=success&amount=${encodeURIComponent(String(verifiedAmount))}&trxId=${encodeURIComponent(realTrxId || transactionRef)}`
+        `${siteUrl}/dashboard/wallet?topup=pending&trxId=${encodeURIComponent(realTrxId || transactionRef)}`
       );
     }
 

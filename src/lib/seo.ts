@@ -39,7 +39,7 @@ export const ORGANIZATION_SCHEMA = {
   url: SITE_URL,
   logo: `${SITE_URL}/images/logo.png`,
   description:
-    "AI Haat is Bangladesh's premier digital goods and software subscription marketplace offering instant delivery and full warranty.",
+    "AI Haat is a Bangladesh-focused marketplace for AI tools, software subscriptions, VPNs and digital products.",
   contactPoint: [
     {
       "@type": "ContactPoint",
@@ -71,7 +71,7 @@ export const WEBSITE_SCHEMA = {
   url: SITE_URL,
   inLanguage: ["bn-BD", "en-US"],
   description:
-    "Buy genuine AI subscriptions, software licenses, VPNs, and digital accounts with instant delivery in Bangladesh via bKash, Nagad & Rocket in BDT.",
+    "Find AI tools, software subscriptions, VPNs and digital products in Bangladesh with local BDT payment options.",
   potentialAction: {
     "@type": "SearchAction",
     target: {

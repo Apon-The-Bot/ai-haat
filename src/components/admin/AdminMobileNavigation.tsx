@@ -20,11 +20,11 @@ export function AdminMobileNavigation({
   pathname, unreadCount, expandedGroups, setExpandedGroups, setIsMobileMenuOpen, logout,
 }: Props) {
   return (
-    <div 
+    <div
       className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex animate-in fade-in duration-150"
       onClick={() => setIsMobileMenuOpen(false)}
     >
-      <div 
+      <div
         className="w-72 bg-white h-full p-5 flex flex-col justify-between shadow-2xl overflow-y-auto animate-in slide-in-from-left duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -38,7 +38,7 @@ export function AdminMobileNavigation({
 
           {navigation.map((group) => {
             const isExpanded = expandedGroups[group.group] || false;
-            
+
             return (
               <div key={group.group} className="space-y-1">
                 <button
@@ -54,14 +54,14 @@ export function AdminMobileNavigation({
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                   )}
                 </button>
-                
+
                 {isExpanded && (
                   <div className="space-y-0.5 mt-1">
                     {group.items.map((item) => {
                       const Icon = item.icon;
                       const isActive = pathname === item.href;
                       const showBadge = (item.name === "Orders" || item.name === "Support Queue") && unreadCount > 0;
-                      
+
                       return (
                         <Tooltip key={item.name} content={item.name === "Inventory Batches" ? "Manage inventory batches, stock records, and related batch operations." : item.name}>
                           <Link

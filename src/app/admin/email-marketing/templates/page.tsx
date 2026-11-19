@@ -1,5 +1,6 @@
 "use client";
 
+import { EmailHtmlPreview } from "@/components/admin/EmailHtmlPreview";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -281,15 +282,13 @@ export default function TemplatesListPage() {
                 <div className="bg-[#0F172A] p-4 text-center border-b-2 border-[#FC5C03]">
                   <div className="font-black text-white text-base">AI <span className="text-[#FC5C03]">HAAT</span></div>
                 </div>
-                <div
+                <EmailHtmlPreview
                   className="p-5 space-y-3"
-                  dangerouslySetInnerHTML={{
-                    __html: previewTemplate.contentHtml
-                      .replace(/\{\{first_name\}\}/g, "John")
-                      .replace(/\{\{customer_name\}\}/g, "John Doe")
-                      .replace(/\{\{coupon_code\}\}/g, "SAVE30")
-                      .replace(/\{\{site_url\}\}/g, "https://aihaat.shop"),
-                  }}
+                  html={previewTemplate.contentHtml
+                  .replace(/\{\{first_name\}\}/g, "John")
+                  .replace(/\{\{customer_name\}\}/g, "John Doe")
+                  .replace(/\{\{coupon_code\}\}/g, "SAVE30")
+                  .replace(/\{\{site_url\}\}/g, "https://aihaat.shop")}
                 />
                 <div className="bg-slate-900 p-4 text-center text-[10px] text-slate-400">
                   <p className="margin: 0">AI Haat — Bangladesh&apos;s #1 Digital Marketplace</p>
