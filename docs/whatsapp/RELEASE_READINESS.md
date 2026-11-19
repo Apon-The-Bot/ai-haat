@@ -1,6 +1,6 @@
 # WhatsApp Automation release decision · NO-GO
 
-20 November 2026. Local implementation and synthetic QA passed the checks below. Real MySQL contention, real delivery, durable session restoration and unattended execution on the subscribed Hostinger plan remain release gates. The controlled production rollout requested on this date is currently stopped at the backup gate.
+20 November 2026. Local implementation and synthetic QA passed the checks below. Production migrations were applied after the supplied Hostinger backup evidence, and the validated source was pushed to the existing Hostinger Business v5 auto-deploy branch. Real WhatsApp pairing, delivery, durable session restoration and unattended execution remain release gates; final decision remains NO-GO.
 
 ## Execution and evidence
 
@@ -20,9 +20,11 @@ Each tick checks up to ten eligible media rows. Bytes are released after all ref
 | Source architecture | 104 oversized files, same count as previous checkpoint. No new WhatsApp source file exceeds 300 lines. |
 | Local synthetic resource measurement | One run including TypeScript transpilation and all 11 tests: 562 ms elapsed, 984 ms CPU, 123 MiB peak RSS. This measures the test process only. |
 | Actual scheduling delay, socket latency, resource impact on storefront and hosting | Unmeasured. Record due/submitted timestamps, connection and elapsed audit values, and host resource graphs on staging. |
-| Real database and WhatsApp acceptance | Blocked. No migrations applied, live recipient contacted, or account linked during this work. |
+| Real database and WhatsApp acceptance | Blocked. No live recipient contacted or account linked during this work. Real MySQL contention remains untested locally. |
 | Production backup gate | Hostinger screenshot evidence shows database and files backups completed and prepared for download at 2026-11-20 00:09. This is an external Hostinger restore point. A local encrypted copy and cryptographic checksum are still absent because the download has not been provided to the workspace. |
 | Production HTTP smoke | Passed read-only on 20 November 2026: `/`, `/api/health` and `/login` returned HTTP 200. `/api/health` reported HEALTHY and database UP with 1 ms latency. Existing payment gateway mode reported WARN for development test mode; this is pre-existing production evidence and was not changed. |
+| Production migration application | Passed on 20 November 2026. Nine pending additive migrations were applied: the existing provider-catalog migration plus the eight WhatsApp/release migrations. Post-apply `/`, `/api/health`, `/login` and `/api/auth/session` smoke checks passed. |
+| Validated source deployment | Pushed commits `526975e` and `0e0f41c` to `origin/main`. Hostinger detected commit `0e0f41c` and started build `01a1f574-af4a-7085-bbaa-47f76df272d3`; MCP last reported `running`. Live `/` and `/api/health` returned HTTP 200 during the build. |
 
 ## Hostinger and cron setup
 
