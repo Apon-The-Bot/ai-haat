@@ -55,15 +55,16 @@ export default function WhatsAppAutomation() {
     {!accounts.length && !error && <p className={styles.empty}>Add your first account to get started. Then connect it using a QR code or your phone number.</p>}
     {accounts.map(row=><section className="rounded-lg border p-4 space-y-2" key={row.id}>
       <h3 className="font-semibold">{row.label}</h3><span className={styles.badge}>{row.state}</span>
+      {["Disconnected","Authentication Expired","Connection Failed"].includes(row.state) && <p>Choose Connect with QR, then open WhatsApp on your phone → Linked devices → Link a device and scan the code. No phone number is needed.</p>}
       {row.qr && <img src={row.qr} width={220} height={220} alt="Scan this code in WhatsApp Linked devices"/>}
       {row.pairing && <p>Linked devices pairing code <strong>{row.pairing}</strong></p>}
       {["Disconnected","Authentication Expired","Connection Failed"].includes(row.state) &&
-        <form onSubmit={e=>{e.preventDefault();void submit("connect",row.id,String(new FormData(e.currentTarget).get("phone")));}}>
+        <details><summary>Or pair using a phone number</summary><form onSubmit={e=>{e.preventDefault();void submit("connect",row.id,String(new FormData(e.currentTarget).get("phone")));}}>
           <label>International phone <input name="phone" type="tel" pattern="[1-9][0-9]{7,14}" required placeholder="880…"/></label>
           <button disabled={busy}>Pair with phone number</button>
-        </form>}
+        </form></details>}
       <button disabled={busy} onClick={()=>void submit(["Connecting","Connected","Waiting for QR Scan","Reconnecting"].includes(row.state) ? "disconnect" : "connect",row.id)}>
-        {["Connecting","Connected","Waiting for QR Scan","Reconnecting"].includes(row.state) ? "Disconnect" : "Connect"}
+        {["Connecting","Connected","Waiting for QR Scan","Reconnecting"].includes(row.state) ? "Disconnect" : "Connect with QR"}
       </button>
       {row.state==="Connected" && <button className="ml-3" disabled={busy}
         onClick={()=>void submit("sync-groups",row.id)}>Sync groups</button>}

@@ -81,6 +81,7 @@ export async function connect(accountId: string, attempt = 0, pairingPhone?:stri
         clearInterval(heartbeat);
         clearTimeout(lifetime);
         const code = (update.lastDisconnect?.error as {output?:{statusCode?:number}})?.output?.statusCode;
+        console.info("[WhatsApp connection closed]", { accountId, code, attempt, timedOut, online });
         const expired = code === DisconnectReason.loggedOut;
         const retry = !expired && !stopping && !timedOut && attempt < 2;
         await records.write([["qr", null],["pairing",null]]);
@@ -93,7 +94,7 @@ export async function connect(accountId: string, attempt = 0, pairingPhone?:stri
         });
         if (retry) setTimeout(() => {
           void prisma.whatsappAccount.findFirst({where:{id:accountId,state:"Reconnecting"}})
-            .then(row => row && connect(accountId, attempt+1)).catch(() => {});
+            .then(row => row && connect(accountId, attempt+1, pairingPhone)).catch(() => {});
         }, 1000 * 2 ** attempt).unref();
         return;
       }
