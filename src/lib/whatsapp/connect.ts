@@ -81,7 +81,15 @@ export async function connect(accountId: string, attempt = 0, pairingPhone?:stri
         clearInterval(heartbeat);
         clearTimeout(lifetime);
         const code = (update.lastDisconnect?.error as {output?:{statusCode?:number}})?.output?.statusCode;
-        console.info("[WhatsApp connection closed]", { accountId, code, attempt, timedOut, online });
+        const failure = update.lastDisconnect?.error as (Error & { code?: string; cause?: { code?: string } }) | undefined;
+        const knownReasons = ["Session storage unavailable", "Lease unavailable", "Session stopped", "Admin disconnected", "Interactive window ended"];
+        console.info("[WhatsApp connection closed]", {
+          accountId, code: code ?? null, attempt, timedOut, online,
+          errorType: failure?.name ?? null,
+          transportCode: /^[A-Z0-9_]+$/.test(failure?.code || "") ? failure?.code : null,
+          causeCode: /^[A-Z0-9_]+$/.test(failure?.cause?.code || "") ? failure?.cause?.code : null,
+          internalReason: knownReasons.includes(failure?.message || "") ? failure?.message : null,
+        });
         const expired = code === DisconnectReason.loggedOut;
         const retry = !expired && !stopping && !timedOut && attempt < 2;
         await records.write([["qr", null],["pairing",null]]);
