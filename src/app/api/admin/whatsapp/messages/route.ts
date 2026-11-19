@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminMfa } from "@/lib/auth-guard";
+import { isSameOriginMutation } from "@/lib/security/csrf";
 import { prisma } from "@/lib/prisma";
 import { recipientAddress } from "@/lib/whatsapp/recipient";
 import { validateMedia } from "@/lib/whatsapp/media";
@@ -33,7 +34,7 @@ export async function GET(req:NextRequest) {
 export async function POST(req:NextRequest) {
   const auth = await guard();
   if (auth instanceof NextResponse) return auth;
-  if (req.headers.get("origin") !== req.nextUrl.origin) return NextResponse.json({error:"Invalid origin"},{status:403});
+  if (!req.headers.get("origin") || !isSameOriginMutation(req)) return NextResponse.json({error:"Invalid origin"},{status:403});
   if (!checkRateLimit("wa-messages:"+auth.user.id,30,60000).allowed) return NextResponse.json({error:"Try again in a minute"},{status:429});
   if (Number(req.headers.get("content-length"))>2900000) return invalid("Attachment exceeds 2 MiB");
   const reader=req.body?.getReader();

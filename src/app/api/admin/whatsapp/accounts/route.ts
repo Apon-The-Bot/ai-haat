@@ -5,6 +5,7 @@ import {logAdminAudit} from "@/lib/audit-logger";
 import { requireAdminMfa } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { openSession } from "@/lib/whatsapp/session-cipher";
+import { isSameOriginMutation } from "@/lib/security/csrf";
 
 export const dynamic = "force-dynamic";
 const json = (body:unknown, status=200) => NextResponse.json(body,{status,headers:{"Cache-Control":"private, no-store"}});
@@ -32,7 +33,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const auth = await requireAdminMfa();
   if (auth instanceof NextResponse) return auth;
-  if (req.headers.get("origin") !== req.nextUrl.origin) return json({error:"Invalid origin"},403);
+  if (!req.headers.get("origin") || !isSameOriginMutation(req)) return json({error:"Invalid origin"},403);
   if (process.env.WHATSAPP_ENABLED !== "true") return json({error:"WhatsApp integration is disabled"},503);
   const body = await req.json().catch(() => null);
   if (!checkRateLimit("wa-accounts:"+auth.user.id,20,60000).allowed) return json({error:"Try again in a minute"},429);
