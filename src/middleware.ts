@@ -9,6 +9,11 @@ import { isSameOriginMutation } from "@/lib/security/csrf";
  */
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-admin-path", pathname + req.nextUrl.search);
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
 
   // Protect administrative mutation endpoints against Cross-Site Request Forgery (CSRF)
   if (pathname.startsWith("/api/admin")) {
@@ -31,5 +36,6 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/api/admin/:path*",
+    "/admin/:path*",
   ],
 };
