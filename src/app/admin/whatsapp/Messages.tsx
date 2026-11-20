@@ -1,5 +1,6 @@
 "use client";
-import {FormEvent,useEffect,useState} from "react";
+import {FormEvent,useEffect,useState,useRef} from "react";
+import {compressImage} from "./compress-image";
 import {History,type Job} from "./History";
 import {zones,isZone} from "@/lib/whatsapp/zones";
 
@@ -15,6 +16,19 @@ export function Messages({accountId}:{accountId:string}) {
   const [revision,setRevision]=useState(0);
   const [error,setError]=useState("");
   const [pending,setPending]=useState(false);
+  const attachmentInput=useRef<HTMLInputElement>(null);
+  const [attachment,setAttachment]=useState<File|null>(null);
+  const [compressing,setCompressing]=useState(false);
+  const attachmentVersion=useRef(0);
+  async function selectAttachment(file?:File) {
+    const version=++attachmentVersion.current;
+    setAttachment(null);setError("");setCompressing(Boolean(file));
+    try {
+      const prepared=file ? await compressImage(file) : null;
+      if(version===attachmentVersion.current) setAttachment(prepared);
+    } catch {if(version===attachmentVersion.current) setError("Unable to process this attachment. Please choose another file.");}
+    finally {if(version===attachmentVersion.current) setCompressing(false);}
+  }
   const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
   useEffect(()=>{
     const controller=new AbortController();
@@ -39,6 +53,7 @@ export function Messages({accountId}:{accountId:string}) {
   }
   async function compose(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if(compressing) return;
     const form=event.currentTarget;
     const data=new FormData(form);
     const due=data.get("due");
@@ -48,7 +63,7 @@ export function Messages({accountId}:{accountId:string}) {
     if(!isZone(timezone)) return;
     const weekdays=data.getAll("weekday").reduce<number>((mask,day)=>mask | (1<<Number(day)),0);
     const recipient=contacts.find(c=>c.id===data.get("contactId"));
-    const file=data.get("attachment");
+    const file=attachment;
     let media;
     if(file instanceof File && file.size) {
       if(file.size>2097152){setError("Choose a file up to 2 MiB");return;}
@@ -61,7 +76,7 @@ export function Messages({accountId}:{accountId:string}) {
         (media?"\nAttachment: "+media.filename:""))) return;
     if (await act({action,id:requestId,media,body:data.get("body"),contactId:data.get("contactId"),
       timezone,weekdays,recurrence:data.get("recurrence"),intervalDays:data.get("intervalDays"),due:due?String(due)+":00"+zones[timezone]:null})) {
-      setRequestId(crypto.randomUUID());form.reset();setDraft("");
+      setRequestId(crypto.randomUUID());form.reset();setDraft("");void selectAttachment();
     }
   }
   return <div className="space-y-6">
@@ -89,7 +104,15 @@ export function Messages({accountId}:{accountId:string}) {
           value={draft} onChange={e=>setDraft(e.target.value)}/></label>
         <label>Schedule (optional) <input type="datetime-local" name="due"/></label>
         <label>Schedule timezone <select name="timezone">{Object.keys(zones).map(z=><option key={z}>{z}</option>)}</select></label>
-        <label>Attachment (up to 2 MiB) <input name="attachment" type="file" accept="image/png,image/jpeg,video/mp4,application/pdf,audio/ogg"/></label>
+        <div><label>Attachment · large images are compressed automatically
+          <input ref={attachmentInput} disabled={pending} type="file" accept="image/png,image/jpeg,image/webp,video/mp4,application/pdf,audio/ogg"
+            onChange={e=>void selectAttachment(e.target.files?.[0])}/></label>
+          {compressing && <p role="status">Optimizing image…</p>}
+          {attachment && <p>{attachment.name} · {(attachment.size/1024).toFixed(0)} KB</p>}
+          {(attachment || compressing) && <button type="button" disabled={pending} onClick={()=>{
+            void selectAttachment();if(attachmentInput.current) attachmentInput.current.value="";
+          }}>Remove attachment</button>}
+        </div>
         <label>Repeat <select name="recurrence">{["none","daily","weekly","monthly","custom","weekdays"].map(r=>
           <option key={r}>{r}</option>)}</select></label>
         <label>Custom interval in days <input name="intervalDays" type="number" defaultValue={1} min={1} max={365}/></label>
