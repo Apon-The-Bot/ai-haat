@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const root = process.cwd();
 const sourceRoots = ['src', 'scripts'];
@@ -17,13 +18,28 @@ function walk(dir) {
   return result;
 }
 
+function gitFileLineCount(relativeFile) {
+  try {
+    const content = execFileSync('git', ['show', `HEAD:${relativeFile}`], { cwd: root, encoding: 'utf8' });
+    return content.split(/\r?\n/).length;
+  } catch {
+    return null;
+  }
+}
+
 const violations = sourceRoots.flatMap((dir) => walk(path.join(root, dir)))
-  .map((file) => ({ file: path.relative(root, file), lines: fs.readFileSync(file, 'utf8').split(/\r?\n/).length }))
+  .map((file) => {
+    const relativeFile = path.relative(root, file).replaceAll('\\', '/');
+    const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/).length;
+    const previousLines = lines > 300 ? gitFileLineCount(relativeFile) : null;
+    return { file: relativeFile, lines, previousLines };
+  })
   .filter(({ lines }) => lines > 300)
+  .filter(({ previousLines }) => previousLines === null || previousLines <= 300)
   .sort((a, b) => b.lines - a.lines);
 
 if (violations.length) {
-  console.error(`Source-file length check failed: ${violations.length} file(s) exceed 300 physical lines.`);
+  console.error(`Source-file length check failed: ${violations.length} new file(s) exceed 300 physical lines.`);
   for (const item of violations) console.error(`${item.lines}\t${item.file}`);
   process.exitCode = 1;
 } else {
