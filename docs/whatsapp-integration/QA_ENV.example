@@ -1,0 +1,15 @@
+# Copy to a private, gitignored .env.whatsapp-qa.local file.
+# Never use production credentials or a production database in this file.
+DATABASE_URL=mysql://aihaat_wa_qa:REPLACE_WITH_PASSWORD@127.0.0.1:3306/aihaat_whatsapp_qa
+NEXTAUTH_URL=http://127.0.0.1:3000
+NEXTAUTH_SECRET=REPLACE_WITH_INDEPENDENT_RANDOM_SECRET
+WHATSAPP_SESSION_KEY=REPLACE_WITH_64_HEX_CHAR_32_BYTE_KEY
+CRON_SECRET=REPLACE_WITH_INDEPENDENT_RANDOM_SECRET
+WHATSAPP_ENABLED=true
+WHATSAPP_SENDING_ENABLED=false
+# Optional bounded socket lifetime in milliseconds.
+# WHATSAPP_CRON_SOCKET_MS=25000
+
+# After creating an empty loopback-only schema and user:
+# node --env-file=.env.whatsapp-qa.local scripts/prepare-whatsapp-qa.mjs
+# node --env-file=.env.whatsapp-qa.local scripts/test-whatsapp-mysql.mjs
