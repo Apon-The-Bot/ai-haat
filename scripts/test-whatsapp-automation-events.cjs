@@ -31,6 +31,7 @@ const { buildReviewRequestEvent } = load("review-adapter", { "./automation-event
 const { buildReactivationEvent } = load("reactivation-adapter", { "./automation-events": events });
 const { buildSupportReplyEvent } = load("support-adapter", { "./automation-events": events });
 const { buildAdminMessageEvent } = load("admin-adapter", { "./automation-events": events });
+const { buildOrderDeliveredEvent } = load("order-adapter", { "./automation-events": events });
 const { evaluateAutomationControls } = load("automation-engine");
 
 const event = Object.freeze({
@@ -296,4 +297,12 @@ test("WA-12 central controls enforce kill switch, dry-run, template approval and
   for (const patch of [
     { enabled: false }, { dryRun: true }, { templateApproved: false }, { queueDepth: 10 },
   ]) assert.equal(evaluateAutomationControls({ ...base, ...patch }).allowed, false);
+});
+
+test("order delivery adapter requires verified payment and complete fulfillment", () => {
+  const base = { orderId: "order_2", deliveryVersion: "delivery_2", correlationId: "order_2",
+    occurredAt: new Date("2026-11-21T00:00:00.000Z"), paymentVerified: true, allItemsDelivered: true };
+  assert.equal(buildOrderDeliveredEvent(base).type, "order.delivered");
+  assert.equal(buildOrderDeliveredEvent({ ...base, paymentVerified: false }), null);
+  assert.equal(buildOrderDeliveredEvent({ ...base, allItemsDelivered: false }), null);
 });

@@ -7,6 +7,8 @@ import { sendTelegramMessage, sendLowStockTelegramAlert, sendStockExpiryTelegram
 import { isEmailSuppressed } from "@/lib/commerce/abandoned-cart";
 import { notifyWaitingCustomersForProduct } from "@/lib/commerce/stock-waitlist";
 import crypto from "crypto";
+import { recordBuiltAutomationEvent } from "@/lib/whatsapp/automation-outbox";
+import { buildOrderDeliveredEvent } from "@/lib/whatsapp/order-adapter";
 
 export interface StockSummaryItem {
   productId: string;
@@ -451,7 +453,17 @@ export async function tryAutoFulfillOrder(orderId: string, options?: { exactId: 
       const allItems = await tx.orderItem.findMany({ where: { orderId: order.id } });
       const allDelivered = allItems.length > 0 && allItems.every((it) => it.deliveryStatus === "DELIVERED");
       const finalStatus: DeliveryStatus = allDelivered ? "DELIVERED" : "PROCESSING";
-      await tx.order.update({ where: { id: order.id }, data: { deliveryStatus: finalStatus } });
+      const updatedOrder = await tx.order.update({ where: { id: order.id }, data: { deliveryStatus: finalStatus } });
+      if (allDelivered) {
+        await recordBuiltAutomationEvent(tx, () => buildOrderDeliveredEvent({
+          orderId: order.id,
+          deliveryVersion: updatedOrder.updatedAt.toISOString(),
+          correlationId: order.id,
+          occurredAt: new Date(),
+          paymentVerified: order.paymentStatus === "VERIFIED",
+          allItemsDelivered: true,
+        }));
+      }
       return { allItems, allDelivered, finalStatus };
     });
     if (!fulfillment) {
