@@ -10,6 +10,7 @@ const rules = {
   "review.request-ready": { producer: "reviews", template: "review-request" },
   "reactivation.campaign-ready": { producer: "reactivation", template: "reactivation-campaign" },
   "support.inbound-reply": { producer: "support", template: "support-auto-reply" },
+  "support.handoff-requested": { producer: "support", template: null },
   "admin.message-approved": { producer: "admin", template: "admin-message" },
 } as const;
 
@@ -56,7 +57,9 @@ export function describeAutomationEvent(event: AutomationEvent) {
   return {
     dedupeKey,
     templateKey: rules[event.type].template,
-    category: "utility",
+    category: event.type === "marketing.campaign-ready" || event.type === "reactivation.campaign-ready"
+      || event.type === "review.request-ready" ? "marketing"
+      : event.producer === "support" || event.producer === "admin" ? "service" : "utility",
     disposition: "dry-run",
   } as const;
 }

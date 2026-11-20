@@ -7,8 +7,10 @@ export function buildSupportReplyEvent(input: {
   disposition: SupportDisposition; safeReplyAvailable: boolean; authorizedAccount: boolean;
 }): AutomationEvent | null {
   if (!input.authorizedAccount || !Number.isFinite(input.occurredAt.getTime())
+    || (input.disposition !== "auto-reply" && input.disposition !== "human-handoff")
     || (input.disposition === "auto-reply" && !input.safeReplyAvailable)) return null;
-  return parseAutomationEvent({ schemaVersion: 1, type: "support.inbound-reply", producer: "support",
+  const type = input.disposition === "human-handoff" ? "support.handoff-requested" : "support.inbound-reply";
+  return parseAutomationEvent({ schemaVersion: 1, type, producer: "support",
     entityId: input.conversationId, entityVersion: input.messageVersion, correlationId: input.correlationId,
     occurredAt: input.occurredAt.toISOString() });
 }

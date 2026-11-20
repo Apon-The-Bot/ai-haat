@@ -290,8 +290,8 @@ test("WA-12 central controls enforce kill switch, dry-run, template approval and
 });
 
 test("order delivery adapter requires verified payment and complete fulfillment", () => {
-  const base = { orderId: "order_2", deliveryVersion: "delivery_2", correlationId: "order_2",
-    occurredAt: new Date("2026-11-21T00:00:00.000Z"), paymentVerified: true, allItemsDelivered: true };
+  const base = { orderId: "order_2", correlationId: "order_2",
+    deliveredAt: new Date("2026-11-21T00:00:00.000Z"), paymentVerified: true, allItemsDelivered: true };
   assert.equal(buildOrderDeliveredEvent(base).type, "order.delivered");
   assert.equal(buildOrderDeliveredEvent({ ...base, paymentVerified: false }), null);
   assert.equal(buildOrderDeliveredEvent({ ...base, allItemsDelivered: false }), null);

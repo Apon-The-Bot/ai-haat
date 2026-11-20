@@ -454,12 +454,11 @@ export async function tryAutoFulfillOrder(orderId: string, options?: { exactId: 
       const allDelivered = allItems.length > 0 && allItems.every((it) => it.deliveryStatus === "DELIVERED");
       const finalStatus: DeliveryStatus = allDelivered ? "DELIVERED" : "PROCESSING";
       const updatedOrder = await tx.order.update({ where: { id: order.id }, data: { deliveryStatus: finalStatus } });
-      if (allDelivered) {
+      if (allDelivered && process.env.WHATSAPP_ORDER_OUTBOX_ENABLED === "true") {
         await recordBuiltAutomationEvent(tx, () => buildOrderDeliveredEvent({
           orderId: order.id,
-          deliveryVersion: updatedOrder.updatedAt.toISOString(),
+          deliveredAt: updatedOrder.updatedAt,
           correlationId: order.id,
-          occurredAt: new Date(),
           paymentVerified: order.paymentStatus === "VERIFIED",
           allItemsDelivered: true,
         }));
