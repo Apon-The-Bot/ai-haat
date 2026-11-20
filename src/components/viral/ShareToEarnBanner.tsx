@@ -1,19 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Share2,
-  Gift,
-  Sparkles,
-  Check,
-  Copy,
-  X,
-  MessageCircle,
-  ExternalLink,
-  Flame,
-  ArrowRight,
-  CheckCircle2,
-} from "lucide-react";
+import { Gift, Sparkles, Check, Copy, X, MessageCircle, ExternalLink, Flame, ArrowRight, CheckCircle2 } from "@/components/animated-icons/lucide";
+import { Share2 } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { useCurrency } from "@/context/CurrencyContext";
 
@@ -64,7 +53,7 @@ export function ShareToEarnBanner({
       // SSR-safe fallback
     }
 
-    showToast("🎉 অভিনন্দন! ৳৩০ ডিসকাউন্ট কোড আনলক হয়েছে!", "success");
+    showToast("অভিনন্দন! ৳৩০ ডিসকাউন্ট কোড আনলক হয়েছে!", "success");
   };
 
   const handleShareClick = (platform: "whatsapp" | "facebook" | "telegram" | "copy") => {

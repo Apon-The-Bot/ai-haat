@@ -2,19 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  RotateCcw,
-  ShieldCheck,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  KeyRound,
-  RefreshCw,
-  ExternalLink,
-  MessageSquare,
-  AlertCircle,
-  HelpCircle,
-} from "lucide-react";
+import { RotateCcw, ShieldCheck, Clock, CheckCircle2, XCircle, KeyRound, RefreshCw, ExternalLink, MessageSquare, AlertCircle } from "@/components/animated-icons/lucide";
+import { HelpCircle } from "@/components/animated-icons/lucide";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface ReplacementClaim {

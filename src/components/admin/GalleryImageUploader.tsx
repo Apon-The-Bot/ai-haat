@@ -1,15 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import {
-  UploadCloud,
-  Plus,
-  Trash2,
-  Image as ImageIcon,
-  RefreshCw,
-  Sparkles,
-  ExternalLink,
-} from "lucide-react";
+import { UploadCloud, Plus, Trash2, Image as ImageIcon, RefreshCw, Sparkles, ExternalLink } from "@/components/animated-icons/lucide";
 import { uploadCompressedImage } from "@/lib/image-compression";
 import { AdaptiveImage } from "@/components/common/AdaptiveImage";
 

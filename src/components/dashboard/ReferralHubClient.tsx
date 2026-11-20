@@ -1,25 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Gift,
-  Sparkles,
-  Users,
-  Wallet,
-  Coins,
-  Copy,
-  Check,
-  Share2,
-  Award,
-  ArrowRight,
-  TrendingUp,
-  ShieldCheck,
-  CheckCircle2,
-  Clock,
-  ChevronRight,
-  Zap,
-  Info,
-} from "lucide-react";
+import { Gift, Sparkles, Users, Wallet, Coins, Copy, Check, ArrowRight, TrendingUp, ShieldCheck, CheckCircle2, Clock, ChevronRight, Zap, Info } from "@/components/animated-icons/lucide";
+import { Share2, Award } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -142,7 +125,7 @@ export function ReferralHubClient() {
       const json = await res.json();
 
       if (json.success) {
-        showToast(json.message || "🎉 অভিনন্দন! রিওয়ার্ড গ্রহণ করা হয়েছে!", "success");
+        showToast(json.message || "অভিনন্দন! রিওয়ার্ড গ্রহণ করা হয়েছে!", "success");
         // Trigger celebratory confetti dynamically
         try {
           const confetti = (await import("canvas-confetti")).default;

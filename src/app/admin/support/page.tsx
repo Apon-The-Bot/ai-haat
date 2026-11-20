@@ -3,18 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { MetricCard } from "@/components/admin/MetricCard";
-import {
-  LifeBuoy,
-  RefreshCw,
-  Search,
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-  ArrowRight,
-  User,
-  Hash,
-  AlertCircle,
-} from "lucide-react";
+import { LifeBuoy, RefreshCw, Search, Clock, AlertTriangle, CheckCircle2, ArrowRight, User, Hash, AlertCircle } from "@/components/animated-icons/lucide";
 
 export default function AdminSupportQueuePage() {
   const [searchTerm, setSearchTerm] = useState("");

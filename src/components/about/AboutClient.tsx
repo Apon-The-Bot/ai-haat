@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ShieldCheck, Zap, Headphones, RotateCcw, MapPin, Mail, Phone } from "lucide-react";
+import { ShieldCheck, Zap, Headphones, RotateCcw, MapPin, Mail, Phone } from "@/components/animated-icons/lucide";
 import { Logo } from "@/components/Logo";
 
 export function AboutClient() {

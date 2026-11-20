@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, X, Zap, RefreshCw, Clock, Gift } from "lucide-react";
+import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, X, Zap, RefreshCw, Clock, Gift } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";

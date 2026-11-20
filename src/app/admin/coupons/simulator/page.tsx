@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Calculator, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Calculator, Plus, RefreshCw, Trash2 } from "@/components/animated-icons/lucide";
 
 type Variation = { id: string; name: string; priceBDT: number; inStock: boolean };
 type Product = { id: string; slug: string; name: string; priceBDT: number; inStock: boolean; variations: Variation[] };

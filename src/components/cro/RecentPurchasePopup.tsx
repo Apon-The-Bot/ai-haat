@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShieldCheck } from "lucide-react";
+import { X, ShieldCheck } from "@/components/animated-icons/lucide";
 import { CartoonAvatar } from "@/components/ui/CartoonAvatar";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";

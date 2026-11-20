@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Plus, Trash2, Check, X, Star, RefreshCw } from "lucide-react";
+import { ShieldCheck, Plus, Trash2, Check, X, Star, RefreshCw } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
 

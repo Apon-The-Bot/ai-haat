@@ -4,22 +4,7 @@ import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  Users,
-  Search,
-  RefreshCw,
-  ArrowLeft,
-  Plus,
-  Upload,
-  UserCheck,
-  UserX,
-  ShieldAlert,
-  ShieldBan,
-  Trash2,
-  CheckCircle2,
-  AlertCircle,
-  FileSpreadsheet,
-} from "lucide-react";
+import { Users, Search, RefreshCw, ArrowLeft, Plus, Upload, UserCheck, UserX, ShieldAlert, ShieldBan, Trash2, CheckCircle2, AlertCircle, FileSpreadsheet } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
 
@@ -234,7 +219,7 @@ export default function AdminContactsPage() {
             className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Upload className="w-4 h-4 text-blue-600" />
-            <span>📥 Import CSV List</span>
+            <span>Import CSV List</span>
           </button>
 
           <button

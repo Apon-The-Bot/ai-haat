@@ -2,34 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  Users,
-  Search,
-  ShieldCheck,
-  ShieldAlert,
-  Wallet,
-  ShoppingBag,
-  ExternalLink,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Check,
-  Copy,
-  X,
-  RefreshCw,
-  Clock,
-  Plus,
-  Filter,
-  ArrowUpDown,
-  Download,
-  AlertTriangle,
-  Ban,
-  Lock,
-  Tag,
-  Coins,
-  SlidersHorizontal,
-  UserPlus,
-} from "lucide-react";
+import { Users, Search, ShieldCheck, ShieldAlert, Wallet, ShoppingBag, ExternalLink, ChevronLeft, ChevronRight, Eye, Check, Copy, X, RefreshCw, Clock, Plus, Filter, ArrowUpDown, Download, AlertTriangle, Ban, Lock, Tag, Coins, SlidersHorizontal, UserPlus } from "@/components/animated-icons/lucide";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import { BulkActionBar, BulkActionItem } from "@/components/admin/BulkActionBar";

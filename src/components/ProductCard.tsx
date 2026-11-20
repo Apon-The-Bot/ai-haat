@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Star, Zap, ShoppingBag, AlertCircle, Bell, Heart } from "lucide-react";
+import { Star, Zap, ShoppingBag, AlertCircle, Bell, Heart } from "@/components/animated-icons/lucide";
 import { Product, Variation } from "@/types";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";

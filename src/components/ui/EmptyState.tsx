@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Inbox } from 'lucide-react';
+import { Inbox } from "@/components/animated-icons/lucide";
 
 export interface EmptyStateProps {
   icon?: React.ReactNode;

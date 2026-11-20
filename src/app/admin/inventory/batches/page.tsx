@@ -4,24 +4,7 @@ import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  FileSpreadsheet,
-  RefreshCw,
-  Search,
-  PackageCheck,
-  AlertTriangle,
-  Clock,
-  CheckCircle,
-  Eye,
-  Download,
-  AlertCircle,
-  ArrowLeft,
-  Plus,
-  Edit2,
-  DollarSign,
-  Layers,
-  ShieldAlert
-} from "lucide-react";
+import { FileSpreadsheet, RefreshCw, Search, PackageCheck, AlertTriangle, Clock, CheckCircle, Eye, Download, AlertCircle, ArrowLeft, Plus, Edit2, DollarSign, Layers, ShieldAlert } from "@/components/animated-icons/lucide";
 
 interface BatchItem {
   id: string;

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Plus, MessageCircle, HelpCircle, ExternalLink, ChevronDown, Clock, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
+import { Plus, MessageCircle, ExternalLink, ChevronDown, Clock, CheckCircle2, AlertCircle, RefreshCw } from "@/components/animated-icons/lucide";
+import { HelpCircle } from "@/components/animated-icons/lucide";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function SupportPage() {

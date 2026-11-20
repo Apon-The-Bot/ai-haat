@@ -2,19 +2,7 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import {
-  Search,
-  SlidersHorizontal,
-  ArrowUpDown,
-  RefreshCw,
-  X,
-  Sparkles,
-  Zap,
-  Check,
-  Flame,
-  Star,
-  ChevronDown,
-} from "lucide-react";
+import { Search, SlidersHorizontal, ArrowUpDown, RefreshCw, X, Sparkles, Zap, Check, Flame, Star, ChevronDown } from "@/components/animated-icons/lucide";
 import { ProductCard } from "@/components/ProductCard";
 import { PRODUCTS, CATEGORIES } from "@/data/products";
 import { useCurrency } from "@/context/CurrencyContext";

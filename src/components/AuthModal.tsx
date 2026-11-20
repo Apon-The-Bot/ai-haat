@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { X, ShieldCheck, Zap, Lock, CheckCircle2 } from "lucide-react";
+import { X, ShieldCheck, Zap, Lock, CheckCircle2 } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
 import { Logo } from "@/components/Logo";
 import { safeAuthReturn } from "@/lib/security/auth-return";

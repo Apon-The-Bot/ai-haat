@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/ProductCard";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@/components/animated-icons/lucide";
 import { trackViewItemList } from "@/lib/analytics/client";
 import { sanitizeItem } from "@/lib/analytics/sanitize";
 

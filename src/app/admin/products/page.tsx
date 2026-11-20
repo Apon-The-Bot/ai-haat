@@ -4,32 +4,8 @@ import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import {
-  Plus,
-  Search,
-  Trash2,
-  Edit2,
-  Star,
-  Trophy,
-  CheckCircle2,
-  XCircle,
-  ExternalLink,
-  Copy,
-  FolderTree,
-  KeyRound,
-  RefreshCw,
-  MoreVertical,
-  ChevronDown,
-  Zap,
-  User,
-  Check,
-  ArchiveRestore,
-  Archive,
-  Download,
-  Eye,
-  EyeOff,
-  DollarSign
-} from "lucide-react";
+import { Plus, Search, Trash2, Edit2, Star, Trophy, CheckCircle2, XCircle, ExternalLink, Copy, FolderTree, KeyRound, RefreshCw, MoreVertical, ChevronDown, Zap, User, Check, Archive, Download, Eye, EyeOff, DollarSign } from "@/components/animated-icons/lucide";
+import { ArchiveRestore } from "lucide-react";
 import { SafeImage } from "@/components/SafeImage";
 import { Product } from "@/types";
 import { useToast } from "@/context/ToastContext";

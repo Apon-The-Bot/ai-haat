@@ -2,26 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowRight,
-  MessageSquare,
-  Lock,
-  Send,
-  User,
-  Phone,
-  Mail,
-  ShieldCheck,
-  ShoppingBag,
-  Package,
-  Key,
-  RotateCcw,
-  Undo2,
-  ExternalLink,
-  Calendar,
-  CreditCard,
-  Truck,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, MessageSquare, Lock, Send, User, Phone, Mail, ShieldCheck, ShoppingBag, Package, Key, RotateCcw, Undo2, ExternalLink, Calendar, CreditCard, Truck } from "@/components/animated-icons/lucide";
 import { useParams } from "next/navigation";
 
 export default function AdminTicketWorkspacePage() {

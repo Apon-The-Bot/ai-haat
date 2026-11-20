@@ -6,30 +6,7 @@ import Link from "next/link";
 import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Building2, 
-  Key, 
-  Activity, 
-  PackageCheck, 
-  Plus, 
-  Copy, 
-  RefreshCw, 
-  CheckCircle, 
-  Power, 
-  ExternalLink,
-  ShieldCheck,
-  AlertCircle,
-  TrendingDown,
-  DollarSign,
-  Layers,
-  Send,
-  Globe,
-  Phone,
-  Mail,
-  User,
-  Sliders,
-  Trash2
-} from "lucide-react";
+import { Building2, Key, Activity, PackageCheck, Plus, Copy, RefreshCw, CheckCircle, Power, ExternalLink, ShieldCheck, AlertCircle, TrendingDown, DollarSign, Layers, Send, Globe, Phone, Mail, User, Sliders, Trash2 } from "@/components/animated-icons/lucide";
 
 interface ProductMapping {
   id: string;

@@ -1,20 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  AlertTriangle,
-  ArrowUpRight,
-  Bell,
-  CheckCircle2,
-  CreditCard,
-  Mail,
-  MessageCircle,
-  RefreshCw,
-  Settings,
-  ShieldCheck,
-  Smartphone,
-  Truck,
-} from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Bell, CheckCircle2, CreditCard, Mail, MessageCircle, RefreshCw, Settings, ShieldCheck, Smartphone, Truck } from "@/components/animated-icons/lucide";
 
 type CardState = {
   key: string;

@@ -33,7 +33,7 @@ import {
   BarChart3,
   ClipboardCheck,
   ListChecks,
-} from "lucide-react";
+} from "@/components/animated-icons/lucide";
 
 export const adminNavigation = [
     {

@@ -3,19 +3,7 @@
 import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  Tag,
-  Plus,
-  Trash2,
-  Check,
-  X,
-  Copy,
-  Search,
-  Power,
-  Edit2,
-  RefreshCw,
-  ShoppingBag,
-} from "lucide-react";
+import { Tag, Plus, Trash2, Check, X, Copy, Search, Power, Edit2, RefreshCw, ShoppingBag } from "@/components/animated-icons/lucide";
 import { Coupon, Product } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";

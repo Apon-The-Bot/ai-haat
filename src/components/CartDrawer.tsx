@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { X, Trash2, ShoppingBag, ArrowRight, Tag, Minus, Plus, CheckCircle2 } from "lucide-react";
+import { X, Trash2, ShoppingBag, ArrowRight, Tag, Minus, Plus, CheckCircle2 } from "@/components/animated-icons/lucide";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";

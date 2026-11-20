@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Facebook, Mail, MapPin, MessageCircle, Phone, Send, ShieldCheck } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Phone, Send, ShieldCheck } from "@/components/animated-icons/lucide";
+import { Facebook } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { PaymentLogo } from "@/components/PaymentLogo";
 import { useToast } from "@/context/ToastContext";

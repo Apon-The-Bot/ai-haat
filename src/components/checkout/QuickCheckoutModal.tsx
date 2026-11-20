@@ -3,26 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  X,
-  Zap,
-  ShieldCheck,
-  CreditCard,
-  Wallet,
-  Tag,
-  CheckCircle2,
-  Clock,
-  Sparkles,
-  ArrowRight,
-  Plus,
-  Minus,
-  AlertCircle,
-  Lock,
-  Mail,
-  MessageCircle,
-  Gift,
-  Copy,
-} from "lucide-react";
+import { X, Zap, ShieldCheck, CreditCard, Wallet, Tag, CheckCircle2, Clock, Sparkles, ArrowRight, Plus, Minus, AlertCircle, Lock, Mail, MessageCircle, Gift, Copy } from "@/components/animated-icons/lucide";
 import { useQuickCheckout } from "@/context/QuickCheckoutContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
@@ -87,6 +68,24 @@ export function QuickCheckoutModal() {
   } | null>(null);
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
+  const showModal = isOpen && Boolean(product);
+
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!showModal || !modal) return;
+    const previousFocus = document.activeElement;
+    modal.focus();
+    return () => {
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
+        previousFocus.focus();
+      }
+    };
+  }, [showModal]);
+
+  useEffect(() => {
+    if (successOrder) successHeadingRef.current?.focus();
+  }, [successOrder]);
 
   // Auto-populate user data on open or login
   useEffect(() => {
@@ -119,13 +118,35 @@ export function QuickCheckoutModal() {
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen && !isSubmitting) {
+      if (!showModal) return;
+      if (e.key === "Escape" && !isSubmitting) {
+        e.preventDefault();
         closeQuickCheckout();
+      } else if (e.key === "Tab") {
+        const modal = modalRef.current;
+        if (!modal) return;
+        const checkedRadioNames = new Set(
+          Array.from(modal.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked'), (radio) => radio.name)
+        );
+        const controls = Array.from(modal.querySelectorAll<HTMLElement>(
+          'a[href], button, input, select, textarea, [tabindex]'
+        )).filter((control) =>
+          control.tabIndex >= 0 && !control.matches(":disabled") && control.getClientRects().length > 0
+          && !(control instanceof HTMLInputElement && control.type === "radio"
+            && !control.checked && checkedRadioNames.has(control.name))
+        );
+        const active = document.activeElement;
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (!first || !controls.some((control) => control === active) || active === (e.shiftKey ? first : last)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first)?.focus();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isSubmitting, closeQuickCheckout]);
+  }, [showModal, isSubmitting, closeQuickCheckout]);
 
   useMetaCheckout(isOpen && !!user?.id, product ? [{
     productId: product.id, variationId: selectedVariation?.id === "default" ? null : selectedVariation?.id, quantity,
@@ -323,6 +344,7 @@ export function QuickCheckoutModal() {
           recipientName: giftData.recipientName,
           recipientPhone: giftData.recipientPhone,
         });
+        setIsSubmitting(false);
         showToast("অর্ডার সফলভাবে সম্পন্ন ও ভল্টে যুক্ত হয়েছে!", "success");
       } else {
         // Online Gateway (bKash / Nagad)
@@ -365,6 +387,10 @@ export function QuickCheckoutModal() {
     >
       <div
         ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-checkout-title"
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-xl max-h-[92vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-150"
       >
@@ -378,7 +404,7 @@ export function QuickCheckoutModal() {
               <Zap className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-1.5">
+              <h2 id="quick-checkout-title" className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-1.5">
                 <span>১-ক্লিক এক্সপ্রেস বাই (Quick Buy)</span>
               </h2>
               <p className="text-[11px] text-slate-500">তাৎক্ষণিক অটো-ডেলিভারি • ১০০% অফিসিয়াল ওয়ারেন্টি</p>
@@ -405,7 +431,7 @@ export function QuickCheckoutModal() {
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-lg font-black text-slate-900">অর্ডার সফলভাবে সম্পন্ন হয়েছে!</h3>
+                <h3 ref={successHeadingRef} tabIndex={-1} className="text-lg font-black text-slate-900">অর্ডার সফলভাবে সম্পন্ন হয়েছে!</h3>
                 <p className="text-xs font-mono text-[#FC5C03] font-bold">অর্ডার #{successOrder.orderNumber}</p>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto pt-1">
                   আপনার ওয়ালেট থেকে {formatPrice(totalBDT)} সফলভাবে পরিশোধ করা হয়েছে। আপনার লাইসেন্স বা লগইন তথ্য ডিজিটাল ভল্টে

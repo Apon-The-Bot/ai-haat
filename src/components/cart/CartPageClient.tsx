@@ -3,25 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ShoppingBag,
-  Trash2,
-  Plus,
-  Minus,
-  Tag,
-  ArrowRight,
-  ShieldCheck,
-  Zap,
-  CheckCircle2,
-  ArrowLeft,
-  Sparkles,
-  Percent,
-  Copy,
-  Clock,
-  ExternalLink,
-  MessageCircle,
-  AlertCircle,
-} from "lucide-react";
+import { ShoppingBag, Trash2, Plus, Minus, Tag, ArrowRight, ShieldCheck, Zap, CheckCircle2, ArrowLeft, Sparkles, Percent, Copy, Clock, ExternalLink, MessageCircle, AlertCircle } from "@/components/animated-icons/lucide";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
@@ -70,7 +52,7 @@ export function CartPageClient() {
         const data = await res.json();
         if (data.success && data.cart?.items?.length > 0) {
           restoreCart(data.cart.items);
-          showToast("🛒 আপনার আগের কার্ট সফলভাবে রিস্টোর করা হয়েছে!", "success");
+          showToast("আপনার আগের কার্ট সফলভাবে রিস্টোর করা হয়েছে!", "success");
           if (data.cart.appliedCoupon || urlCoupon) {
             const couponToApply = (urlCoupon || data.cart.appliedCoupon || "").toUpperCase();
             if (couponToApply) {

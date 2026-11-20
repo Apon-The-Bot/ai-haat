@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from "@/components/animated-icons/lucide";
 
 export interface PageHeaderProps {
   title: string;

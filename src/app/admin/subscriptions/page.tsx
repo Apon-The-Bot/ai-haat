@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, Bell, Clock3, RefreshCw, RotateCcw } from "lucide-react";
+import { AlertTriangle, Bell, Clock3, RefreshCw, RotateCcw } from "@/components/animated-icons/lucide";
 
 type DeskData = {
   summary: { expiring: number; expired: number; failedRenewals: number; pendingRenewals: number; reminderEvents: number };
@@ -18,8 +18,6 @@ const cards: Array<{ Icon: typeof Clock3; label: string; key: keyof DeskData["su
   { Icon: Bell, label: "Sent reminders", key: "reminderEvents" },
 ] as const;
 
-const date = (value: string | null) => value ? new Intl.DateTimeFormat("bn-BD", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "—";
-
 export default function SubscriptionDeskPage() {
   const [window, setWindow] = useState("30");
   const [data, setData] = useState<DeskData | null>(null);
@@ -27,6 +25,12 @@ export default function SubscriptionDeskPage() {
   const load = useCallback(async () => { setLoading(true); try { const response = await fetch(`/api/admin/subscriptions?window=${window}`); if (response.ok) setData(await response.json()); } finally { setLoading(false); } }, [window]);
   useEffect(() => { load(); }, [load]);
   const summary = data?.summary;
+  let formatter: Intl.DateTimeFormat | undefined;
+  const date = (value: string | null) => {
+    if (!value) return "—";
+    formatter ??= new Intl.DateTimeFormat("bn-BD", { dateStyle: "medium", timeStyle: "short" });
+    return formatter.format(new Date(value));
+  };
 
   return <div className="space-y-6 pb-14">
     <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-slate-200 pb-5">

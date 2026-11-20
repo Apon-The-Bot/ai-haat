@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Users, Tag, CheckCircle2 } from "lucide-react";
+import { Users, Tag, CheckCircle2 } from "@/components/animated-icons/lucide";
 import { useCurrency } from "@/context/CurrencyContext";
 
 interface Tier {

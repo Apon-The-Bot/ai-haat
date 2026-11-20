@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { AlertTriangle, RefreshCw, Home, MessageSquare } from "lucide-react";
+import { AlertTriangle, RefreshCw, Home, MessageSquare } from "@/components/animated-icons/lucide";
 
 export default function GlobalError({
   error,

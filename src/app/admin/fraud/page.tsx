@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Fingerprint, RefreshCw, ShieldAlert, WalletCards } from "lucide-react";
+import { AlertTriangle, Fingerprint, RefreshCw, ShieldAlert, WalletCards } from "@/components/animated-icons/lucide";
 
 type Report = { generatedAt: string; limitations: string[]; summary: { repeatedRefundUsers: number; couponPressure: number; walletAnomalies: number; sharedDevices: number }; signals: { repeatedRefunds: Array<{ userId: string; name: string; email: string; count: number; totalRequestedBDT: number; approvedCount: number; latestAt: string; orderIds: string[] }>; couponPressure: Array<{ code: string; usedCount: number; usageLimit: number; usageRate: number; active: boolean; validUntil: string; discount: string }>; walletAnomalies: Array<{ userId: string; name: string; email: string; walletBalanceBDT: number; expectedBalanceBDT: number; mismatchBDT: number; rejected: number; pending: number; transactionCount: number }>; sharedDevices: Array<{ deviceInstanceId: string; deviceType: string; browser: string | null; os: string | null; userCount: number; userIds: string[]; lastSeenAt: string }> } };
 

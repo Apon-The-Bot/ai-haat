@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Copy, Check, X, Tag, ArrowRight, Clock } from "lucide-react";
+import { Sparkles, Copy, Check, X, Tag, ArrowRight, Clock } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { useLanguage } from "@/context/LanguageContext";
 

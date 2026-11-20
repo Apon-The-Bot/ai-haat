@@ -4,7 +4,7 @@ import { EmailHtmlPreview } from "@/components/admin/EmailHtmlPreview";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, Eye, Trash2, Send } from "lucide-react";
+import { ArrowLeft, Save, Eye, Trash2, Send } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
 

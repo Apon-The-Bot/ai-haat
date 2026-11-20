@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Key, Shield, AlertTriangle, Loader2, Copy, Download, RefreshCw, LogOut } from "lucide-react";
+import { ShieldCheck, Key, Shield, AlertTriangle, Copy, Download, RefreshCw, LogOut } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 
 type SecurityStatus = {

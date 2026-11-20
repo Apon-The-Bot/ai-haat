@@ -59,6 +59,7 @@ export async function GET() {
 
   const isHealthy = checks.database.status === "UP";
   const totalResponseTimeMs = Date.now() - startTime;
+  const { rss, heapUsed } = process.memoryUsage();
 
   return NextResponse.json(
     {
@@ -69,8 +70,8 @@ export async function GET() {
       responseTimeMs: totalResponseTimeMs,
       uptimeSeconds: Math.floor(process.uptime()),
       memoryUsage: {
-        rssMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
-        heapUsedMB: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        rssMB: Math.round(rss / 1024 / 1024),
+        heapUsedMB: Math.round(heapUsed / 1024 / 1024),
       },
       checks,
     },

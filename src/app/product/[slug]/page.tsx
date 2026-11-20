@@ -1,10 +1,12 @@
-import React from "react";
+import React, { cache } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProductBySlug, getAllProducts } from "@/lib/products-db";
 import { PRODUCTS } from "@/data/products";
 import { ProductDetailClient } from "@/components/product/ProductDetailClient";
 import { SITE_URL, safeJsonLd } from "@/lib/seo";
+
+const getProductForRender = cache(getProductBySlug);
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -29,7 +31,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const product = await getProductForRender(slug);
 
   if (!product) {
     return {
@@ -105,7 +107,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const product = await getProductForRender(slug);
 
   if (!product) {
     notFound();

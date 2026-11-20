@@ -3,33 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  ShoppingBag,
-  KeyRound,
-  Wallet,
-  Bell,
-  LogOut,
-  ShieldCheck,
-  RotateCcw,
-  ExternalLink,
-  ChevronRight,
-  Globe,
-  Lock,
-  LogIn,
-  UserPlus,
-  ArrowRight,
-  Sparkles,
-  Mail,
-  Banknote,
-  LifeBuoy,
-  Share2,
-  MoreHorizontal,
-  X,
-  Gift,
-  Settings,
-  Heart,
-} from "lucide-react";
+import { LayoutDashboard, ShoppingBag, KeyRound, Wallet, Bell, LogOut, ShieldCheck, RotateCcw, ExternalLink, ChevronRight, Globe, Lock, LogIn, UserPlus, ArrowRight, Sparkles, Mail, Banknote, LifeBuoy, MoreHorizontal, X, Gift, Settings, Heart } from "@/components/animated-icons/lucide";
+import { Share2 } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";

@@ -3,25 +3,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Gift,
-  Sparkles,
-  Copy,
-  Check,
-  ExternalLink,
-  ShieldCheck,
-  Key,
-  Clock,
-  Heart,
-  Eye,
-  EyeOff,
-  MessageCircle,
-  PartyPopper,
-  ArrowRight,
-  Bookmark,
-  Share2,
-  RefreshCw,
-} from "lucide-react";
+import { Gift, Sparkles, Copy, Check, ExternalLink, ShieldCheck, Key, Clock, Heart, Eye, EyeOff, MessageCircle, PartyPopper, ArrowRight, Bookmark, RefreshCw } from "@/components/animated-icons/lucide";
+import { Share2 } from "@/components/animated-icons/lucide";
 import { GIFT_THEMES, GiftThemeConfig } from "@/lib/gifting/gift-themes";
 import { GiftTheme } from "@/types";
 import { SafeImage } from "@/components/SafeImage";

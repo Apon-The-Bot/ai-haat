@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AlertTriangle, ArrowRight, RefreshCw, ShieldAlert } from "lucide-react";
+import { AlertTriangle, ArrowRight, RefreshCw, ShieldAlert } from "@/components/animated-icons/lucide";
 
 type Alert = { id: string; kind: string; title: string; detail: string; severity: "high" | "medium"; since: string | null; href: string };
 const labels: Record<string, string> = { LOW_STOCK: "Stock", FAILED_PAYMENT: "Payments", DELAYED_DELIVERY: "Delivery", SUPPLIER_SYNC: "Suppliers", UNUSUAL_REFUND: "Refunds" };

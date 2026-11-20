@@ -3,19 +3,7 @@
 import { EmailHtmlPreview } from "@/components/admin/EmailHtmlPreview";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  FileCode,
-  Plus,
-  ArrowLeft,
-  RefreshCw,
-  Search,
-  Eye,
-  Copy,
-  Edit2,
-  Trash2,
-  Send,
-  Sparkles,
-} from "lucide-react";
+import { FileCode, Plus, ArrowLeft, RefreshCw, Search, Eye, Copy, Edit2, Trash2, Send, Sparkles } from "@/components/animated-icons/lucide";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { useToast } from "@/context/ToastContext";
 

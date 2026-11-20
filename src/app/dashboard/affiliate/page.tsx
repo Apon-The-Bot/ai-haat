@@ -4,31 +4,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
-import {
-  Share2,
-  Copy,
-  CheckCircle2,
-  TrendingUp,
-  Wallet,
-  Users,
-  MousePointerClick,
-  Award,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Building,
-  Smartphone,
-  QrCode,
-  Download,
-  ExternalLink,
-  RefreshCw,
-  AlertCircle,
-  ShieldCheck,
-  Percent,
-  Layers,
-  ChevronRight,
-  Info,
-} from "lucide-react";
+import { Copy, CheckCircle2, TrendingUp, Wallet, Users, MousePointerClick, Clock, CheckCircle, XCircle, Building, Smartphone, QrCode, Download, ExternalLink, RefreshCw, AlertCircle, ShieldCheck, Percent, Layers, ChevronRight, Info } from "@/components/animated-icons/lucide";
+import { Share2, Award } from "@/components/animated-icons/lucide";
 
 export default function AffiliateDashboard() {
   const { user } = useAuth();

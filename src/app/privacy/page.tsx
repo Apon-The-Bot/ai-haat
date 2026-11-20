@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Metadata } from "next";
-import { ShieldCheck, Lock, ArrowLeft } from "lucide-react";
+import { ShieldCheck, Lock, ArrowLeft } from "@/components/animated-icons/lucide";
 import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {

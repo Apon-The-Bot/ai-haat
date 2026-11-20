@@ -4,27 +4,7 @@ import { EmailHtmlPreview } from "@/components/admin/EmailHtmlPreview";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Send,
-  Sparkles,
-  Users,
-  Eye,
-  FileCode,
-  Tag,
-  ShoppingBag,
-  ArrowRight,
-  ArrowLeft,
-  Check,
-  Smartphone,
-  Monitor,
-  AlertTriangle,
-  Clock,
-  Calendar,
-  Layers,
-  Search,
-  CheckCircle2,
-  Info,
-} from "lucide-react";
+import { Send, Sparkles, Users, Eye, FileCode, Tag, ShoppingBag, ArrowRight, ArrowLeft, Check, Smartphone, Monitor, AlertTriangle, Clock, Calendar, Layers, Search, CheckCircle2, Info } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { Product, Coupon } from "@/types";
 
@@ -982,7 +962,7 @@ export default function CreateCampaignWizardPage() {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs">🚀 Broadcast Immediately</span>
+                  <span className="font-bold text-xs">Broadcast Immediately</span>
                   {sendOption === "NOW" && <Check className="w-4 h-4 text-[#FC5C03]" />}
                 </div>
                 <span className="text-[11px] text-slate-500 block mt-1">
@@ -1000,7 +980,7 @@ export default function CreateCampaignWizardPage() {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs">📅 Schedule for Later</span>
+                  <span className="font-bold text-xs">Schedule for Later</span>
                   {sendOption === "SCHEDULE" && <Check className="w-4 h-4 text-[#FC5C03]" />}
                 </div>
                 <span className="text-[11px] text-slate-500 block mt-1">

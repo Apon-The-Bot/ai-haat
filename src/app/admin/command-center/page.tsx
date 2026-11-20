@@ -3,10 +3,7 @@
 import Link from "next/link";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
-import {
-  AlertTriangle, ArrowRight, CheckCircle2, Clock3, LayoutDashboard,
-  RefreshCw, Search, ShieldAlert, Users, WalletCards,
-} from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, Clock3, LayoutDashboard, RefreshCw, Search, ShieldAlert, Users, WalletCards } from "@/components/animated-icons/lucide";
 
 type Counts = {
   fulfillment: number; payments: number; refunds: number; replacements: number;

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Mail, Plus, Send, Radio, Eye, RefreshCw, ArrowLeft } from "lucide-react";
+import { Mail, Plus, Send, Radio, Eye, RefreshCw, ArrowLeft } from "@/components/animated-icons/lucide";
 
 export default function AdminCampaignsListPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);

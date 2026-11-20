@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { RefreshCw, Search, Users, Package, ClipboardList, AlertTriangle, type LucideIcon } from "lucide-react";
+import { RefreshCw, Search, Users, Package, ClipboardList, AlertTriangle } from "@/components/animated-icons/lucide";
+import { type LucideIcon } from "lucide-react";
 
 type Report = {
   summary: { productRequests: number; pendingProductRequests: number; pendingWaitlist: number; distinctWaitlistProducts: number; urgentRequests: number };

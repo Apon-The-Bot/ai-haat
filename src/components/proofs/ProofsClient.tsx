@@ -2,32 +2,8 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
-import {
-  CheckCircle2,
-  ShieldCheck,
-  Clock,
-  ArrowRight,
-  PackageOpen,
-  Star,
-  Search,
-  X,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  ChevronLeft,
-  ChevronRight,
-  Maximize2,
-  MessageSquarePlus,
-  Send,
-  Zap,
-  Headphones,
-  Sparkles,
-  Filter,
-  ThumbsUp,
-  Award,
-  Lock,
-  RefreshCw,
-} from "lucide-react";
+import { CheckCircle2, ShieldCheck, Clock, ArrowRight, PackageOpen, Star, Search, X, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight, Maximize2, MessageSquarePlus, Send, Zap, Headphones, Sparkles, Filter, ThumbsUp, Lock, RefreshCw } from "@/components/animated-icons/lucide";
+import { Award } from "@/components/animated-icons/lucide";
 import { PROOFS as initialProofs } from "@/data/proofs";
 import { REVIEWS as initialReviews } from "@/data/reviews";
 import { useCurrency } from "@/context/CurrencyContext";

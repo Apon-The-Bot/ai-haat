@@ -2,7 +2,7 @@
 
 import React from "react";
 import { PARTNERS } from "@/data/partners";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "@/components/animated-icons/lucide";
 import { SafeImage } from "@/components/SafeImage";
 
 export function Partners() {

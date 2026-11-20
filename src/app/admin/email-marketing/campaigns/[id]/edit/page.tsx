@@ -4,18 +4,8 @@ import { EmailHtmlPreview } from "@/components/admin/EmailHtmlPreview";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Save,
-  Loader2,
-  ShoppingBag,
-  Tag,
-  Eye,
-  Search,
-  Sparkles,
-  CheckCircle2,
-  RefreshCw,
-} from "lucide-react";
+import { ArrowLeft, Save, ShoppingBag, Tag, Eye, Search, Sparkles, CheckCircle2, RefreshCw } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { Product, Coupon } from "@/types";
 

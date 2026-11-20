@@ -7,16 +7,7 @@ import { QueueSummary } from "./operations/QueueSummary";
 import { DashboardDeliverySla } from "./DashboardDeliverySla";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  TrendingUp,
-  ShoppingBag,
-  Clock,
-  KeyRound,
-  Users,
-  Wallet,
-  Sparkles,
-  RefreshCw,
-} from "lucide-react";
+import { TrendingUp, ShoppingBag, Clock, KeyRound, Users, Wallet, Sparkles, RefreshCw } from "@/components/animated-icons/lucide";
 import { useCurrency } from "@/context/CurrencyContext";
 
 interface DashboardStats extends RecentOrdersData {

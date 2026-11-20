@@ -4,17 +4,8 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { BLOGS } from "@/data/blogs";
 import { SafeImage } from "@/components/SafeImage";
-import {
-  BookOpen,
-  Clock,
-  Calendar,
-  ArrowLeft,
-  Share2,
-  Check,
-  ShoppingBag,
-  Sparkles,
-  ChevronRight,
-} from "lucide-react";
+import { BookOpen, Clock, Calendar, ArrowLeft, Check, ShoppingBag, Sparkles, ChevronRight } from "@/components/animated-icons/lucide";
+import { Share2 } from "@/components/animated-icons/lucide";
 
 import { SITE_URL, safeJsonLd } from "@/lib/seo";
 import { renderSafeMarkdownInline } from "@/components/blog/safe-markdown";

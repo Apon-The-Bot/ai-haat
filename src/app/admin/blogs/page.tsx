@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FileText, Plus, Trash2, Edit, Search, Check, Sparkles, X, RefreshCw } from "lucide-react";
+import { FileText, Plus, Trash2, Edit, Search, Check, Sparkles, X, RefreshCw } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
 

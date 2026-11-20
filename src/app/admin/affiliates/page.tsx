@@ -3,29 +3,7 @@
 import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { 
-  RefreshCw, 
-  Search, 
-  Filter, 
-  Wallet, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  TrendingUp, 
-  Users, 
-  DollarSign, 
-  Edit,
-  Clock,
-  ExternalLink,
-  ShieldCheck,
-  CheckCircle2,
-  Layers,
-  ArrowUpRight,
-  Send,
-  Building,
-  Smartphone,
-  Info
-} from "lucide-react";
+import { RefreshCw, Search, Filter, Wallet, CheckCircle, XCircle, AlertCircle, TrendingUp, Users, DollarSign, Edit, Clock, ExternalLink, ShieldCheck, CheckCircle2, Layers, ArrowUpRight, Send, Building, Smartphone, Info } from "@/components/animated-icons/lucide";
 
 export default function AdminAffiliatesPage() {
   const [activeTab, setActiveTab] = useState<"payouts" | "partners" | "commissions">("payouts");

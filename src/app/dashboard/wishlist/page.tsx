@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Heart, Trash2 } from "lucide-react";
+import { Heart, Trash2 } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 
 type Item = { productId: string; product: { slug: string; name: string; image: string; minPriceBDT: number; maxPriceBDT: number; salePriceBDT: number | null; inStock: boolean } };

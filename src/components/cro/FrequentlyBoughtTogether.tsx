@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Check, ShoppingBag, Sparkles, Tag } from "lucide-react";
+import { Plus, Check, ShoppingBag, Sparkles, Tag } from "@/components/animated-icons/lucide";
 import { SafeImage } from "@/components/SafeImage";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";

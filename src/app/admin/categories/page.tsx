@@ -2,19 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  FolderTree,
-  Plus,
-  Search,
-  Edit2,
-  Trash2,
-  Image as ImageIcon,
-  CheckCircle2,
-  XCircle,
-  Package,
-  AlertTriangle,
-  X
-} from "lucide-react";
+import { FolderTree, Plus, Search, Edit2, Trash2, Image as ImageIcon, CheckCircle2, XCircle, Package, AlertTriangle, X } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { SafeImage } from "@/components/SafeImage";
 import ImageUploadDropzone from "@/components/admin/ImageUploadDropzone";

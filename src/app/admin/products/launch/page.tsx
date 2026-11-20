@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AlertCircle, CheckCircle2, ExternalLink, Loader2, PackageCheck, TriangleAlert } from "lucide-react";
+import { AlertCircle, CheckCircle2, ExternalLink, PackageCheck, TriangleAlert } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 
 type Check = { key: string; label: string; passed: boolean; severity: "error" | "warning" | "info"; message: string };
 type Report = { product: { id: string; name: string; slug: string; status: string; visibility: string }; checks: Check[]; preview: any; summary: { passed: number; total: number; errors: number; warnings: number } };

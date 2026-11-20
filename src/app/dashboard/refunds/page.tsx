@@ -3,18 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import {
-  Banknote,
-  RefreshCw,
-  Search,
-  ExternalLink,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  MessageSquare,
-  ShieldAlert,
-} from "lucide-react";
+import { Banknote, RefreshCw, Search, ExternalLink, Clock, CheckCircle2, XCircle, AlertCircle, MessageSquare, ShieldAlert } from "@/components/animated-icons/lucide";
 import Link from "next/link";
 import { SafeImage } from "@/components/SafeImage";
 

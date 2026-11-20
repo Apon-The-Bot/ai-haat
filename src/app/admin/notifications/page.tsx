@@ -3,21 +3,7 @@
 import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Bell,
-  RefreshCw,
-  Search,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  RotateCcw,
-  Mail,
-  Send,
-  ShieldAlert,
-  Smartphone,
-  Eye,
-  Layers,
-} from "lucide-react";
+import { Bell, RefreshCw, Search, CheckCircle, AlertTriangle, Clock, RotateCcw, Mail, Send, ShieldAlert, Smartphone, Eye, Layers } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 
 interface NotificationDelivery {

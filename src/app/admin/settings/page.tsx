@@ -1,23 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Settings,
-  Globe,
-  ShoppingBag,
-  CreditCard,
-  Bell,
-  Shield,
-  Save,
-  Check,
-  RefreshCw,
-  Send,
-  MessageSquare,
-  Mail,
-  Lock,
-  Smartphone,
-  Info,
-} from "lucide-react";
+import { Settings, Globe, ShoppingBag, CreditCard, Bell, Shield, Save, Check, RefreshCw, Send, MessageSquare, Mail, Lock, Smartphone, Info } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { SafeImage } from "@/components/SafeImage";
 

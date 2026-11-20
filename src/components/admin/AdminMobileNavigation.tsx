@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Dispatch, SetStateAction } from "react";
-import { ChevronDown, ChevronUp, LogOut, X } from "lucide-react";
+import { ChevronDown, ChevronUp, LogOut, X } from "@/components/animated-icons/lucide";
 import { Logo } from "@/components/Logo";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { adminNavigation as navigation } from "./admin-navigation";

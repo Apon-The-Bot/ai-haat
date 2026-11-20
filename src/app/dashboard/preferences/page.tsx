@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Mail, Bell, Shield, ArrowLeft, Save, Loader2, CheckCircle2, Info } from "lucide-react";
+import { Mail, Bell, Shield, ArrowLeft, Save, CheckCircle2, Info } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 

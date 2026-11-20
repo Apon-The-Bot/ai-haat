@@ -4,41 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useToast } from "@/context/ToastContext";
-import {
-  KeyRound,
-  Copy,
-  Check,
-  ShieldCheck,
-  Clock,
-  Eye,
-  EyeOff,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle2,
-  X,
-  Send,
-  MessageSquare,
-  Search,
-  ExternalLink,
-  ShieldAlert,
-  Download,
-  User,
-  Lock,
-  Banknote,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-  AlertTriangle,
-  Info,
-  Sparkles,
-  Terminal,
-  Zap,
-  RotateCcw,
-  ShoppingCart,
-  Calendar,
-  Layers,
-  FileText,
-} from "lucide-react";
+import { KeyRound, Copy, Check, ShieldCheck, Clock, Eye, EyeOff, RefreshCw, AlertCircle, CheckCircle2, X, Send, MessageSquare, Search, ExternalLink, ShieldAlert, Download, User, Lock, Banknote, BookOpen, ChevronDown, ChevronUp, AlertTriangle, Info, Sparkles, Terminal, Zap, RotateCcw, ShoppingCart, Calendar, Layers, FileText } from "@/components/animated-icons/lucide";
 import Link from "next/link";
 import { SafeImage } from "@/components/SafeImage";
 

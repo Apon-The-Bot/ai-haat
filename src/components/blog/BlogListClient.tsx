@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { BookOpen, Clock, ChevronRight } from "lucide-react";
+import { BookOpen, Clock, ChevronRight } from "@/components/animated-icons/lucide";
 import { BLOGS } from "@/data/blogs";
 import { SafeImage } from "@/components/SafeImage";
 

@@ -4,7 +4,8 @@ import React, { useState, useRef, useEffect, KeyboardEvent, ClipboardEvent } fro
 import { useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import Link from "next/link";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 
 export default function VerifyPage() {
   const router = useRouter();

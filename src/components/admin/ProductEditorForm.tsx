@@ -2,21 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Save,
-  Trash2,
-  Plus,
-  Image as ImageIcon,
-  AlertTriangle,
-  Lock,
-  Unlock,
-  Info,
-  CheckCircle2,
-  XCircle,
-  Eye,
-  EyeOff,
-  Search
-} from "lucide-react";
+import { Save, Trash2, Plus, Image as ImageIcon, AlertTriangle, Lock, Unlock, Info, CheckCircle2, XCircle, Eye, EyeOff, Search } from "@/components/animated-icons/lucide";
 import ImageUploadDropzone from "@/components/admin/ImageUploadDropzone";
 import GalleryImageUploader from "@/components/admin/GalleryImageUploader";
 
@@ -598,10 +584,10 @@ export default function ProductEditorForm({
                     onChange={(e) => handleChange("fulfillmentType", e.target.value)}
                   >
                     <option value="AUTO_STOCK">⚡ Automatic Stock Pool (Digital Vault Instant Delivery)</option>
-                    <option value="MANUAL">👤 Manual Fulfillment (Agent Processing)</option>
-                    <option value="PROTECTED_DOWNLOAD">🔒 Protected Download (Secure Asset Link)</option>
+                    <option value="MANUAL">Manual Fulfillment (Agent Processing)</option>
+                    <option value="PROTECTED_DOWNLOAD">Protected Download (Secure Asset Link)</option>
                     <option value="WORKSPACE_INVITE">✉️ Workspace Invitation</option>
-                    <option value="EXTERNAL_ACTIVATION">🌐 External Activation</option>
+                    <option value="EXTERNAL_ACTIVATION">External Activation</option>
                   </select>
                 </div>
                 <div>

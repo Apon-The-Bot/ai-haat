@@ -3,18 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { 
-  ArrowLeft, 
-  MessageCircle, 
-  Clock, 
-  Send, 
-  ExternalLink, 
-  ShieldCheck, 
-  KeyRound, 
-  RotateCcw,
-  RefreshCw,
-  AlertCircle
-} from "lucide-react";
+import { ArrowLeft, MessageCircle, Clock, Send, ExternalLink, ShieldCheck, KeyRound, RotateCcw, RefreshCw, AlertCircle } from "@/components/animated-icons/lucide";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { SafeImage } from "@/components/SafeImage";

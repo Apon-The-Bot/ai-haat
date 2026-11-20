@@ -4,7 +4,7 @@ import { EmailHtmlPreview } from "@/components/admin/EmailHtmlPreview";
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Sparkles, Eye, FileCode } from "lucide-react";
+import { ArrowLeft, Save, Sparkles, Eye, FileCode } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 
 export default function NewTemplatePage() {

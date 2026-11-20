@@ -3,7 +3,8 @@
 import React, { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, ShieldCheck, Mail, ArrowRight, Loader2, Info } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Mail, ArrowRight, Info } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
 function UnsubscribeForm() {

@@ -1,0 +1,37 @@
+# Test report
+
+Architecture check, lint, build, standalone typecheck and diff check passed. An isolated fixture accepted 299 comment lines and rejected 301. Lint retains existing warnings. The first standalone typecheck overlapped the build and reported missing generated `.next/types` files. It passed after the build completed. Live auth/session, checkout/refund/webhook, database integrity, UI/accessibility, analytics, and notification/WhatsApp acceptance remain unverified in this batch.
+
+OPT-04 passed `npm run typecheck`, `npm run architecture:check` and `git diff --check`. An inline Node VM fixture transpiled the HEAD and candidate handlers with TypeScript, injected a fixed clock and mocked Prisma and NextResponse, then compared complete serialized responses for success and failure. The initial fixture clock was not constructible and was corrected before the passing run. The fixture verified 200/503 and the sampling call reduction. Real database connectivity and endpoint timing were not verified.
+
+OPT-05 passed typecheck, architecture check, targeted lint and diff check. A local fixture compared 200 formatted dates in Asia/Dhaka, UTC and America/New_York. Browser and database-backed admin workflows remain unverified.
+
+OPT-06 passed local Next production build, build-time lint/type validation, architecture check and diff check. Verified the loadable manifest contains a Quick Checkout JS chunk outside the initial layout, home and Subscription Desk asset sets. Prisma used its catalog fallback against an intentionally unavailable loopback DB. Browser checkout, slow-network opening, reopen, auth resume, payment and Subscription Desk render profiling remain unverified. Authenticated browser fixtures were not established.
+
+Browser acceptance attempt encountered an execution-policy rejection before the isolated Next server started. No checkout interaction, browser timing, chunk failure/retry, or payment test was executed.
+
+An isolated Node fixture transpiled the actual AppShell and mocked the router, checkout context and dynamic wrapper. It verified a null modal while no product is selected, stable modal type after selection, and exclusion from the admin shell. This covers render branching. Browser mounting, hydration and network failure recovery remain open.
+
+Chrome loaded both built homepages with one h1 and zero uncaught page errors. Candidate at 1440×900 and 390×844 used a mocked NextAuth session, clicked Buy Now, observed an email input and one deferred chunk request, then sent Escape and clicked again with no second request. Explicit dialog-close and reopen visibility, focus, wallet/gateway submission, failure recovery and real auth remain unverified. External requests were blocked and API responses mocked.
+
+Revised OPT-06 passed typecheck, architecture check and a production build with the loopback DB fixture. Chrome aborted the first modal JS request, verified Buy Now remained visible, retried in place, observed the close button, verified Escape hid it and reopened without a third request. No uncaught page errors. This covers client recovery with a mocked signed-in session.
+
+Matched eager and deferred builds both passed. Five mobile Chrome runs per variant passed first open, Escape visibility and reopen with zero uncaught page errors. The mocked session bypasses real sign-in and no payment was submitted.
+
+Matched deferred mobile fixture, one run: imposed 1,000 ms delay on the modal JS response. Loading status appeared, three additional clicks caused no duplicate download or modal, and Escape/reopen reused the chunk. First open took 1,157 ms including test automation. A separate guest fixture opened the login dialog, stored a homepage checkout intent, and requested no modal JS. A matched keyboard inspection found focus stayed on Buy Now and the checkout had no dialog role in both eager and deferred builds. This is existing accessibility debt. Full tab traversal, focus restoration and login completion remain unverified.
+
+Chrome checkout continuation fixture started as a guest, switched the intercepted NextAuth session response to a synthetic user, then reloaded the homepage. The product was refreshed once from a catalog fixture, the stored intent was consumed, and the modal opened. Gateway and wallet radios were selectable with no uncaught page errors. The first harness run had retained intentional chunk abortion from the recovery fixture and timed out. The corrected run allowed chunk delivery. No real OAuth, order creation, or payment submission was tested.
+
+OPT-07 passed typecheck, architecture check and diff check. A VM fixture compared the original and candidate product route's metadata and page outcomes for found and missing slugs and a fresh render. A mocked render cache reduced lookup calls from six to three. This verifies wiring against a fixture cache. Actual React request isolation and physical DB queries need application-level validation.
+
+OPT-07 also passed a Next production build and an additional fixture using Next's bundled React server cache implementation and a fixture dispatcher. Repeated and concurrent callers shared each slug result, including misses, and fresh dispatcher scopes fetched again. The data source and scope dispatcher were fixtures.
+
+OPT-08 passed typecheck and diff check. A VM fixture compared list and detail product DTOs using mocked Prisma for zero, single and multiple variations with mixed shared and variation-specific stock. A final helper fixture reconfirmed parity after retaining a single scan for the single-variation case. Real Prisma and request timing remain unverified.
+
+OPT-09 passed typecheck, architecture and diff checks. A projection-aware Prisma fixture compared both list and detail DTOs against HEAD and confirmed identical query selections apart from the unused stock ID. A separate Chrome fixture verified full-document navigation to About, browser back, reopening checkout and browser forward with no uncaught error. Client-side route transitions were not covered.
+
+Chrome client-side navigation fixture served built RSC responses for Home and About. After closing checkout, the About link and browser Back/Forward retained a marker on the original window. Checkout reopened after Back with one modal chunk request across the session and zero uncaught page errors. A separate keyboard comparison found none of the first five Tab presses moved focus inside checkout in either eager or deferred build. Keyboard accessibility remains open as pre-existing debt.
+
+Combined catalog and checkout candidate production build passed. Chrome intercepted every request and simulated order success, wallet success and a gateway redirect to a fixture-only URL. A double-click with a delayed order response generated one order POST per method. Each payment POST used the expected fixture order ID. Wallet success rendered and its Close action worked. The first run timed out when attempting Escape after wallet success because the modal still reports submitting. Real payment and server idempotency remain unverified.
+
+OPT-10 rebuilt successfully and passed an intercepted Chrome checkout fixture. The named modal received focus on open, kept Shift+Tab and 41 forward Tab presses inside, focused the wallet success heading, closed on Escape and restored Buy Now focus. Reopen and mocked gateway redirect also passed. An initial fixture found stale success focus on reopen, corrected before the passing build. Screen-reader and real payment acceptance remain open.

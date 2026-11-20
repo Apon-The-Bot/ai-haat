@@ -2,18 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  ShieldBan,
-  Search,
-  RefreshCw,
-  ArrowLeft,
-  Plus,
-  Trash2,
-  AlertTriangle,
-  UserX,
-  CheckCircle2,
-  ShieldCheck,
-} from "lucide-react";
+import { ShieldBan, Search, RefreshCw, ArrowLeft, Plus, Trash2, AlertTriangle, UserX, CheckCircle2, ShieldCheck } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
 

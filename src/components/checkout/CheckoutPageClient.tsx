@@ -3,27 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ShieldCheck,
-  Zap,
-  CheckCircle2,
-  ArrowLeft,
-  X,
-  ExternalLink,
-  MessageCircle,
-  Mail,
-  Smartphone,
-  Wallet,
-  Tag,
-  CreditCard,
-  Lock,
-  Clock,
-  AlertCircle,
-  PlusCircle,
-  Sparkles,
-  Gift,
-  Copy,
-} from "lucide-react";
+import { ShieldCheck, Zap, CheckCircle2, ArrowLeft, X, ExternalLink, MessageCircle, Mail, Smartphone, Wallet, Tag, CreditCard, Lock, Clock, AlertCircle, PlusCircle, Sparkles, Gift, Copy } from "@/components/animated-icons/lucide";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
@@ -1355,7 +1335,7 @@ function CheckoutContent() {
               <div className="p-4 bg-orange-50/90 rounded-2xl border border-orange-200 text-left space-y-2.5 animate-in fade-in">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#FC5C03]">
                   <Gift className="w-4 h-4" />
-                  <span>🎁 বন্ধুকে দেওয়ার জন্য সরাসরি গিফট লিঙ্ক:</span>
+                  <span>বন্ধুকে দেওয়ার জন্য সরাসরি গিফট লিঙ্ক:</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <input

@@ -3,21 +3,7 @@
 import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  RefreshCw,
-  Search,
-  ShieldCheck,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  PackageCheck,
-  Clock,
-  ShieldAlert,
-  X,
-  User,
-  Mail,
-  Phone,
-} from "lucide-react";
+import { RefreshCw, Search, ShieldCheck, AlertCircle, CheckCircle2, XCircle, PackageCheck, Clock, ShieldAlert, X, User, Mail, Phone } from "@/components/animated-icons/lucide";
 
 export default function AdminReplacementsPage() {
   const [activeTab, setActiveTab] = useState("ALL");

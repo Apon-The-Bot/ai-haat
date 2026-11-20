@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Check, X, Sparkles, ArrowRight, ShieldCheck, Zap, Scale, Star } from "lucide-react";
+import { Check, X, Sparkles, ArrowRight, ShieldCheck, Zap, Star } from "@/components/animated-icons/lucide";
+import { Scale } from "lucide-react";
 import { SafeImage } from "@/components/SafeImage";
 import { useQuickCheckout } from "@/context/QuickCheckoutContext";
 import { useCurrency } from "@/context/CurrencyContext";

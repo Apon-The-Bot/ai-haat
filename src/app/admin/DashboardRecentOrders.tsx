@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ShoppingBag } from "lucide-react";
+import { ArrowRight, ShoppingBag } from "@/components/animated-icons/lucide";
 
 export interface RecentOrdersData {
   recentOrders: Array<{

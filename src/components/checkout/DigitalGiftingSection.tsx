@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Gift, Sparkles, Heart, EyeOff, Check, PartyPopper, User, Mail, Phone } from "lucide-react";
+import { Gift, Sparkles, Heart, EyeOff, Check, PartyPopper, User, Mail, Phone } from "@/components/animated-icons/lucide";
 import { motion, AnimatePresence } from "framer-motion";
 import { GIFT_THEMES, QUICK_GREETINGS, GiftThemeConfig } from "@/lib/gifting/gift-themes";
 import { GiftTheme } from "@/types";

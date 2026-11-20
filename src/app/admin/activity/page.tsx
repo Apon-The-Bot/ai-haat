@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, RefreshCw, Search, ShieldCheck } from "lucide-react";
+import { Download, RefreshCw, Search, ShieldCheck } from "@/components/animated-icons/lucide";
 import { useCallback, useEffect, useState } from "react";
 
 type Event = { id: string; source: string; actor: string; action: string; targetType: string; targetId: string; details: unknown; createdAt: string };

@@ -2,21 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  CalendarClock,
-  RefreshCw,
-  ArrowLeft,
-  Plus,
-  Send,
-  Edit2,
-  Trash2,
-  Clock,
-  Calendar,
-  AlertCircle,
-  CheckCircle2,
-  Layers,
-  Terminal,
-} from "lucide-react";
+import { CalendarClock, RefreshCw, ArrowLeft, Plus, Send, Edit2, Trash2, Clock, Calendar, AlertCircle, CheckCircle2, Layers, Terminal } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
 

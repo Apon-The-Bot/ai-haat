@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, ShieldCheck, Zap } from "lucide-react";
+import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, ShieldCheck, Zap } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";

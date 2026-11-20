@@ -5,32 +5,8 @@ import Link from "next/link";
 import confetti from "canvas-confetti";
 import { trackCustomEvent } from "@/lib/analytics/client";
 import { trackMeta } from "@/lib/analytics/meta-browser";
-import {
-  HelpCircle,
-  Send,
-  CheckCircle2,
-  Clock,
-  ShieldCheck,
-  Zap,
-  Sparkles,
-  DollarSign,
-  Calendar,
-  AlertTriangle,
-  User,
-  Mail,
-  Phone,
-  MessageCircle,
-  Layers,
-  ArrowRight,
-  RefreshCw,
-  Search,
-  ExternalLink,
-  ChevronDown,
-  Info,
-  BadgeCheck,
-  Check,
-  AlertCircle,
-} from "lucide-react";
+import { Send, CheckCircle2, Clock, ShieldCheck, Zap, Sparkles, DollarSign, Calendar, AlertTriangle, User, Mail, Phone, MessageCircle, Layers, ArrowRight, RefreshCw, Search, ExternalLink, ChevronDown, Info, BadgeCheck, Check, AlertCircle } from "@/components/animated-icons/lucide";
+import { HelpCircle } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { useCurrency } from "@/context/CurrencyContext";

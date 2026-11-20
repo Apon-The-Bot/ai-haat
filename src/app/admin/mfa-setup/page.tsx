@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef, KeyboardEvent, ClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
-import { ShieldAlert, ShieldCheck, Loader2, Copy, Download, ChevronRight, AlertCircle } from "lucide-react";
+import { ShieldAlert, ShieldCheck, Copy, Download, ChevronRight, AlertCircle } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 
 export default function AdminMfaSetupPage() {

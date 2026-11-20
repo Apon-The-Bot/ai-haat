@@ -3,27 +3,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import {
-  Search,
-  CheckCircle2,
-  Clock,
-  Truck,
-  Package,
-  ShieldCheck,
-  AlertCircle,
-  MessageCircle,
-  Copy,
-  ExternalLink,
-  Lock,
-  RefreshCw,
-  Sparkles,
-  Check,
-  CreditCard,
-  XCircle,
-  ChevronRight,
-  Download,
-  Gift,
-} from "lucide-react";
+import { Search, CheckCircle2, Clock, Truck, Package, ShieldCheck, AlertCircle, MessageCircle, Copy, ExternalLink, Lock, RefreshCw, Sparkles, Check, CreditCard, XCircle, ChevronRight, Download, Gift } from "@/components/animated-icons/lucide";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useToast } from "@/context/ToastContext";

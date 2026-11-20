@@ -4,7 +4,7 @@ import React, { useEffect, Suspense } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
+import { ShieldCheck, ArrowRight, Sparkles } from "@/components/animated-icons/lucide";
 import { Logo } from "@/components/Logo";
 import { safeAuthReturn } from "@/lib/security/auth-return";
 

@@ -6,26 +6,7 @@ import { MetricCard } from "@/components/admin/MetricCard";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Radio,
-  ArrowLeft,
-  RefreshCw,
-  Send,
-  CheckCircle2,
-  Eye,
-  MousePointer,
-  AlertTriangle,
-  Clock,
-  Calendar,
-  Users,
-  ShieldBan,
-  Search,
-  ExternalLink,
-  ChevronDown,
-  ChevronUp,
-  Edit2,
-  Trash2,
-} from "lucide-react";
+import { Radio, ArrowLeft, RefreshCw, Send, CheckCircle2, Eye, MousePointer, AlertTriangle, Clock, Calendar, Users, ShieldBan, Search, ExternalLink, ChevronDown, ChevronUp, Edit2, Trash2 } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
 

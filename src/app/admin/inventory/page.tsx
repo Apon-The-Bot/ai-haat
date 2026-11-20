@@ -5,31 +5,7 @@ import { VariationStockTable, type VariationStock } from "./VariationStockTable"
 import React, { useCallback, useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import {
-  PackageCheck,
-  Plus,
-  FileSpreadsheet,
-  RefreshCw,
-  Search,
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  Trash2,
-  Lock,
-  Eye,
-  Key,
-  ShieldAlert,
-  Send,
-  X,
-  Copy,
-  Check,
-  Filter,
-  MessageSquare,
-  Sparkles,
-  Download,
-  AlertTriangle,
-  Bell,
-} from "lucide-react";
+import { PackageCheck, Plus, FileSpreadsheet, RefreshCw, Search, CheckCircle, AlertCircle, Clock, Trash2, Lock, Eye, Key, ShieldAlert, Send, X, Copy, Check, Filter, MessageSquare, Sparkles, Download, AlertTriangle, Bell } from "@/components/animated-icons/lucide";
 import { BulkActionBar, BulkActionItem } from "@/components/admin/BulkActionBar";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { useToast } from "@/context/ToastContext";

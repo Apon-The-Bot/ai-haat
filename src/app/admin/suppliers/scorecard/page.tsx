@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AlertTriangle, ArrowLeft, CheckCircle2, RefreshCw, Star } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, RefreshCw, Star } from "@/components/animated-icons/lucide";
 
 type SupplierScorecard = {
   id: string;

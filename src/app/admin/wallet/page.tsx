@@ -1,27 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Wallet,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Search,
-  Check,
-  X,
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  PlusCircle,
-  MinusCircle,
-  RefreshCw,
-  Copy,
-  MessageSquare,
-  ShieldCheck,
-  User,
-  ArrowUpRight,
-  ArrowDownRight,
-} from "lucide-react";
+import { Wallet, CheckCircle2, XCircle, Clock, Search, Check, X, AlertCircle, ChevronLeft, ChevronRight, PlusCircle, MinusCircle, RefreshCw, Copy, MessageSquare, ShieldCheck, User, ArrowUpRight, ArrowDownRight } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { useCurrency } from "@/context/CurrencyContext";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, MousePointerClick, CreditCard, Send } from "lucide-react";
+import { CheckCircle2, MousePointerClick, CreditCard, Send } from "@/components/animated-icons/lucide";
 
 export function HowToOrder() {
 

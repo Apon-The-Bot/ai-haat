@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Home, ShoppingBag, ArrowRight, HelpCircle } from "lucide-react";
+import { Search, Home, ShoppingBag, ArrowRight } from "@/components/animated-icons/lucide";
+import { HelpCircle } from "@/components/animated-icons/lucide";
 import { Logo } from "@/components/Logo";
 
 export default function NotFound() {

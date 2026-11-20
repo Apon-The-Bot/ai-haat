@@ -1,30 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Laptop,
-  Smartphone,
-  Tablet,
-  Globe,
-  MapPin,
-  ShieldAlert,
-  ShieldCheck,
-  Activity,
-  Cpu,
-  Monitor,
-  Wifi,
-  WifiOff,
-  Layers,
-  Lock,
-  Eye,
-  RefreshCw,
-  Clock,
-  AlertTriangle,
-  Info,
-  CheckCircle2,
-  XCircle,
-  HelpCircle,
-} from "lucide-react";
+import { Smartphone, Tablet, Globe, MapPin, ShieldAlert, ShieldCheck, Activity, Cpu, Monitor, Wifi, WifiOff, Layers, Lock, Eye, RefreshCw, Clock, AlertTriangle, Info, CheckCircle2, XCircle } from "@/components/animated-icons/lucide";
+import { Laptop, HelpCircle } from "@/components/animated-icons/lucide";
 
 interface UserIntelligencePanelProps {
   userId: string;

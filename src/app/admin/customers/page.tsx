@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Search, Users, ChevronRight, RefreshCw } from "lucide-react";
+import { Search, Users, ChevronRight, RefreshCw } from "@/components/animated-icons/lucide";
 import Link from "next/link";
-import { MessageSquare, ShieldAlert, Ticket, Undo2, Tag } from "lucide-react";
+import { MessageSquare, ShieldAlert, Ticket, Undo2, Tag } from "@/components/animated-icons/lucide";
 
 type Customer = { id: string; name: string | null; email: string; phone: string | null; role: string; walletBalanceBDT: number; createdAt: string; _count: { orders: number; supportTickets: number } };
 type Detail = any;

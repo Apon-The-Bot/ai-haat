@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Coins, Sparkles, Gift, ArrowRight, Copy, Check, Clock, ShieldCheck, Tag } from "lucide-react";
+import { Coins, Sparkles, Gift, ArrowRight, Copy, Check, Clock, ShieldCheck, Tag } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { COIN_REWARD_TIERS, CoinRewardTier } from "@/lib/loyalty/coins";
 
@@ -55,7 +55,7 @@ export function RewardsClubView() {
 
       if (json.success && json.couponCode) {
         setClaimedCoupon({ code: json.couponCode, discountBDT: json.discountBDT });
-        showToast("🎉 অভিনন্দন! আপনার ডিসকাউন্ট কুপন তৈরি হয়েছে!", "success");
+        showToast("অভিনন্দন! আপনার ডিসকাউন্ট কুপন তৈরি হয়েছে!", "success");
         fetchLoyalty();
       } else {
         showToast(json.error || "কুপন ক্লেইম করতে সমস্যা হয়েছে।", "error");
@@ -106,7 +106,7 @@ export function RewardsClubView() {
           </div>
 
           <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/15 space-y-1 text-xs text-slate-200 sm:max-w-[240px]">
-            <strong className="text-amber-300 block font-bold">💡 কীভাবে কয়েন কাজ করে?</strong>
+            <strong className="text-amber-300 block font-bold">কীভাবে কয়েন কাজ করে?</strong>
             <p className="text-[11px] leading-relaxed text-slate-300">
               অর্ডার সম্পন্ন হলে স্বয়ংক্রিয়ভাবে কয়েন জমা হবে। কয়েন দিয়ে নিচের রিওয়ার্ড স্টোর থেকে ডিসকাউন্ট
               কুপন তৈরি করুন।

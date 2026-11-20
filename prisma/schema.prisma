@@ -3,6 +3,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model WhatsappAutomationEvent {
+  id            String   @id @db.Char(64)
+  schemaVersion Int
+  type          String   @db.VarChar(64)
+  producer      String   @db.VarChar(32)
+  entityId      String   @db.VarChar(64)
+  entityVersion String   @db.VarChar(64)
+  correlationId String   @db.VarChar(64)
+  occurredAt    DateTime @db.DateTime(3)
+  createdAt     DateTime @default(now()) @db.DateTime(3)
+  state         String   @default("Pending") @db.VarChar(24)
+  availableAt   DateTime @default(now()) @db.DateTime(3)
+  claimToken    String?  @db.Char(36)
+  inspectedAt   DateTime? @db.DateTime(3)
+
+  @@index([createdAt, id])
+  @@index([state, availableAt, id], map: "wa_automation_due_idx")
+  @@map("whatsapp_automation_events")
+}
+
+model WhatsappAutomationIdentity {
+  id                 String   @id @default(cuid()) @db.VarChar(64)
+  userId             String
+  revision           String   @db.VarChar(64)
+  addressFingerprint String   @db.Char(64)
+  verifiedAt         DateTime @db.DateTime(3)
+  revokedAt          DateTime? @db.DateTime(3)
+  user               User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consents           WhatsappAutomationConsent[]
+  suppressions       WhatsappAutomationSuppression[]
+
+  @@unique([userId, revision], map: "wa_identity_user_revision_key")
+  @@map("whatsapp_automation_identities")
+}
+
+model WhatsappAutomationConsent {
+  identityId     String @db.VarChar(64)
+  purpose        String @db.VarChar(32)
+  grantedAt      DateTime @db.DateTime(3)
+  revokedAt      DateTime? @db.DateTime(3)
+  wordingVersion String @db.VarChar(64)
+  locale         String @db.VarChar(16)
+  source         String @db.VarChar(32)
+  identity       WhatsappAutomationIdentity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+
+  @@id([identityId, purpose])
+  @@map("whatsapp_automation_consents")
+}
+
+model WhatsappAutomationSuppression {
+  identityId String @db.VarChar(64)
+  scope      String @db.VarChar(32)
+  createdAt  DateTime @default(now()) @db.DateTime(3)
+  identity   WhatsappAutomationIdentity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+
+  @@id([identityId, scope])
+  @@map("whatsapp_automation_suppressions")
+}
+
 model WhatsappAccount {
   id        String @id @default(cuid()) @db.VarChar(64)
   label     String @db.VarChar(120)
@@ -371,6 +430,7 @@ model User {
   sessionRevokedAt DateTime?
 
   accounts         Account[]
+  whatsappAutomationIdentities WhatsappAutomationIdentity[]
   sessions         Session[]
   orders           Order[]
   transactions     WalletTransaction[]

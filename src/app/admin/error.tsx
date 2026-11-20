@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { AlertCircle, RefreshCw, LayoutDashboard } from "lucide-react";
+import { AlertCircle, RefreshCw, LayoutDashboard } from "@/components/animated-icons/lucide";
 
 export default function AdminError({
   error,

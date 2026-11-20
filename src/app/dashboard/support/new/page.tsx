@@ -3,7 +3,8 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShieldAlert, CheckCircle2, Loader2, Send } from "lucide-react";
+import { ArrowLeft, ShieldAlert, CheckCircle2, Send } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 const CATEGORIES = [

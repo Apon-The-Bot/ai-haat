@@ -3,21 +3,7 @@
 import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  RefreshCw,
-  Search,
-  RotateCcw,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  Wallet,
-  CreditCard,
-  User,
-  Mail,
-  Phone,
-  X,
-  Sparkles,
-} from "lucide-react";
+import { RefreshCw, Search, RotateCcw, AlertCircle, CheckCircle2, XCircle, Wallet, CreditCard, User, Mail, Phone, X, Sparkles } from "@/components/animated-icons/lucide";
 
 export default function AdminRefundsPage() {
   const [activeTab, setActiveTab] = useState("ALL");

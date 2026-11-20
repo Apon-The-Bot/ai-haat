@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { UploadCloud, X, CheckCircle, Loader2, Image as ImageIcon } from "lucide-react";
+import { UploadCloud, X, CheckCircle, Image as ImageIcon } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { AdaptiveImage } from "@/components/common/AdaptiveImage";
 

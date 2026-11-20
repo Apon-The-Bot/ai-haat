@@ -2,23 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  ShieldCheck,
-  RefreshCw,
-  ArrowLeft,
-  Save,
-  Send,
-  CheckCircle2,
-  AlertTriangle,
-  Server,
-  Key,
-  Globe,
-  Sliders,
-  Sparkles,
-  ExternalLink,
-  Copy,
-  Info,
-} from "lucide-react";
+import { ShieldCheck, RefreshCw, ArrowLeft, Save, Send, CheckCircle2, AlertTriangle, Server, Key, Globe, Sliders, Sparkles, ExternalLink, Copy, Info } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 
 interface EmailSettingsData {

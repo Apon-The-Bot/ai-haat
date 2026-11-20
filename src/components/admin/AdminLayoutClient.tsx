@@ -3,18 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Store,
-  Menu,
-  ExternalLink,
-  ShieldAlert,
-  LogIn,
-  Bell,
-  LogOut,
-  Mail,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Store, Menu, ExternalLink, ShieldAlert, LogIn, Bell, LogOut, Mail, ChevronDown, ChevronUp } from "@/components/animated-icons/lucide";
 import { Logo } from "@/components/Logo";
 import { UserAvatar } from "@/components/admin/UserAvatar";
 import { useAuth } from "@/context/AuthContext";

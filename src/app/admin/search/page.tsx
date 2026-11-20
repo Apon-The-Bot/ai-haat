@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Box, Command, Headphones, Loader2, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { ArrowRight, Box, Command, Headphones, Search, ShoppingBag, UserRound, X } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 
 type Scope = "all" | "orders" | "users" | "tickets" | "products";
 type Result = { type: string; id: string; title: string; subtitle: string; meta: string; href: string; timestamp: string | null };

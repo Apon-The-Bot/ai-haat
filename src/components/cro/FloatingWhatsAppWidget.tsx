@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Sparkles, Zap, ShieldCheck, CheckCheck } from "lucide-react";
+import { MessageCircle, X, Send, Sparkles, Zap, ShieldCheck, CheckCheck } from "@/components/animated-icons/lucide";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface QuickActionChip {

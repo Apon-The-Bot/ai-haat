@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, Gift, Link2, Users } from "lucide-react";
+import { ArrowRight, Gift, Users } from "@/components/animated-icons/lucide";
+import { Link2 } from "@/components/animated-icons/lucide";
 
 type Summary = {
   referral?: { referralCode?: string; convertedOrdersCount?: number; totalEarnedBDT?: number };

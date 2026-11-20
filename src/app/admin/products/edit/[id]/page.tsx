@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import ProductEditorForm from "@/components/admin/ProductEditorForm";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "@/components/animated-icons/lucide";
 
 export default function EditProductPage() {
   const params = useParams();

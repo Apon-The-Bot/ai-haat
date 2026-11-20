@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search } from "@/components/animated-icons/lucide";
 import { BottomSheet } from './BottomSheet';
 
 export interface FilterOption {

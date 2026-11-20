@@ -142,7 +142,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               playOrderChime();
 
               // Toast + In-App Notification
-              showToast(`🔔 নতুন অর্ডার এসেছে! (#${id}) - ৳${o.totalBDT || 0}`, "success");
+              showToast(`নতুন অর্ডার এসেছে! (#${id}) - ৳${o.totalBDT || 0}`, "success");
               addNotification({
                 title: `নতুন অর্ডার: #${id}`,
                 message: `${o.customerName || "Customer"} ৳${o.totalBDT || 0} মূল্যের অর্ডার প্লেস করেছেন।`,
@@ -171,7 +171,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               playSuccessChime();
 
               // Toast + In-App Notification
-              showToast(`🎉 আপনার অর্ডার #${id} সফলভাবে ডেলিভারি হয়েছে!`, "success");
+              showToast(`আপনার অর্ডার #${id} সফলভাবে ডেলিভারি হয়েছে!`, "success");
               addNotification({
                 title: `অর্ডার #${id} ডেলিভারি সম্পন্ন!`,
                 message: `আপনার ডিজিটাল কি / সাবস্ক্রিপশন ডেলিভারি হয়েছে। ভল্ট থেকে অ্যাক্সেস করুন।`,

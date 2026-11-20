@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, FileText, ShieldCheck } from "lucide-react";
+import { ArrowLeft, FileText, ShieldCheck } from "@/components/animated-icons/lucide";
 import type { LegalDocument } from "@/lib/legal/documents";
 
 export function LegalDocumentPage({ document }: { document: LegalDocument }) {

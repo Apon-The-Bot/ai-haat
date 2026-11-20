@@ -2,20 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  Sliders,
-  RefreshCw,
-  ArrowLeft,
-  Plus,
-  Trash2,
-  Send,
-  Users,
-  Layers,
-  Sparkles,
-  ShoppingBag,
-  Clock,
-  DollarSign,
-} from "lucide-react";
+import { Sliders, RefreshCw, ArrowLeft, Plus, Trash2, Send, Users, Layers, Sparkles, ShoppingBag, Clock, DollarSign } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { Product } from "@/types";

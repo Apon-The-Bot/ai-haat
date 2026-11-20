@@ -7,6 +7,22 @@ import path from "path";
 const dataDir = path.join(process.cwd(), "data");
 const productsFile = path.join(dataDir, "products.json");
 
+function countAvailableStock(stocks: readonly { variationId: string | null }[], variationCount: number) {
+  if (variationCount < 2) {
+    return (variationId: string) => stocks.filter((stock) => stock.variationId === variationId || !stock.variationId).length;
+  }
+  const specific = new Map<string, number>();
+  let shared = 0;
+  for (const { variationId } of stocks) {
+    if (variationId) {
+      specific.set(variationId, (specific.get(variationId) ?? 0) + 1);
+    } else {
+      shared++;
+    }
+  }
+  return (variationId: string) => shared + (specific.get(variationId) ?? 0);
+}
+
 function ensureDir() {
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
@@ -42,7 +58,7 @@ export async function getAllProducts(includeHidden = false): Promise<Product[]> 
         },
         digitalStocks: {
           where: { status: "AVAILABLE" },
-          select: { id: true, variationId: true }
+          select: { variationId: true }
         }
       },
       orderBy: {
@@ -68,12 +84,10 @@ export async function getAllProducts(includeHidden = false): Promise<Product[]> 
         const availableStocks = p.digitalStocks || [];
         const isAutoStock = p.fulfillmentType === "AUTO_STOCK";
         const totalAvailableStock = availableStocks.length;
+        const stockCountFor = countAvailableStock(availableStocks, p.variations?.length ?? 0);
 
         const variations = (p.variations || []).map((v) => {
-          const vStocks = availableStocks.filter(
-            (s) => s.variationId === v.id || !s.variationId
-          );
-          const vStockCount = vStocks.length;
+          const vStockCount = stockCountFor(v.id);
           // In AUTO_STOCK mode, stock is dynamic: inStock is true if stockCount > 0
           const isVarInStock = isAutoStock
             ? (vStockCount > 0)
@@ -171,7 +185,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         },
         digitalStocks: {
           where: { status: "AVAILABLE" },
-          select: { id: true, variationId: true }
+          select: { variationId: true }
         },
         reviews: {
           where: { status: "APPROVED" },
@@ -197,12 +211,10 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       const availableStocks = dbProduct.digitalStocks || [];
       const isAutoStock = dbProduct.fulfillmentType === "AUTO_STOCK";
       const totalAvailableStock = availableStocks.length;
+      const stockCountFor = countAvailableStock(availableStocks, dbProduct.variations?.length ?? 0);
 
       const variations = (dbProduct.variations || []).map((v) => {
-        const vStocks = availableStocks.filter(
-          (s) => s.variationId === v.id || !s.variationId
-        );
-        const vStockCount = vStocks.length;
+        const vStockCount = stockCountFor(v.id);
         // In AUTO_STOCK mode, stock is dynamic: inStock is true if stockCount > 0
         const isVarInStock = isAutoStock
           ? (vStockCount > 0)

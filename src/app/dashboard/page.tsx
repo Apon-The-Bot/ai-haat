@@ -2,15 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  ShoppingBag,
-  KeyRound,
-  Wallet,
-  Clock,
-  Plus,
-  Compass,
-  RefreshCw,
-} from "lucide-react";
+import { ShoppingBag, KeyRound, Wallet, Clock, Plus, Compass, RefreshCw } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Headphones } from "lucide-react";
+import { ArrowRight, Shield, Zap, Headphones } from "@/components/animated-icons/lucide";
 import { Logo } from "@/components/Logo";
 import { SafeImage } from "@/components/SafeImage";
 import { useProducts } from "@/context/ProductsContext";

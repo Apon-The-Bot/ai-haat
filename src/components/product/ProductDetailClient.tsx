@@ -5,32 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { trackViewItem } from "@/lib/analytics/client";
 import { sanitizeItem } from "@/lib/analytics/sanitize";
-import {
-  Star,
-  ShieldCheck,
-  Zap,
-  Headphones,
-  Copy,
-  MessageCircle,
-  Share2,
-  CheckCircle,
-  Minus,
-  Plus,
-  Lock,
-  RotateCcw,
-  ShoppingBag,
-  Clock,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-  Flame,
-  HelpCircle,
-  CreditCard,
-  BadgeCheck,
-  Check,
-  AlertCircle,
-  Bell,
-} from "lucide-react";
+import { Star, ShieldCheck, Zap, Headphones, Copy, MessageCircle, CheckCircle, Minus, Plus, Lock, RotateCcw, ShoppingBag, Clock, Sparkles, ChevronDown, ChevronUp, Flame, CreditCard, BadgeCheck, Check, AlertCircle, Bell } from "@/components/animated-icons/lucide";
+import { Share2, HelpCircle } from "@/components/animated-icons/lucide";
 import { Product, Variation, Review } from "@/types";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";

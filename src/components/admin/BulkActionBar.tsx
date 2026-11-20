@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X } from "lucide-react";
+import { X } from "@/components/animated-icons/lucide";
 
 export interface BulkActionItem {
   id: string;

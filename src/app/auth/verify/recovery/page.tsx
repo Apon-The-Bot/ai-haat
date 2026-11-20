@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import Link from "next/link";
-import { AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { AlertCircle, AlertTriangle } from "@/components/animated-icons/lucide";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 
 export default function RecoveryPage() {

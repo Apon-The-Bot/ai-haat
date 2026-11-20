@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, ShoppingBag, Menu, X, ChevronRight, Gift, ShieldCheck } from "lucide-react";
+import { Search, ShoppingBag, Menu, X, ChevronRight, Gift, ShieldCheck } from "@/components/animated-icons/lucide";
 import { UserAvatar } from "@/components/admin/UserAvatar";
 import { Logo } from "@/components/Logo";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -124,7 +124,7 @@ export function Header() {
           {/* Center: Long Rounded Search Field (Desktop & Tablet) */}
           <div ref={searchRef} className="hidden md:flex flex-1 max-w-[650px] relative mx-4">
             <form onSubmit={handleSearchSubmit} className="w-full relative">
-              <div className="relative flex items-center w-full bg-[#F3F4F6] rounded-full border border-[#E8E8EE] focus-within:border-[#FC5C03] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#FC5C03]/15 transition-all">
+              <div data-icon-trigger className="relative flex items-center w-full bg-[#F3F4F6] rounded-full border border-[#E8E8EE] focus-within:border-[#FC5C03] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#FC5C03]/15 transition-all">
                 <Search className="w-4 h-4 text-[#7A8190] ml-4 shrink-0" />
                 <input
                   type="text"

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { KeyRound, Plus, Tag, TrendingUp } from "lucide-react";
+import { KeyRound, Plus, Tag, TrendingUp } from "@/components/animated-icons/lucide";
 
 type AnalyticsStats = {
   revenue: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Flame, Clock, Zap } from "lucide-react";
+import { Flame, Clock, Zap } from "@/components/animated-icons/lucide";
 
 interface FlashSaleBannerProps {
   saleTitle?: string;
@@ -86,7 +86,7 @@ export function FlashSaleBanner({
       {/* Limited Stock Urgency Progress Bar */}
       <div className="space-y-1">
         <div className="flex items-center justify-between text-[11px] font-bold text-white/90">
-          <span>🔥 {soldPercentage}% বুকিং সম্পন্ন</span>
+          <span>{soldPercentage}% বুকিং সম্পন্ন</span>
           <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">
             আর মাত্র {stockLeft}টি স্লট বাকি!
           </span>

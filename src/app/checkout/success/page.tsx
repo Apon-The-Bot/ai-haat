@@ -3,21 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import {
-  CheckCircle2,
-  Clock,
-  XCircle,
-  KeyRound,
-  ShoppingBag,
-  ArrowRight,
-  ShieldCheck,
-  Mail,
-  Copy,
-  Gift,
-  ExternalLink,
-  MessageCircle,
-  Check,
-} from "lucide-react";
+import { CheckCircle2, Clock, XCircle, KeyRound, ShoppingBag, ArrowRight, ShieldCheck, Mail, Copy, Gift, ExternalLink, MessageCircle, Check } from "@/components/animated-icons/lucide";
 import { useLanguage } from "@/context/LanguageContext";
 import { useToast } from "@/context/ToastContext";
 import PurchaseTracker from "@/components/analytics/PurchaseTracker";
@@ -136,7 +122,7 @@ function SuccessContent() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-purple-700 font-extrabold text-sm">
                 <Gift className="w-5 h-5 text-purple-600" />
-                <span>{isBn ? "🎁 উপহার পাঠানোর লিঙ্ক প্রস্তুত!" : "🎁 Gift Link Ready!"}</span>
+                <span>{isBn ? "উপহার পাঠানোর লিঙ্ক প্রস্তুত!" : "Gift Link Ready!"}</span>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200">
                 Gift Order
@@ -290,7 +276,7 @@ function SuccessContent() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-800 font-bold"
           >
-            <span>💬 সহায়তার জন্য হোয়াটসঅ্যাপ</span>
+            <span>সহায়তার জন্য হোয়াটসঅ্যাপ</span>
           </a>
 
           <Link

@@ -1,18 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  ShieldAlert,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-  Eye,
-  X,
-  Clock,
-  User,
-  Activity,
-} from "lucide-react";
+import { ShieldAlert, Search, ChevronLeft, ChevronRight, RefreshCw, Eye, X, Clock, User, Activity } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 
 interface AuditLogItem {

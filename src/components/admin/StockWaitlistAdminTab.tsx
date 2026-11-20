@@ -1,19 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Bell,
-  Users,
-  Package,
-  RefreshCw,
-  Send,
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  Sparkles,
-  ExternalLink,
-  Plus,
-} from "lucide-react";
+import { Bell, Users, Package, RefreshCw, Send, CheckCircle, AlertCircle, Clock, Sparkles, ExternalLink, Plus } from "@/components/animated-icons/lucide";
 import { SafeImage } from "@/components/SafeImage";
 import { useToast } from "@/context/ToastContext";
 

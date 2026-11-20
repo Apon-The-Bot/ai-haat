@@ -4,41 +4,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { OrderInvestigation } from "./OrderInvestigation";
 import { SavedOrderFilters } from "./SavedOrderFilters";
-import {
-  ShoppingBag,
-  Search,
-  Send,
-  CheckCircle2,
-  KeyRound,
-  Mail,
-  Phone,
-  Copy,
-  Check,
-  X,
-  MessageSquare,
-  Download,
-  ExternalLink,
-  Eye,
-  Edit3,
-  Ban,
-  RotateCcw,
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  FileSpreadsheet,
-  ShieldCheck,
-  User,
-  CreditCard,
-  Layers,
-  ChevronDown,
-  ChevronUp,
-  RefreshCw,
-  Plus,
-  CheckSquare,
-  Square,
-  Trash2,
-} from "lucide-react";
+import { ShoppingBag, Search, Send, CheckCircle2, KeyRound, Mail, Phone, Copy, Check, X, MessageSquare, Download, ExternalLink, Eye, Ban, RotateCcw, AlertTriangle, ChevronLeft, ChevronRight, Filter, FileSpreadsheet, ShieldCheck, User, CreditCard, Layers, ChevronDown, ChevronUp, RefreshCw, Plus, CheckSquare, Square, Trash2 } from "@/components/animated-icons/lucide";
+import { Edit3 } from "@/components/animated-icons/lucide";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import { generateDeliveryHtml } from "@/utils/emailTemplate";

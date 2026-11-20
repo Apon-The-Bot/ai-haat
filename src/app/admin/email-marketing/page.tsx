@@ -4,27 +4,7 @@ import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  Mail,
-  Send,
-  Users,
-  CheckCircle2,
-  Eye,
-  MousePointer,
-  RefreshCw,
-  Sparkles,
-  ArrowRight,
-  TrendingUp,
-  CalendarClock,
-  ShieldCheck,
-  Radio,
-  FileCode,
-  Sliders,
-  AlertTriangle,
-  Inbox,
-  Clock,
-  Plus,
-} from "lucide-react";
+import { Mail, Send, Users, CheckCircle2, Eye, MousePointer, RefreshCw, Sparkles, ArrowRight, TrendingUp, CalendarClock, ShieldCheck, Radio, FileCode, Sliders, AlertTriangle, Inbox, Clock, Plus } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 
 interface EmailMarketingStats {

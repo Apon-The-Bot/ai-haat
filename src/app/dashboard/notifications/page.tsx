@@ -2,18 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  CheckCheck,
-  KeyRound,
-  Wallet,
-  Sparkles,
-  BellOff,
-  ShoppingBag,
-  RotateCcw,
-  RefreshCw,
-  Clock,
-  ShieldAlert,
-} from "lucide-react";
+import { CheckCheck, KeyRound, Wallet, Sparkles, BellOff, ShoppingBag, RotateCcw, RefreshCw, Clock, ShieldAlert } from "@/components/animated-icons/lucide";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface NotificationItem {

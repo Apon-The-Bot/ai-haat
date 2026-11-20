@@ -4,45 +4,8 @@ import { MetricCard } from "@/components/admin/MetricCard";
 
 import React, { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
-import {
-  Users,
-  Search,
-  ShieldCheck,
-  ShieldAlert,
-  Wallet,
-  ShoppingBag,
-  ExternalLink,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Check,
-  Copy,
-  X,
-  RefreshCw,
-  Clock,
-  Plus,
-  Filter,
-  ArrowUpDown,
-  Download,
-  AlertTriangle,
-  Ban,
-  Lock,
-  Unlock,
-  Tag,
-  Coins,
-  SlidersHorizontal,
-  KeyRound,
-  FileText,
-  Activity,
-  Smartphone,
-  Laptop,
-  Share2,
-  Trash2,
-  UserCheck,
-  AlertCircle,
-  HelpCircle,
-  Globe,
-} from "lucide-react";
+import { Users, Search, ShieldCheck, ShieldAlert, Wallet, ShoppingBag, ExternalLink, ChevronLeft, ChevronRight, Eye, Check, Copy, X, RefreshCw, Clock, Plus, Filter, ArrowUpDown, Download, AlertTriangle, Ban, Lock, Unlock, Tag, Coins, SlidersHorizontal, KeyRound, FileText, Activity, Smartphone, Trash2, UserCheck, AlertCircle, Globe } from "@/components/animated-icons/lucide";
+import { Laptop, Share2, HelpCircle } from "@/components/animated-icons/lucide";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import UserIntelligencePanel from "@/components/admin/UserIntelligencePanel";

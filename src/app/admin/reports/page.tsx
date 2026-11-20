@@ -4,31 +4,8 @@ import { MetricCard } from "@/components/admin/MetricCard";
 import Link from "next/link";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  TrendingUp,
-  FileSpreadsheet,
-  ShoppingBag,
-  Users,
-  CreditCard,
-  Layers,
-  ArrowUpRight,
-  RefreshCw,
-  Clock,
-  Download,
-  AlertTriangle,
-  RotateCcw,
-  Undo2,
-  Tag,
-  Radio,
-  HelpCircle,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  DollarSign,
-  Building2,
-  TrendingDown,
-  ShieldAlert,
-} from "lucide-react";
+import { TrendingUp, FileSpreadsheet, ShoppingBag, Users, CreditCard, Layers, ArrowUpRight, RefreshCw, Clock, Download, AlertTriangle, RotateCcw, Undo2, Tag, Radio, CheckCircle2, XCircle, AlertCircle, DollarSign, Building2, TrendingDown, ShieldAlert } from "@/components/animated-icons/lucide";
+import { HelpCircle } from "@/components/animated-icons/lucide";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 

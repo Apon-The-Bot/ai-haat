@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { AlertTriangle, Trash2, X, Check, Info } from "lucide-react";
+import { AlertTriangle, Trash2, X, Check, Info } from "@/components/animated-icons/lucide";
 
 interface ConfirmModalProps {
   isOpen: boolean;

@@ -2,20 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  Inbox,
-  RefreshCw,
-  ArrowLeft,
-  Search,
-  Eye,
-  MousePointer,
-  Send,
-  CheckCircle2,
-  AlertTriangle,
-  UserX,
-  Radio,
-  ExternalLink,
-} from "lucide-react";
+import { Inbox, RefreshCw, ArrowLeft, Search, Eye, MousePointer, Send, CheckCircle2, AlertTriangle, UserX, Radio, ExternalLink } from "@/components/animated-icons/lucide";
 import { useToast } from "@/context/ToastContext";
 
 interface LogEntry {

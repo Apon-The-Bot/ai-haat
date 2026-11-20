@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Gift, Sparkles, Heart, Check, ArrowRight, ShieldCheck, Mail, User } from "lucide-react";
+import { Gift, Sparkles, Heart, Check, ArrowRight, ShieldCheck, Mail, User } from "@/components/animated-icons/lucide";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/context/AuthContext";
@@ -56,7 +56,7 @@ export default function GiftCardsPage() {
         openLoginModal("/gift-cards");
       } else if (res.ok && data.success && data.giftCard) {
         void refreshUser();
-        showToast("🎉 আপনার গিফট কার্ড সফলভাবে তৈরি হয়েছে!", "success");
+        showToast("আপনার গিফট কার্ড সফলভাবে তৈরি হয়েছে!", "success");
         // Redirect to wallet or show the code
         router.push(`/dashboard/wallet?giftcard=${data.giftCard.code}`);
       } else {
