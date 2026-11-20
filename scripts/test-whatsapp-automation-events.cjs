@@ -18,12 +18,20 @@ function load(name, dependencies = {}) {
 }
 const events = load("automation-events");
 const { parseAutomationEvent, describeAutomationEvent } = events;
-const { recordAutomationEvent } = load("automation-outbox", { "./automation-events": events });
+const { recordAutomationEvent, recordBuiltAutomationEvent } = load("automation-outbox", { "./automation-events": events });
 const { inspectAutomationBatch } = load("automation-inspector", { "./automation-events": events });
 const consentPolicy = load("automation-consent");
 const { evaluateAutomationConsent } = consentPolicy;
 const { readAutomationEligibility } = load("automation-consent-store", { "./automation-consent": consentPolicy });
 const { revokeAutomationConsent } = load("automation-consent-store", { "./automation-consent": consentPolicy });
+const { grantAutomationConsent } = load("automation-consent-store", { "./automation-consent": consentPolicy });
+const { buildMarketingCampaignEvent } = load("marketing-adapter", { "./automation-events": events });
+const { buildBackInStockEvent } = load("stock-adapter", { "./automation-events": events });
+const { buildReviewRequestEvent } = load("review-adapter", { "./automation-events": events });
+const { buildReactivationEvent } = load("reactivation-adapter", { "./automation-events": events });
+const { buildSupportReplyEvent } = load("support-adapter", { "./automation-events": events });
+const { buildAdminMessageEvent } = load("admin-adapter", { "./automation-events": events });
+const { evaluateAutomationControls } = load("automation-engine");
 
 const event = Object.freeze({
   schemaVersion: 1, type: "payment.settled", producer: "payments",
@@ -85,6 +93,19 @@ test("outbox validates before writing and retries use the same primary key", asy
   assert.deepEqual(second, { ...first, inserted: false });
   assert.equal(first.inserted, true);
   assert.equal(rows.size, 1);
+});
+
+test("lifecycle bridge records only an eligible built event inside the caller transaction", async () => {
+  const rows = [];
+  const tx = { whatsappAutomationEvent: { createMany: async ({ data }) => {
+    rows.push(data); return { count: 1 };
+  } } };
+  const valid = { schemaVersion: 1, type: "stock.back-in-stock", producer: "inventory",
+    entityId: "product_1", entityVersion: "stock_1", correlationId: "corr_lifecycle",
+    occurredAt: "2026-11-21T00:00:00.000Z" };
+  assert.deepEqual(await recordBuiltAutomationEvent(tx, () => null), { recorded: false, reason: "not-eligible" });
+  assert.equal((await recordBuiltAutomationEvent(tx, () => valid)).inserted, true);
+  assert.equal(rows.length, 1);
 });
 
 test("two inspectors finalize an expired lease only once and leave future events alone", async () => {
@@ -185,4 +206,94 @@ test("WhatsApp fingerprints require canonical E.164 and a dedicated 256-bit key"
   assert.notEqual(first, fingerprintWhatsAppAddress("+8801800000000", key));
   assert.throws(() => fingerprintWhatsAppAddress("8801700000000", key));
   assert.throws(() => fingerprintWhatsAppAddress("+8801700000000", Buffer.alloc(31)));
+});
+
+test("consent grant requires the current verified identity and safely re-grants a revoked purpose", async () => {
+  const now = new Date("2026-11-21T00:00Z");
+  const calls = [];
+  const tx = {
+    whatsappAutomationIdentity: {
+      findUnique: async ({ where }) => where.userId_revision.revision === "2"
+        ? { id: "identity", addressFingerprint: "a".repeat(64), verifiedAt: new Date("2026-11-20T00:00Z"), revokedAt: null }
+        : null,
+    },
+    whatsappAutomationConsent: {
+      upsert: async (args) => { calls.push(args); return args.create; },
+    },
+  };
+  assert.deepEqual(await grantAutomationConsent(tx, {
+    userId: "user", revision: "2", addressFingerprint: "a".repeat(64), purpose: "campaign",
+    wordingVersion: "v2", locale: "bn", source: "preference-center", now,
+  }), { granted: true, identityId: "identity", purpose: "campaign" });
+  assert.equal(calls[0].update.revokedAt, null);
+  assert.equal((await grantAutomationConsent(tx, {
+    userId: "user", revision: "1", addressFingerprint: "a".repeat(64), purpose: "campaign",
+    wordingVersion: "v2", locale: "bn", source: "preference-center", now,
+  })).reason, "unverified-identity");
+  assert.equal((await grantAutomationConsent(tx, {
+    userId: "user", revision: "2", addressFingerprint: "bad", purpose: "campaign",
+    wordingVersion: "v2", locale: "bn", source: "preference-center", now,
+  })).reason, "invalid-evidence");
+});
+
+test("WA-06 marketing adapter requires approval and an eligible audience", () => {
+  const base = { campaignId: "campaign_1", campaignVersion: "v1", correlationId: "corr_1",
+    occurredAt: new Date("2026-11-21T00:00:00.000Z"), eligibleRecipientCount: 2,
+    approved: true, templateReady: true };
+  assert.equal(buildMarketingCampaignEvent(base).type, "marketing.campaign-ready");
+  assert.equal(buildMarketingCampaignEvent({ ...base, approved: false }), null);
+  assert.equal(buildMarketingCampaignEvent({ ...base, eligibleRecipientCount: 0 }), null);
+});
+
+test("WA-07 stock adapter requires availability and opted-in recipients", () => {
+  const base = { productId: "product_1", inventoryVersion: "stock_2", correlationId: "corr_2",
+    occurredAt: new Date("2026-11-21T00:00:00.000Z"), available: true, optedInRecipientCount: 1 };
+  assert.equal(buildBackInStockEvent(base).type, "stock.back-in-stock");
+  assert.equal(buildBackInStockEvent({ ...base, available: false }), null);
+  assert.equal(buildBackInStockEvent({ ...base, optedInRecipientCount: 0 }), null);
+});
+
+test("WA-08 review adapter requires fulfilled order and review-window eligibility", () => {
+  const base = { orderId: "order_1", fulfillmentVersion: "delivery_1", correlationId: "corr_3",
+    occurredAt: new Date("2026-11-21T00:00:00.000Z"), fulfilled: true,
+    eligibleRecipientCount: 1, withinReviewWindow: true };
+  assert.equal(buildReviewRequestEvent(base).type, "review.request-ready");
+  assert.equal(buildReviewRequestEvent({ ...base, fulfilled: false }), null);
+  assert.equal(buildReviewRequestEvent({ ...base, withinReviewWindow: false }), null);
+});
+
+test("WA-09 reactivation adapter enforces consent, approval and frequency cap", () => {
+  const base = { audienceId: "audience_1", audienceVersion: "v1", correlationId: "corr_4",
+    occurredAt: new Date("2026-11-21T00:00:00.000Z"), explicitlyConsented: true,
+    templateApproved: true, withinFrequencyCap: true, eligibleRecipientCount: 1 };
+  assert.equal(buildReactivationEvent(base).type, "reactivation.campaign-ready");
+  assert.equal(buildReactivationEvent({ ...base, explicitlyConsented: false }), null);
+  assert.equal(buildReactivationEvent({ ...base, withinFrequencyCap: false }), null);
+});
+
+test("WA-10 support adapter rejects unsafe auto-replies and unauthorized conversations", () => {
+  const base = { conversationId: "conversation_1", messageVersion: "m1", correlationId: "corr_5",
+    occurredAt: new Date("2026-11-21T00:00:00.000Z"), disposition: "auto-reply",
+    safeReplyAvailable: true, authorizedAccount: true };
+  assert.equal(buildSupportReplyEvent(base).type, "support.inbound-reply");
+  assert.equal(buildSupportReplyEvent({ ...base, safeReplyAvailable: false }), null);
+  assert.equal(buildSupportReplyEvent({ ...base, authorizedAccount: false }), null);
+});
+
+test("WA-11 admin adapter requires privilege, recipient authorization and preview approval", () => {
+  const base = { requestId: "request_1", approvalVersion: "v1", correlationId: "corr_6",
+    occurredAt: new Date("2026-11-21T00:00:00.000Z"), isSuperAdmin: true,
+    messagingPrivilege: true, recipientAuthorized: true, previewApproved: true };
+  assert.equal(buildAdminMessageEvent(base).type, "admin.message-approved");
+  assert.equal(buildAdminMessageEvent({ ...base, messagingPrivilege: false }), null);
+  assert.equal(buildAdminMessageEvent({ ...base, recipientAuthorized: false }), null);
+});
+
+test("WA-12 central controls enforce kill switch, dry-run, template approval and queue cap", () => {
+  const base = { enabled: true, dryRun: false, category: "utility", queueDepth: 1,
+    queueLimit: 10, templateApproved: true };
+  assert.deepEqual(evaluateAutomationControls(base), { allowed: true, category: "utility" });
+  for (const patch of [
+    { enabled: false }, { dryRun: true }, { templateApproved: false }, { queueDepth: 10 },
+  ]) assert.equal(evaluateAutomationControls({ ...base, ...patch }).allowed, false);
 });

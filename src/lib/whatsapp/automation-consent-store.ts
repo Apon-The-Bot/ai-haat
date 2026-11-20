@@ -5,6 +5,47 @@ type Store = Pick<Prisma.TransactionClient, "whatsappAutomationIdentity">;
 type RevocationStore = Pick<Prisma.TransactionClient,
   "whatsappAutomationIdentity" | "whatsappAutomationConsent" | "whatsappAutomationSuppression">;
 
+type ConsentStore = Pick<Prisma.TransactionClient,
+  "whatsappAutomationIdentity" | "whatsappAutomationConsent">;
+
+const purposes = new Set<AutomationPurpose>([
+  "authentication", "order", "payment", "subscription", "abandoned-checkout",
+  "campaign", "stock", "review", "reactivation", "support", "admin-operational",
+]);
+
+// Grants are accepted only for an existing, current, verified identity. The
+// caller must establish ownership before invoking this transaction-scoped API.
+export async function grantAutomationConsent(tx: ConsentStore, input: {
+  userId: string;
+  revision: string;
+  addressFingerprint: string;
+  purpose: AutomationPurpose;
+  wordingVersion: string;
+  locale: string;
+  source: "preference-center" | "explicit-enrollment";
+  now: Date;
+}) {
+  const { userId, revision, addressFingerprint, purpose, wordingVersion, locale, source, now } = input;
+  if (!purposes.has(purpose) || !/^[a-f0-9]{64}$/.test(addressFingerprint)
+    || !wordingVersion.trim() || !locale.trim() || !Number.isFinite(now.getTime())) {
+    return { granted: false, reason: "invalid-evidence" } as const;
+  }
+  const identity = await tx.whatsappAutomationIdentity.findUnique({
+    where: { userId_revision: { userId, revision } },
+    select: { id: true, addressFingerprint: true, verifiedAt: true, revokedAt: true },
+  });
+  if (!identity || identity.revokedAt !== null || identity.addressFingerprint !== addressFingerprint
+    || identity.verifiedAt.getTime() > now.getTime()) {
+    return { granted: false, reason: "unverified-identity" } as const;
+  }
+  await tx.whatsappAutomationConsent.upsert({
+    where: { identityId_purpose: { identityId: identity.id, purpose } },
+    create: { identityId: identity.id, purpose, grantedAt: now, revokedAt: null, wordingVersion, locale, source },
+    update: { grantedAt: now, revokedAt: null, wordingVersion, locale, source },
+  });
+  return { granted: true, identityId: identity.id, purpose } as const;
+}
+
 // The application supplies the authenticated user ID and wraps both writes in
 // its transaction. Repeating an opt-out leaves the original evidence intact.
 export async function revokeAutomationConsent(tx: RevocationStore, input: {

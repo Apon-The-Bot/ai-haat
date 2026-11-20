@@ -15,3 +15,14 @@ export async function recordAutomationEvent(tx: EventStore, input: unknown) {
   });
   return { recorded: true, inserted: result.count === 1, eventId: dedupeKey } as const;
 }
+
+export async function recordBuiltAutomationEvent(
+  tx: EventStore,
+  build: () => unknown,
+) {
+  // Domain callers build from their authoritative post-mutation state inside
+  // the same transaction. A null result is an intentional no-op.
+  const input = build();
+  if (input === null) return { recorded: false, reason: "not-eligible" } as const;
+  return recordAutomationEvent(tx, input);
+}

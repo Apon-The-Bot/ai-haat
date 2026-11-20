@@ -5,6 +5,12 @@ const rules = {
   "order.delivered": { producer: "fulfillment", template: "order-delivered" },
   "payment.settled": { producer: "payments", template: "payment-settled" },
   "subscription.expiry-reminder": { producer: "subscriptions", template: "subscription-expiry-reminder" },
+  "marketing.campaign-ready": { producer: "marketing", template: "marketing-campaign" },
+  "stock.back-in-stock": { producer: "inventory", template: "stock-back-in-stock" },
+  "review.request-ready": { producer: "reviews", template: "review-request" },
+  "reactivation.campaign-ready": { producer: "reactivation", template: "reactivation-campaign" },
+  "support.inbound-reply": { producer: "support", template: "support-auto-reply" },
+  "admin.message-approved": { producer: "admin", template: "admin-message" },
 } as const;
 
 type EventType = keyof typeof rules;
