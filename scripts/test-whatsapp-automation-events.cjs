@@ -58,7 +58,6 @@ test("durable consent lookup rejects a changed address and respects stored suppr
   identity.suppressions.push({ scope: "promotional" });
   assert.equal((await readAutomationEligibility(db, input)).reason, "suppressed");
 });
-
 test("retries share a key, while different versions and entities have separate keys", () => {
   const describe = (patch) => describeAutomationEvent(parseAutomationEvent({ ...event, ...patch }));
   const first = describe({});
@@ -68,7 +67,6 @@ test("retries share a key, while different versions and entities have separate k
   assert.notEqual(first.dedupeKey, describe({ entityVersion: "settlement_002" }).dedupeKey);
   assert.notEqual(first.dedupeKey, describe({ entityId: "order_002" }).dedupeKey);
 });
-
 test("rejects unknown fields, mismatched producer, invalid version and malformed time", () => {
   for (const patch of [
     { body: "unapproved" }, { phone: "fixture" }, { type: "__proto__" }, { producer: "orders" },
@@ -76,7 +74,6 @@ test("rejects unknown fields, mismatched producer, invalid version and malformed
     { occurredAt: "2026-02-30T00:00:00.000Z" }, { occurredAt: "2026-11-21T06:00:00+06:00" },
   ]) assert.equal(parseAutomationEvent({ ...event, ...patch }), null);
 });
-
 test("outbox validates before writing and retries use the same primary key", async () => {
   const rows = new Map();
   const tx = { whatsappAutomationEvent: { createMany: async ({ data, skipDuplicates }) => {
@@ -95,7 +92,6 @@ test("outbox validates before writing and retries use the same primary key", asy
   assert.equal(first.inserted, true);
   assert.equal(rows.size, 1);
 });
-
 test("lifecycle bridge records only an eligible built event inside the caller transaction", async () => {
   const rows = [];
   const tx = { whatsappAutomationEvent: { createMany: async ({ data }) => {
@@ -108,7 +104,6 @@ test("lifecycle bridge records only an eligible built event inside the caller tr
   assert.equal((await recordBuiltAutomationEvent(tx, () => valid)).inserted, true);
   assert.equal(rows.length, 1);
 });
-
 test("two inspectors finalize an expired lease only once and leave future events alone", async () => {
   const now = new Date("2026-11-21T00:01:00Z");
   const id = describeAutomationEvent(event).dedupeKey;
@@ -137,7 +132,6 @@ test("two inspectors finalize an expired lease only once and leave future events
   assert.equal(results.reduce((sum, result) => sum + result.invalid, 0), 1);
   assert.deepEqual(rows.map(({ state }) => state), ["Inspected", "Invalid", "Pending"]);
 });
-
 test("consent is explicit and bound to verified ownership, purpose and current number revision", () => {
   const verifiedAt = new Date("2026-11-20T00:00Z");
   const now = new Date("2026-11-21T00:00Z");
@@ -161,7 +155,6 @@ test("consent is explicit and bound to verified ownership, purpose and current n
     suppressions: [{ identityId: identity.id, scope: "promotional" }],
   }).allowed, true);
 });
-
 test("consent revocation is scoped, ownership-bound and idempotent", async () => {
   const now = new Date("2026-11-21T00:00Z");
   const calls = { suppression: [], updates: [] };
@@ -197,7 +190,6 @@ test("consent revocation is scoped, ownership-bound and idempotent", async () =>
     userId: "other", revision: "2", scope: "global", now,
   }), { suppressed: false });
 });
-
 test("WhatsApp fingerprints require canonical E.164 and a dedicated 256-bit key", () => {
   const { fingerprintWhatsAppAddress } = load("automation-fingerprint");
   const key = Buffer.alloc(32, 7);
@@ -208,7 +200,6 @@ test("WhatsApp fingerprints require canonical E.164 and a dedicated 256-bit key"
   assert.throws(() => fingerprintWhatsAppAddress("8801700000000", key));
   assert.throws(() => fingerprintWhatsAppAddress("+8801700000000", Buffer.alloc(31)));
 });
-
 test("consent grant requires the current verified identity and safely re-grants a revoked purpose", async () => {
   const now = new Date("2026-11-21T00:00Z");
   const calls = [];
@@ -236,7 +227,6 @@ test("consent grant requires the current verified identity and safely re-grants 
     wordingVersion: "v2", locale: "bn", source: "preference-center", now,
   })).reason, "invalid-evidence");
 });
-
 test("WA-06 marketing adapter requires approval and an eligible audience", () => {
   const base = { campaignId: "campaign_1", campaignVersion: "v1", correlationId: "corr_1",
     occurredAt: new Date("2026-11-21T00:00:00.000Z"), eligibleRecipientCount: 2,
