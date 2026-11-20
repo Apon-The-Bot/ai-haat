@@ -1,7 +1,7 @@
 import type { AnyMessageContent } from "@whiskeysockets/baileys";
 
 type Media={filename:string;mime:string;content:Buffer};
-const limit=2*1024*1024;
+const limit=5*1024*1024;
 export function validateMedia(value:unknown):Media {
   if (!value || typeof value!=="object" || !("base64" in value) || typeof value.base64!=="string" ||
       value.base64.length>Math.ceil(limit/3)*4 || !("filename" in value) || typeof value.filename!=="string")

@@ -37,7 +37,7 @@ export async function POST(req:NextRequest) {
   if (auth instanceof NextResponse) return auth;
   if (!req.headers.get("origin") || !isSameOriginMutation(req)) return NextResponse.json({error:"Invalid origin"},{status:403});
   if (!checkRateLimit("wa-messages:"+auth.user.id,30,60000).allowed) return NextResponse.json({error:"Try again in a minute"},{status:429});
-  if (Number(req.headers.get("content-length"))>2900000) return invalid("Attachment exceeds 2 MiB");
+  if (Number(req.headers.get("content-length"))>7100000) return invalid("Attachment exceeds 5 MiB");
   const reader=req.body?.getReader();
   if (!reader) return invalid("Missing request");
   const chunks:Uint8Array[]=[];
@@ -46,7 +46,7 @@ export async function POST(req:NextRequest) {
     const {done,value}=await reader.read();
     if(done) break;
     size+=value.byteLength;
-    if(size>2900000){await reader.cancel();return invalid("Attachment exceeds 2 MiB");}
+    if(size>7100000){await reader.cancel();return invalid("Attachment exceeds 5 MiB");}
     chunks.push(value);
   }
   let input;

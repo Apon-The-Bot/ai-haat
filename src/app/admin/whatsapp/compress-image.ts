@@ -1,4 +1,4 @@
-const LIMIT = 2 * 1024 * 1024;
+const LIMIT = 5 * 1024 * 1024;
 
 export async function compressImage(file: File): Promise<File> {
   if (!file.type.startsWith("image/") || file.size <= LIMIT) return file;

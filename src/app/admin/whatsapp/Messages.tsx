@@ -66,7 +66,7 @@ export function Messages({accountId}:{accountId:string}) {
     const file=attachment;
     let media;
     if(file instanceof File && file.size) {
-      if(file.size>2097152){setError("Choose a file up to 2 MiB");return;}
+      if(file.size>5242880){setError("Choose a file up to 5 MiB");return;}
       const bytes=new Uint8Array(await file.arrayBuffer());
       let binary="";
       for(let i=0;i<bytes.length;i+=8192) binary+=String.fromCharCode(...Array.from(bytes.subarray(i,i+8192)));
@@ -104,7 +104,7 @@ export function Messages({accountId}:{accountId:string}) {
           value={draft} onChange={e=>setDraft(e.target.value)}/></label>
         <label>Schedule (optional) <input type="datetime-local" name="due"/></label>
         <label>Schedule timezone <select name="timezone">{Object.keys(zones).map(z=><option key={z}>{z}</option>)}</select></label>
-        <div><label>Attachment · large images are compressed automatically
+        <div><label>Attachment (up to 5 MiB) · large images are compressed automatically
           <input ref={attachmentInput} disabled={pending} type="file" accept="image/png,image/jpeg,image/webp,video/mp4,application/pdf,audio/ogg"
             onChange={e=>void selectAttachment(e.target.files?.[0])}/></label>
           {compressing && <p role="status">Optimizing image…</p>}
