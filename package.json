@@ -6,6 +6,7 @@
     "predev": "node scripts/db-env-guard.mjs --mode=dev",
     "dev": "next dev",
     "build": "node scripts/build.mjs",
+    "production:eps-migrate-build": "npx prisma migrate deploy && npm run build",
     "start": "next start",
     "db:guard": "node scripts/db-env-guard.mjs --mode=dev",
     "db:migrate:dev": "node scripts/db-env-guard.mjs --mode=dev-only && prisma migrate dev",
