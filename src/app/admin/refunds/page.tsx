@@ -420,13 +420,16 @@ export default function AdminRefundsPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">প্রেরক নাম্বার / গেটওয়ে রেফারেন্স</label>
+                    <label className="text-xs font-bold text-slate-700">
+                      {selectedRequest.order?.paymentMethod === "EPS" ? "EPS রিফান্ড নিশ্চিতকরণ রেফারেন্স *" : "প্রেরক নাম্বার / গেটওয়ে রেফারেন্স"}
+                    </label>
                     <input
                       type="text"
                       value={modalGatewayRef}
                       onChange={(e) => setModalGatewayRef(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900"
-                      placeholder="e.g. 017XXXXXXXX"
+                      placeholder={selectedRequest.order?.paymentMethod === "EPS" ? "EPS refund reference" : "e.g. 017XXXXXXXX"}
+                      required={selectedRequest.order?.paymentMethod === "EPS"}
                     />
                   </div>
                 </div>

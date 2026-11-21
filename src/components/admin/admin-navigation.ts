@@ -122,6 +122,7 @@ export const adminNavigation: AdminNavigationGroup[] = [
       items: [
         { name: "Reports & Insights", href: "/admin/reports", icon: TrendingUp },
         { name: "Payment Reconciliation", href: "/admin/reconciliation", icon: Wallet },
+        { name: "EPS Payments", href: "/admin/eps-payments", icon: Wallet },
         { name: "Demand & Waitlist", href: "/admin/demand", icon: ListChecks },
       ],
     },

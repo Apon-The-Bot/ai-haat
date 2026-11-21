@@ -1,0 +1,23 @@
+CREATE TABLE `eps_payment_attempts` (
+    `merchantTransactionId` VARCHAR(40) NOT NULL,
+    `providerTransactionId` VARCHAR(191) NULL,
+    `settlementTransactionId` VARCHAR(191) NULL,
+    `initiationKey` VARCHAR(191) NULL,
+    `checkoutUrl` TEXT NULL,
+    `initializationCode` VARCHAR(16) NULL,
+    `reference` VARCHAR(191) NOT NULL,
+    `userId` VARCHAR(191) NOT NULL,
+    `purpose` VARCHAR(24) NOT NULL,
+    `mode` VARCHAR(8) NOT NULL,
+    `storeId` VARCHAR(191) NOT NULL,
+    `amountBDT` DECIMAL(16, 2) NOT NULL,
+    `state` VARCHAR(32) NOT NULL DEFAULT 'INITIALIZING',
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    UNIQUE INDEX `eps_payment_attempts_providerTransactionId_key`(`providerTransactionId`),
+    UNIQUE INDEX `eps_payment_attempts_settlementTransactionId_key`(`settlementTransactionId`),
+    UNIQUE INDEX `eps_payment_attempts_initiationKey_key`(`initiationKey`),
+    INDEX `eps_payment_attempts_reference_createdAt_idx`(`reference`, `createdAt`),
+    INDEX `eps_payment_attempts_state_updatedAt_idx`(`state`, `updatedAt`),
+    PRIMARY KEY (`merchantTransactionId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

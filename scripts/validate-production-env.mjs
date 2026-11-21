@@ -6,7 +6,7 @@ const required = [
   "DATABASE_URL", "NEXTAUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET",
   "MFA_ENCRYPTION_KEY", "EMAIL_OTP_PEPPER",
   "MFA_RECOVERY_CODE_PEPPER", "CRON_SECRET", "BACKUP_ENCRYPTION_KEY",
-  "SMTP_HOST", "SMTP_USER", "SMTP_PASS", "PIPRAPAY_BASE_URL", "PIPRAPAY_API_KEY",
+  "SMTP_HOST", "SMTP_USER", "SMTP_PASS",
 ];
 const publicKeys = new Set([
   "NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_BDT_PER_USD",
@@ -39,6 +39,22 @@ for (const [index, line] of source.split(/\r?\n/).entries()) {
 }
 
 const env = parseEnv(source);
+if (env.EPS_PAYMENT_ENABLED === "true") {
+  if (env.EPS_MODE !== "live") errors.push("EPS_MODE: expected live in production");
+  required.push(...["USERNAME", "PASSWORD", "HASH_KEY", "STORE_ID", "MERCHANT_ID", "CHECKOUT_ORIGIN"]
+    .map((key) => `EPS_LIVE_${key}`));
+  if (env.EPS_LIVE_CHECKOUT_ORIGIN && !/^https:\/\/[a-z0-9.-]+\.eps\.com\.bd$/i.test(env.EPS_LIVE_CHECKOUT_ORIGIN)) {
+    errors.push("EPS_LIVE_CHECKOUT_ORIGIN: expected an HTTPS EPS origin");
+  } else if (env.EPS_LIVE_CHECKOUT_ORIGIN &&
+      /(?:^|\.)(?:sandbox|test|staging)/i.test(new URL(env.EPS_LIVE_CHECKOUT_ORIGIN).hostname)) {
+    errors.push("EPS_LIVE_CHECKOUT_ORIGIN: expected a live EPS host");
+  }
+  if (env.EPS_LIVE_TRANSACTION_TYPE_ID && env.EPS_LIVE_TRANSACTION_TYPE_ID !== "1") {
+    errors.push("EPS_LIVE_TRANSACTION_TYPE_ID: expected web transaction type 1");
+  }
+} else {
+  required.push("PIPRAPAY_BASE_URL", "PIPRAPAY_API_KEY");
+}
 for (const key of required) {
   if (!env[key]?.trim() || /^(REPLACE_|CHANGEME|YOUR_)/i.test(env[key])) {
     errors.push(`${key}: missing production value`);

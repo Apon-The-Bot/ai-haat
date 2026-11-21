@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       where,
       include: {
         user: { select: { name: true, email: true } },
-        order: { select: { orderNumber: true } },
+        order: { select: { orderNumber: true, paymentMethod: true } },
         orderItem: { select: { productName: true, variationName: true } }
       },
       orderBy: { createdAt: "desc" }
@@ -66,13 +66,19 @@ export async function POST(req: NextRequest) {
     }
 
     if (action !== "REJECT") {
-      const refund = await prisma.refund.findUnique({ where: { id: refundId } });
+      const refund = await prisma.refund.findUnique({
+        where: { id: refundId },
+        include: { order: { select: { paymentMethod: true } } },
+      });
       if (!refund || !["REQUESTED", "UNDER_REVIEW", "APPROVED"].includes(refund.status) ||
         (action === "APPROVE" && refund.status === "APPROVED") ||
         (action === "PROCESS_WALLET" && refund.refundMethod !== "WALLET") ||
         (action === "COMPLETE_MANUAL" && (refund.status !== "APPROVED" || refund.refundMethod === "WALLET" ||
           !payoutTrxId?.trim()))) {
         return NextResponse.json({ error: "This refund is not eligible for the selected action." }, { status: 409 });
+      }
+      if (action === "COMPLETE_MANUAL" && refund.order.paymentMethod === "EPS" && !gatewayRef?.trim()) {
+        return NextResponse.json({ error: "EPS refund confirmation reference is required." }, { status: 400 });
       }
       const amount = approvedAmount ?? refund.approvedAmountBDT ?? refund.requestedAmountBDT;
       if (typeof amount !== "number" || !Number.isFinite(amount) || amount < 0.01 ||

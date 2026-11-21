@@ -1,5 +1,7 @@
 "use client";
 
+import { EpsBillingFields, readEpsBilling } from "@/components/wallet/EpsBillingFields";
+
 import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -310,7 +312,8 @@ function CheckoutContent() {
   const hasEnoughWalletBalance = user ? walletBalance >= finalTotalBDT : false;
   const walletShortage = Math.max(0, finalTotalBDT - walletBalance);
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent<HTMLFormElement>) => {
+    const billing = readEpsBilling(e.currentTarget);
     e.preventDefault();
 
     // 1. Direct Login check
@@ -545,6 +548,7 @@ function CheckoutContent() {
             customerName: cleanFullName,
             customerEmail: cleanEmail,
             customerPhone: cleanPhone,
+            billing,
             metadata: {
               deliveryMethod,
               deliveryDestination: effectiveDeliveryHandle,
@@ -642,6 +646,7 @@ function CheckoutContent() {
           </div>
         ) : items.length > 0 ? (
           <form onSubmit={handlePlaceOrder}>
+              {paymentMethod === "gateway" && <EpsBillingFields />}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
               
               {/* LEFT COLUMN: Customer Info, Delivery Selector, Payment Method (7 Cols) */}
@@ -1080,7 +1085,7 @@ function CheckoutContent() {
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-xs sm:text-sm font-bold text-[#1A1D26]">
-                                অনলাইন পেমেন্ট গেটওয়ে (PipraPay Automated)
+                                অনলাইন পেমেন্ট গেটওয়ে
                               </span>
                               <span className="px-2 py-0.5 text-[9px] font-black uppercase bg-[#FC5C03] text-white rounded-full">
                                 Instant Auto

@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, Suspense } from "react";
+import { EpsBillingFields, readEpsBilling } from "@/components/wallet/EpsBillingFields";
+
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, X, Zap, RefreshCw, Clock, Gift } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
@@ -19,6 +21,7 @@ function WalletContent() {
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
   const [amount, setAmount] = useState("500");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const topupReference = useRef<{ amount: string; id: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Gift Card Redeem State
@@ -111,7 +114,8 @@ function WalletContent() {
   }, [searchParams, fetchTransactions, isBn, refreshUser, showToast]);
 
   // Direct Gateway Top-up
-  const handleGatewayTopup = async (e: React.FormEvent) => {
+  const handleGatewayTopup = async (e: React.FormEvent<HTMLFormElement>) => {
+    const billing = readEpsBilling(e.currentTarget);
     e.preventDefault();
     const numAmount = Number(amount);
     if (isNaN(numAmount) || numAmount < 10) {
@@ -120,7 +124,10 @@ function WalletContent() {
     }
 
     setIsSubmitting(true);
-    const topupOrderId = `WT-${Date.now().toString().slice(-6)}`;
+    if (topupReference.current?.amount !== amount) {
+      topupReference.current = { amount, id: `WT-${crypto.randomUUID()}` };
+    }
+    const topupOrderId = topupReference.current.id;
 
     try {
       const res = await fetch("/api/payment/create", {
@@ -132,6 +139,7 @@ function WalletContent() {
           customerName: user?.name || "Customer",
           customerEmail: user?.email || "",
           customerPhone: user?.phone || "",
+          billing,
           metadata: {
             type: "WALLET_TOPUP",
             userId: user?.id,
@@ -383,6 +391,7 @@ function WalletContent() {
             </div>
 
             <form onSubmit={handleGatewayTopup} className="space-y-4">
+              <EpsBillingFields />
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-slate-700">
                   {isBn ? "টাকার পরিমাণ (BDT) *" : "Enter Amount (BDT) *"}

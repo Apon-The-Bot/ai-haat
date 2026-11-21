@@ -1,5 +1,7 @@
 "use client";
 
+import { EpsBillingFields, readEpsBilling } from "@/components/wallet/EpsBillingFields";
+
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -208,7 +210,8 @@ export function QuickCheckoutModal() {
   };
 
   // 1-Click Order Submission Handler
-  const handleQuickSubmit = async (e: React.FormEvent) => {
+  const handleQuickSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const billing = readEpsBilling(e.currentTarget);
     e.preventDefault();
     if (isSubmitting) return;
     if (!user?.id) {
@@ -357,6 +360,7 @@ export function QuickCheckoutModal() {
             customerName: cleanName,
             customerEmail: cleanEmail,
             customerPhone: cleanPhone,
+            billing,
             paymentMethod: "gateway",
           }),
         });
@@ -511,6 +515,7 @@ export function QuickCheckoutModal() {
           ) : (
             /* ORDER FORM VIEW */
             <form onSubmit={handleQuickSubmit} className="space-y-5">
+              {paymentMethod === "gateway" && <EpsBillingFields />}
               {/* 1. Product Summary Card */}
               <div className="flex gap-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 items-center">
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-white border border-slate-200 shrink-0">

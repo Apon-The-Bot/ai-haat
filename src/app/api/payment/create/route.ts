@@ -5,6 +5,18 @@ import { requireAuth } from "@/lib/auth-guard";
 import { isSameOriginMutation } from "@/lib/security/csrf";
 import { randomUUID } from "node:crypto";
 import { checkFeatureEntitlement } from "@/lib/user-control/user-control-service";
+import { initializeEpsAttempt } from "@/lib/payments/eps/initialize-attempt";
+
+function parseBilling(value: unknown) {
+  if (!value || typeof value !== "object") return null;
+  const fields = value as Record<string, unknown>;
+  const read = (key: string) => typeof fields[key] === "string" ? fields[key].trim() : "";
+  const billing = { name: read("name"), address: read("address"), city: read("city"),
+    state: read("state"), phone: read("phone"), postcode: read("postcode") };
+  const valid = Object.values(billing).every((field) => field.length > 0 && field.length <= 200) &&
+    /^(?:\+?88)?01\d{9}$/.test(billing.phone) && /^\d{4}$/.test(billing.postcode);
+  return valid ? billing : null;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +45,8 @@ export async function POST(req: Request) {
     const baseUrl = process.env.PIPRAPAY_BASE_URL;
     const apiKey = process.env.PIPRAPAY_API_KEY;
 
-    if (!baseUrl || !apiKey) {
+    const epsEnabled = process.env.EPS_PAYMENT_ENABLED === "true";
+    if (!epsEnabled && (!baseUrl || !apiKey)) {
       return NextResponse.json(
         { success: false, message: "PipraPay Payment Gateway is not configured." },
         { status: 503 }
@@ -48,7 +61,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Order reference required." }, { status: 400 });
     }
     const isTopup = reference.startsWith("WT-");
-    let currentOrderId = isTopup ? `WT-${randomUUID()}` : reference;
+    if (isTopup && epsEnabled && !/^WT-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(reference)) {
+      return NextResponse.json({ success: false, message: "Invalid wallet payment reference." }, { status: 400 });
+    }
+    let currentOrderId = isTopup && !epsEnabled ? `WT-${randomUUID()}` : reference;
     let payableAmount = 0;
 
     // 1. Derive authoritative payable amount
@@ -107,6 +123,42 @@ export async function POST(req: Request) {
     }
 
     const cleanEmail = user.email.trim().toLowerCase();
+    if (epsEnabled) {
+      const billing = parseBilling(body.billing);
+      if (!billing) {
+        return NextResponse.json({ success: false, message: "EPS billing details are required." }, { status: 400 });
+      }
+      const prefix = process.env.EPS_MODE === "live" ? "EPS_LIVE" : "EPS_SANDBOX";
+      const storeId = process.env[`${prefix}_STORE_ID`];
+      const merchantId = process.env[`${prefix}_MERCHANT_ID`];
+      const transactionTypeId = Number(process.env[`${prefix}_TRANSACTION_TYPE_ID`] ?? "1");
+      if (!storeId?.trim() || !merchantId?.trim() || transactionTypeId !== 1) {
+        return NextResponse.json({ success: false, message: "EPS payments are unavailable." }, { status: 503 });
+      }
+      const result = await initializeEpsAttempt({
+        reference: currentOrderId,
+        userId: user.id,
+        purpose: isTopup ? "WALLET_TOPUP" : "ORDER",
+        returnUrl: (id) => new URL(`/payment/eps/wallet?merchantTransactionId=${id}`, siteUrl).href,
+        payment: {
+          storeId,
+          merchantId,
+          transactionTypeId,
+          totalAmount: payableAmount,
+          customerName: billing.name,
+          customerEmail: cleanEmail,
+          customerAddress: billing.address,
+          customerCity: billing.city,
+          customerState: billing.state,
+          customerPostcode: billing.postcode,
+          customerCountry: "Bangladesh",
+          customerPhone: billing.phone,
+          productName: isTopup ? "AI Haat Wallet Top-up" : `AI Haat Order ${currentOrderId}`,
+        },
+      });
+      return NextResponse.json({ success: true, pp_url: result.redirectUrl, pp_id: result.merchantTransactionId });
+    }
+    if (!baseUrl || !apiKey) return NextResponse.json({ success: false }, { status: 503 });
     const cleanPhone = (customerPhone || "01700000000").trim();
     const cleanName = (customerName || "Customer").trim();
 
@@ -173,8 +225,8 @@ export async function POST(req: Request) {
       },
       { status: 400 }
     );
-  } catch (error: any) {
-    console.error("[Payment Create Error]:", error);
+  } catch {
+    console.error("[Payment Create Error] Payment initialization failed.");
     return NextResponse.json(
       { success: false, message: "Failed to initialize payment. Please try again." },
       { status: 500 }

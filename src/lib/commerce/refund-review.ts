@@ -156,6 +156,9 @@ export async function reviewRefundRequest(data: RefundReview, authorize?: Approv
     await prisma.$transaction(async (tx) => {
       await authorize!(tx);
       const current = await validateRefundAmount(tx, refund.id, finalAmount);
+      if (data.action === "COMPLETE_MANUAL" && current.order.paymentMethod === "EPS" && !data.gatewayRef?.trim()) {
+        throw new Error("EPS refund confirmation reference is required.");
+      }
       if (current.refundMethod === "WALLET" ? data.action !== "PROCESS_WALLET" : data.action !== "COMPLETE_MANUAL") {
         throw new Error("Payout action does not match the refund method.");
       }

@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { EpsBillingFields, readEpsBilling } from "@/components/wallet/EpsBillingFields";
+
+import React, { useState, useEffect, useRef } from "react";
 import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, ShieldCheck, Zap } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -13,6 +15,7 @@ export default function WalletPage() {
 
   const [rechargeAmount, setRechargeAmount] = useState<number>(500);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const topupReference = useRef<{ amount: number; id: string } | null>(null);
 
   const presetAmounts = [100, 200, 500, 1000, 2000];
 
@@ -29,7 +32,8 @@ export default function WalletPage() {
     }
   }, [user?.email]);
 
-  const handleGatewayRecharge = async (e: React.FormEvent) => {
+  const handleGatewayRecharge = async (e: React.FormEvent<HTMLFormElement>) => {
+    const billing = readEpsBilling(e.currentTarget);
     e.preventDefault();
     if (!user) {
       openLoginModal("/wallet");
@@ -41,7 +45,10 @@ export default function WalletPage() {
     }
 
     setIsSubmitting(true);
-    const topupOrderId = `WT-${Date.now().toString().slice(-6)}`;
+    if (topupReference.current?.amount !== rechargeAmount) {
+      topupReference.current = { amount: rechargeAmount, id: `WT-${crypto.randomUUID()}` };
+    }
+    const topupOrderId = topupReference.current.id;
 
     try {
       const res = await fetch("/api/payment/create", {
@@ -53,6 +60,7 @@ export default function WalletPage() {
           customerName: user.name || "Customer",
           customerEmail: user.email,
           customerPhone: user.phone || "",
+          billing,
           metadata: {
             type: "WALLET_TOPUP",
             userId: user.id,
@@ -130,6 +138,7 @@ export default function WalletPage() {
               </h3>
 
               <form onSubmit={handleGatewayRecharge} className="space-y-4">
+                <EpsBillingFields />
                 <div className="space-y-2">
                   <label className="block text-xs font-bold text-[#1A1D26]">
                     টাকার পরিমাণ (BDT) *

@@ -80,6 +80,7 @@ export async function finalizeWalletTopup(
         // Fast-path check: Is this transaction already registered?
         const existing = await tx.walletTransaction.findUnique({
           where: { trxId: cleanTrxId },
+          select: { amountBDT: true, userId: true, status: true },
         });
 
         if (existing) {
@@ -102,6 +103,7 @@ export async function finalizeWalletTopup(
 
         // Insert new transaction record (Protected by @unique on trxId in MySQL)
         await tx.walletTransaction.create({
+          select: { id: true },
           data: {
             userId,
             amountBDT: parsedAmount,
@@ -141,6 +143,7 @@ export async function finalizeWalletTopup(
       for (let attempt = 0; attempt < 5; attempt++) {
         const winnerTx = await prisma.walletTransaction.findUnique({
           where: { trxId: cleanTrxId },
+          select: { amountBDT: true, userId: true, status: true },
         });
         if (winnerTx && winnerTx.status === "APPROVED") {
           // Verify attributes on the concurrent winner

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import ts from "typescript";
 
-function loadModule(path, dependencies, fetchMock) {
+function loadModule(path, dependencies, fetchMock, envOverrides = {}) {
   const source = readFileSync(new URL(path, import.meta.url), "utf8");
   const code = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React },
@@ -19,6 +19,7 @@ function loadModule(path, dependencies, fetchMock) {
         NEXTAUTH_SECRET: "synthetic-test-only",
         PIPRAPAY_BASE_URL: "https://gateway.example.test",
         PIPRAPAY_API_KEY: "synthetic-test-only",
+        ...envOverrides,
       },
     }, fetchMock
   );
@@ -113,10 +114,12 @@ const request = (body, origin = "https://aihaat.shop") => new Request("https://a
 });
 let order = { id: "fixture-order", orderNumber: "AH-FIXTURE", userId: "other", totalBDT: 100, paymentStatus: "PENDING" };
 let gatewayCalls = 0;
+const epsModule = "@/lib/payments/eps/initialize-attempt";
 const payment = loadModule("../src/app/api/payment/create/route.ts", {
   ...common,
   "node:crypto": await import("node:crypto"),
   "@/lib/prisma": { prisma: { order: { findFirst: async () => order } } },
+  [epsModule]: { initializeEpsAttempt: () => assert.fail("Legacy flow called EPS") },
 }, async (_url, options) => {
   gatewayCalls++;
   const payload = JSON.parse(options.body);
@@ -194,6 +197,275 @@ assert.equal(createdOrder.userId, session.user.id);
 assert.equal(createdOrder.customerEmail, session.user.email);
 assert.equal((await payment.POST(request({ ...spoofed, orderId: order.id, amount: 1 }))).status, 200);
 assert.equal(gatewayCalls, 1);
+
+let epsCalls = 0;
+const epsPayment = loadModule("../src/app/api/payment/create/route.ts", {
+  ...common,
+  "node:crypto": await import("node:crypto"),
+  "@/lib/prisma": { prisma: { order: { findFirst: async () => order } } },
+  [epsModule]: { initializeEpsAttempt: async (params) => {
+    epsCalls++;
+    assert.equal(params.userId, "fixture");
+    assert.equal(params.reference, "AH-FIXTURE");
+    assert.equal(params.purpose, "ORDER");
+    assert.equal(params.payment.totalAmount, 100);
+    assert.equal(params.payment.customerEmail, "buyer@example.test");
+    assert.equal(params.payment.transactionTypeId, 1);
+    return { merchantTransactionId: "12345678901234", redirectUrl: "https://sandboxpg.eps.com.bd/checkout" };
+  } },
+}, () => assert.fail("EPS flow called legacy provider"), {
+  EPS_PAYMENT_ENABLED: "true", EPS_MODE: "sandbox",
+  EPS_SANDBOX_STORE_ID: "fixture-store", EPS_SANDBOX_MERCHANT_ID: "fixture-merchant",
+  PIPRAPAY_BASE_URL: "", PIPRAPAY_API_KEY: "",
+});
+assert.equal((await epsPayment.POST(request({ orderId: order.id }))).status, 400);
+assert.equal(epsCalls, 0);
+const epsCheckout = await epsPayment.POST(request({
+  ...spoofed, orderId: order.id, amount: 1,
+  billing: { name: "Fixture", phone: "01700000000", address: "Test address", city: "Dhaka", state: "Dhaka", postcode: "1205" },
+}));
+assert.equal(epsCheckout.status, 200);
+assert.equal(epsCheckout.body.pp_id, "12345678901234");
+assert.equal(epsCalls, 1);
+
+const epsId = "12345678901234";
+let epsAttempt = { merchantTransactionId: epsId, userId: "fixture", purpose: "ORDER", state: "PENDING" };
+let epsFinalizeCalls = 0;
+const epsVerification = loadModule("../src/app/api/payment/eps/wallet/verify/route.ts", {
+  ...common,
+  "@/lib/prisma": { prisma: { epsPaymentAttempt: { findFirst: async ({ where }) => {
+    return where.userId === epsAttempt.userId && where.merchantTransactionId === epsAttempt.merchantTransactionId
+      ? epsAttempt : null;
+  } } } },
+  "@/lib/payments/eps/finalize-wallet": { finalizeEpsWallet: () => assert.fail("Order routed to wallet") },
+  "@/lib/payments/eps/finalize-order": { finalizeEpsOrder: async (id, userId) => {
+    assert.equal(id, epsId);
+    assert.equal(userId, "fixture");
+    epsFinalizeCalls++;
+    return false;
+  } },
+});
+const verifyRequest = (origin = "https://aihaat.shop") => new Request(
+  `https://aihaat.shop/api/payment/eps/wallet/verify?merchantTransactionId=${epsId}`,
+  { method: "POST", headers: { origin } },
+);
+const originalSession = session;
+session = undefined;
+assert.equal((await epsVerification.POST(verifyRequest())).status, 401);
+session = originalSession;
+assert.equal((await epsVerification.POST(verifyRequest("https://evil.test"))).status, 403);
+epsAttempt.userId = "another-user";
+assert.equal((await epsVerification.POST(verifyRequest())).status, 404);
+assert.equal(epsFinalizeCalls, 0);
+epsAttempt.userId = "fixture";
+const unconfirmed = await epsVerification.POST(verifyRequest());
+assert.equal(unconfirmed.status, 202);
+assert.deepEqual(unconfirmed.body, { status: "PENDING", purpose: "ORDER" });
+epsAttempt.state = "FINALIZED";
+const completed = await epsVerification.POST(verifyRequest());
+assert.equal(completed.status, 200);
+assert.deepEqual(completed.body, { status: "FINALIZED", purpose: "ORDER" });
+assert.equal(epsFinalizeCalls, 1);
+
+const { Prisma } = await import("@prisma/client");
+let recentEpsMfa = false;
+let adminEpsState = "PENDING";
+let adminEpsAudits = 0;
+const adminActor = { user: { id: "fixture-admin", email: "admin@example.test" } };
+const adminEps = loadModule("../src/app/api/admin/eps-payments/reconcile/route.ts", {
+  ...common,
+  "@prisma/client": { Prisma },
+  "@/lib/auth-guard": {
+    requireAdminMfa: async () => adminActor,
+    requireRecentMfa: async () => recentEpsMfa ? adminActor : JsonResponse.json({ code: "STEP_UP_REQUIRED" }, { status: 403 }),
+  },
+  "@/lib/audit-logger": { logAdminAudit: async () => { adminEpsAudits++; } },
+  "@/lib/prisma": { prisma: { epsPaymentAttempt: {
+    findUnique: async () => ({ state: adminEpsState, purpose: "ORDER", userId: "fixture" }),
+  } } },
+  "@/lib/payments/eps/finalize-wallet": { finalizeEpsWallet: () => assert.fail("Order routed to wallet") },
+  "@/lib/payments/eps/finalize-order": { finalizeEpsOrder: async () => {
+    if (adminEpsState === "PENDING") {
+      throw new Prisma.PrismaClientKnownRequestError("Fixture settlement conflict", {
+        code: "P2002", clientVersion: "fixture", meta: { target: "eps_payment_attempts_settlementTransactionId_key" },
+      });
+    }
+    assert.fail("Terminal attempt was reprocessed");
+  } },
+});
+const adminEpsRequest = new Request(`https://aihaat.shop/api/admin/eps-payments/reconcile?id=${epsId}`, {
+  method: "POST", headers: { origin: "https://aihaat.shop" },
+});
+assert.equal((await adminEps.POST(adminEpsRequest)).status, 403);
+assert.equal(adminEpsAudits, 0);
+recentEpsMfa = true;
+const adminConflict = await adminEps.POST(adminEpsRequest);
+assert.equal(adminConflict.status, 409);
+assert.deepEqual(adminConflict.body, { status: "REFERENCE_CONFLICT" });
+assert.equal(adminEpsAudits, 1);
+adminEpsState = "REVIEW_REQUIRED";
+assert.deepEqual((await adminEps.POST(adminEpsRequest)).body, { status: "REVIEW_REQUIRED" });
+adminEpsState = "FINALIZED";
+assert.deepEqual((await adminEps.POST(adminEpsRequest)).body, { status: "FINALIZED" });
+assert.equal(adminEpsAudits, 1);
+const epsCronCandidates = [
+  { merchantTransactionId: epsId, userId: "fixture", state: "PENDING", purpose: "ORDER", updatedAt: new Date(0) },
+  { merchantTransactionId: "12345678901235", userId: "other", state: "PENDING", purpose: "WALLET_TOPUP", updatedAt: new Date(0) },
+];
+let epsCronQueries = 0;
+const epsCron = loadModule("../src/app/api/cron/eps-reconcile/route.ts", {
+  ...common,
+  "@/lib/cron-auth": { isCronAuthorized: (req) => req.headers.get("authorization") === "Bearer fixture-cron" },
+  "@/lib/prisma": { prisma: { epsPaymentAttempt: {
+    findMany: async ({ where, take }) => {
+      epsCronQueries++;
+      assert.equal(where.mode, "sandbox");
+      assert.equal(take, 2);
+      return epsCronCandidates;
+    },
+    updateMany: async ({ where }) => {
+      assert.equal(where.updatedAt.getTime(), 0);
+      return { count: Number(where.merchantTransactionId === epsId) };
+    },
+  } } },
+  "@/lib/payments/eps/finalize-order": { finalizeEpsOrder: async (id, owner) => {
+    assert.equal(id, epsId);
+    assert.equal(owner, "fixture");
+    return true;
+  } },
+  "@/lib/payments/eps/finalize-wallet": { finalizeEpsWallet: () => assert.fail("Unclaimed attempt was processed") },
+}, undefined, { EPS_MODE: "sandbox", EPS_PAYMENT_ENABLED: "false" });
+assert.equal((await epsCron.POST(new Request("https://aihaat.shop/api/cron/eps-reconcile", { method: "POST" }))).status, 401);
+assert.equal(epsCronQueries, 0);
+const cronResult = await epsCron.POST(new Request("https://aihaat.shop/api/cron/eps-reconcile", {
+  method: "POST", headers: { authorization: "Bearer fixture-cron" },
+}));
+assert.deepEqual(cronResult.body, { checked: 1, finalized: 1, errors: 0 });
+assert.equal(epsCronQueries, 1);
+
+let storedAttempt;
+const attemptsByKey = new Map();
+let providerInitializations = 0;
+let finishInitialization;
+let signalInitialization;
+const initializationStarted = new Promise((resolve) => { signalInitialization = resolve; });
+const initializationResult = new Promise((resolve) => { finishInitialization = resolve; });
+const epsCheckoutOrigin = "https://sandboxpg.eps.com.bd";
+const epsInitializer = loadModule("../src/lib/payments/eps/initialize-attempt.ts", {
+  "node:crypto": await import("node:crypto"),
+  "@prisma/client": { Prisma },
+  "@/lib/prisma": { prisma: { epsPaymentAttempt: {
+    create: async ({ data }) => {
+      if (attemptsByKey.has(data.initiationKey)) {
+        throw new Prisma.PrismaClientKnownRequestError("Duplicate order", { code: "P2002", clientVersion: "fixture" });
+      }
+      storedAttempt = { ...data, state: "INITIALIZING" };
+      attemptsByKey.set(data.initiationKey, storedAttempt);
+    },
+    findUnique: async ({ where }) => attemptsByKey.get(where.initiationKey),
+    updateMany: async ({ where, data }) => {
+      if (storedAttempt.merchantTransactionId !== where.merchantTransactionId || storedAttempt.state !== where.state) {
+        return { count: 0 };
+      }
+      Object.assign(storedAttempt, data);
+      return { count: 1 };
+    },
+  } } },
+  "./transactions": { createEpsTransactions: () => ({ initialize: async () => {
+    providerInitializations++;
+    signalInitialization();
+    return initializationResult;
+  } }) },
+}, undefined, {
+  EPS_PAYMENT_ENABLED: "true", EPS_MODE: "sandbox", EPS_SANDBOX_CHECKOUT_ORIGIN: epsCheckoutOrigin,
+  EPS_SANDBOX_USERNAME: "fixture-user", EPS_SANDBOX_PASSWORD: "fixture-password", EPS_SANDBOX_HASH_KEY: "fixture-key",
+});
+const initInput = {
+  reference: "AH-FIXTURE", userId: "fixture", purpose: "ORDER",
+  payment: { totalAmount: 100, storeId: "fixture-store" },
+  returnUrl: (id) => `https://aihaat.shop/payment/eps/wallet?merchantTransactionId=${id}`,
+};
+const firstInitialization = epsInitializer.initializeEpsAttempt(initInput);
+await initializationStarted;
+await assert.rejects(epsInitializer.initializeEpsAttempt(initInput), /already exists/);
+finishInitialization({ TransactionId: "eps-fixture", RedirectURL: `${epsCheckoutOrigin}/checkout` });
+const firstCheckout = await firstInitialization;
+assert.deepEqual(await epsInitializer.initializeEpsAttempt(initInput), firstCheckout);
+await assert.rejects(epsInitializer.initializeEpsAttempt({ ...initInput, userId: "other" }), /already exists/);
+await assert.rejects(epsInitializer.initializeEpsAttempt({ ...initInput, payment: { ...initInput.payment, totalAmount: 110 } }), /already exists/);
+assert.equal(providerInitializations, 1);
+const walletInput = { ...initInput, reference: "WT-fixture", purpose: "WALLET_TOPUP" };
+const walletCheckout = await epsInitializer.initializeEpsAttempt(walletInput);
+assert.deepEqual(await epsInitializer.initializeEpsAttempt(walletInput), walletCheckout);
+await assert.rejects(epsInitializer.initializeEpsAttempt({
+  ...walletInput, payment: { ...walletInput.payment, totalAmount: 110 },
+}), /already exists/);
+const otherWalletCheckout = await epsInitializer.initializeEpsAttempt({ ...walletInput, userId: "other" });
+assert.notEqual(otherWalletCheckout.merchantTransactionId, walletCheckout.merchantTransactionId);
+assert.equal(providerInitializations, 3);
+
+let epsOrderState = "PENDING";
+let epsAttemptState = "PENDING";
+let orderFulfillments = 0;
+let failEpsNotification = false;
+const epsTimeline = [];
+const epsOrderFinalizer = loadModule("../src/lib/payments/eps/finalize-order.ts", {
+  "@prisma/client": { Prisma },
+  "@/lib/analytics/server": { trackServerPurchase: async () => {} },
+  "@/lib/commerce/inventory": { tryAutoFulfillOrder: async () => { orderFulfillments++; } },
+  "@/lib/commerce/affiliates": { processPaidOrderCommission: async () => {} },
+  "@/lib/loyalty/coins": { awardCoinsForOrder: async () => {} },
+  "@/lib/notifications": { NOTIFICATION_EVENTS: {}, dispatchNotificationEvent: () => {
+    if (failEpsNotification) throw new Error("Fixture notification failure");
+  } },
+  "./verify-attempt": { verifyEpsAttempt: async () => ({
+    attempt: { purpose: "ORDER", mode: "sandbox", reference: "AH-FIXTURE" },
+    providerId: "eps-fixture", amountBDT: new Prisma.Decimal(100),
+  }) },
+  "@/lib/prisma": { prisma: {
+    orderTimelineEvent: { create: async ({ data }) => { epsTimeline.push(data); } },
+    $transaction: async (run) => run({
+    epsPaymentAttempt: {
+      updateMany: async ({ where, data }) => {
+        if (!where.state.in.includes(epsAttemptState)) return { count: 0 };
+        epsAttemptState = data.state;
+        return { count: 1 };
+      },
+      update: async ({ data }) => { epsAttemptState = data.state; },
+    },
+    order: {
+      findUnique: async () => ({
+        id: "fixture-order", userId: "fixture", orderNumber: "AH-FIXTURE", totalBDT: 100,
+        customerEmail: "buyer@example.test", _count: { items: 1 },
+      }),
+      updateMany: async ({ where, data }) => {
+        if (where.paymentStatus !== epsOrderState) return { count: 0 };
+        epsOrderState = data.paymentStatus;
+        return { count: 1 };
+      },
+    },
+    orderTimelineEvent: { create: async ({ data }) => { epsTimeline.push(data); } },
+  }) } },
+});
+assert.equal(await epsOrderFinalizer.finalizeEpsOrder(epsId, "fixture"), true);
+assert.equal(await epsOrderFinalizer.finalizeEpsOrder(epsId, "fixture"), false);
+assert.equal(epsAttemptState, "FINALIZED");
+assert.equal(epsOrderState, "VERIFIED");
+assert.equal(orderFulfillments, 1);
+epsAttemptState = "PENDING";
+assert.equal(await epsOrderFinalizer.finalizeEpsOrder(epsId, "fixture"), false);
+assert.equal(epsAttemptState, "REVIEW_REQUIRED");
+assert.equal(epsOrderState, "VERIFIED");
+assert.equal(orderFulfillments, 1);
+epsOrderState = "PENDING";
+epsAttemptState = "PENDING";
+failEpsNotification = true;
+assert.equal(await epsOrderFinalizer.finalizeEpsOrder(epsId, "fixture"), true);
+assert.equal(epsOrderState, "VERIFIED");
+assert.equal(epsAttemptState, "FINALIZED");
+assert.equal(epsTimeline.at(-1)?.status, "POST_PAYMENT_REVIEW");
+assert.match(epsTimeline.at(-1)?.note, /notification/);
+assert.equal(orderFulfillments, 2);
 
 let verificationMetadata;
 let fulfillmentCalls = 0;

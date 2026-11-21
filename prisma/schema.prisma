@@ -755,6 +755,28 @@ model DeliveredKey {
   @@map("delivered_keys")
 }
 
+model EpsPaymentAttempt {
+  merchantTransactionId String   @id @db.VarChar(40)
+  providerTransactionId String?  @unique @db.VarChar(191)
+  settlementTransactionId String? @unique @db.VarChar(191)
+  initiationKey         String?  @unique @db.VarChar(191)
+  checkoutUrl           String?  @db.Text
+  initializationCode    String?  @db.VarChar(16)
+  reference             String
+  userId                String
+  purpose               String    @db.VarChar(24)
+  mode                  String    @db.VarChar(8)
+  storeId               String
+  amountBDT             Decimal   @db.Decimal(16, 2)
+  state                 String    @default("INITIALIZING") @db.VarChar(32)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([reference, createdAt])
+  @@index([state, updatedAt])
+  @@map("eps_payment_attempts")
+}
+
 model WalletTransaction {
   id           String            @id @default(cuid())
   userId       String

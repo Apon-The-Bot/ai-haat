@@ -44,10 +44,16 @@ export async function GET() {
   };
 
   // 4. Payment Gateway Check
-  const hasPipraPay = Boolean(process.env.PIPRAPAY_API_KEY && process.env.PIPRAPAY_MERCHANT_ID);
+  const epsEnabled = process.env.EPS_PAYMENT_ENABLED === "true";
+  const mode = process.env.EPS_MODE;
+  const epsPrefix = mode === "live" ? "EPS_LIVE" : mode === "sandbox" ? "EPS_SANDBOX" : null;
+  const gatewayConfigured = epsEnabled
+    ? Boolean(epsPrefix && ["USERNAME", "PASSWORD", "HASH_KEY", "STORE_ID", "MERCHANT_ID", "CHECKOUT_ORIGIN"]
+      .every((key) => process.env[`${epsPrefix}_${key}`]?.trim()))
+    : Boolean(process.env.PIPRAPAY_API_KEY && process.env.PIPRAPAY_BASE_URL);
   checks.payment_gateway = {
-    status: hasPipraPay ? "UP" : "WARN",
-    message: hasPipraPay ? "PipraPay credentials loaded" : "Development test gateway mode active",
+    status: gatewayConfigured ? "UP" : "WARN",
+    message: gatewayConfigured ? "Payment gateway configuration present" : "Payment gateway configuration incomplete",
   };
 
   // 5. Telegram Bot Check
