@@ -1,7 +1,5 @@
 "use client";
 
-import { EpsBillingFields, readEpsBilling } from "@/components/wallet/EpsBillingFields";
-
 import React, { useState, useEffect, useRef } from "react";
 import { Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft, ShieldCheck, Zap } from "@/components/animated-icons/lucide";
 import { useAuth } from "@/context/AuthContext";
@@ -33,7 +31,6 @@ export default function WalletPage() {
   }, [user?.email]);
 
   const handleGatewayRecharge = async (e: React.FormEvent<HTMLFormElement>) => {
-    const billing = readEpsBilling(e.currentTarget);
     e.preventDefault();
     if (!user) {
       openLoginModal("/wallet");
@@ -60,7 +57,7 @@ export default function WalletPage() {
           customerName: user.name || "Customer",
           customerEmail: user.email,
           customerPhone: user.phone || "",
-          billing,
+          billing: { name: user.name || "Customer", phone: user.phone || "" },
           metadata: {
             type: "WALLET_TOPUP",
             userId: user.id,
@@ -138,7 +135,6 @@ export default function WalletPage() {
               </h3>
 
               <form onSubmit={handleGatewayRecharge} className="space-y-4">
-                <EpsBillingFields />
                 <div className="space-y-2">
                   <label className="block text-xs font-bold text-[#1A1D26]">
                     টাকার পরিমাণ (BDT) *

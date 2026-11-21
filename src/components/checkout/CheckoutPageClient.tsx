@@ -1,6 +1,5 @@
 "use client";
 
-import { EpsBillingFields, readEpsBilling } from "@/components/wallet/EpsBillingFields";
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
@@ -313,7 +312,6 @@ function CheckoutContent() {
   const walletShortage = Math.max(0, finalTotalBDT - walletBalance);
 
   const handlePlaceOrder = async (e: React.FormEvent<HTMLFormElement>) => {
-    const billing = readEpsBilling(e.currentTarget);
     e.preventDefault();
 
     // 1. Direct Login check
@@ -339,6 +337,7 @@ function CheckoutContent() {
     const cleanFullName = fullName.trim();
     const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone.replace(/[\s-]/g, "").trim();
+    const billing = { name: cleanFullName, phone: cleanPhone };
 
     if (!cleanFullName) {
       errors.fullName = "দয়া করে আপনার পুরো নাম লিখুন।";
@@ -646,7 +645,6 @@ function CheckoutContent() {
           </div>
         ) : items.length > 0 ? (
           <form onSubmit={handlePlaceOrder}>
-              {paymentMethod === "gateway" && <EpsBillingFields />}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
               
               {/* LEFT COLUMN: Customer Info, Delivery Selector, Payment Method (7 Cols) */}
