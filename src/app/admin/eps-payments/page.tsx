@@ -61,7 +61,7 @@ export default async function EpsPaymentsPage({
         {prefix && <EpsTestButton />}
       </header>
       <dl className="grid gap-3 sm:grid-cols-3">
-        {[['New gateway payments', enabled ? 'EPS' : 'PipraPay'], ['EPS environment', prefix ? mode : 'Unconfigured'], ['Required settings', prefix && missing.length === 0 ? 'Present' : 'Incomplete']].map(([label, value]) => <div key={label} className="dashboard-surface p-4"><dt className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</dt><dd className="mt-1 text-lg font-black text-slate-900">{value}</dd></div>)}
+        {[['New gateway payments', enabled ? 'EPS' : 'Unavailable'], ['EPS environment', prefix ? mode : 'Unconfigured'], ['Required settings', prefix && missing.length === 0 ? 'Present' : 'Incomplete']].map(([label, value]) => <div key={label} className="dashboard-surface p-4"><dt className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</dt><dd className="mt-1 text-lg font-black text-slate-900">{value}</dd></div>)}
       </dl>
       {missing.length > 0 && <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">Missing settings: {missing.join(", ")}</p>}
       <form method="get" className="dashboard-toolbar">

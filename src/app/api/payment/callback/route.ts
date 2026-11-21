@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   let realTrxId = transactionRef;
   let verifiedOrderId = "";
 
-  // 1. Server-to-Server Verification with PipraPay API
+  // 1. Server-to-server verification with the configured gateway API
   try {
     const baseUrl = process.env.PIPRAPAY_BASE_URL;
     const apiKey = process.env.PIPRAPAY_API_KEY;

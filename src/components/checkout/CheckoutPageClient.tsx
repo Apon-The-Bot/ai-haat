@@ -536,7 +536,7 @@ function CheckoutContent() {
       }
     }
 
-    // 4. AUTOMATED PIPRAPAY GATEWAY FLOW (bKash, Nagad, Rocket, Cards)
+    // 4. Automated hosted payment gateway flow (bKash, Nagad, Rocket, Cards)
     if (paymentMethod === "gateway") {
       try {
         const res = await fetch("/api/payment/create", {
@@ -1065,7 +1065,7 @@ function CheckoutContent() {
                       )}
                     </div>
 
-                    {/* OPTION 2: AUTOMATED PIPRAPAY GATEWAY */}
+                    {/* OPTION 2: AUTOMATED HOSTED PAYMENT GATEWAY */}
                     <div
                       onClick={() => {
                         setPaymentMethod("gateway");

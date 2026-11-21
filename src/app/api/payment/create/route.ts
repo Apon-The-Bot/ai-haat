@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     const epsEnabled = process.env.EPS_PAYMENT_ENABLED === "true";
     if (!epsEnabled && (!baseUrl || !apiKey)) {
       return NextResponse.json(
-        { success: false, message: "PipraPay Payment Gateway is not configured." },
+        { success: false, message: "Payment gateway is not configured." },
         { status: 503 }
       );
     }

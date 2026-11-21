@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     let matchedOrderId = "";
     let verifiedOrderIdFromProvider = "";
 
-    // 1. Direct Server-to-Server Verification with PipraPay Gateway
+    // 1. Direct server-to-server verification with the configured gateway
     try {
       const baseUrl = process.env.PIPRAPAY_BASE_URL;
       const apiKey = process.env.PIPRAPAY_API_KEY;
