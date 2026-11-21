@@ -197,7 +197,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/70 py-4 sm:py-6 lg:py-8">
+    <div className="dashboard-shell py-4 sm:py-6 lg:py-8">
       {/* Main content area — add bottom padding on mobile for bottom nav */}
       <div className="max-w-[1500px] w-[calc(100%-24px)] md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)] mx-auto space-y-4 sm:space-y-6 pb-20 lg:pb-0">
         

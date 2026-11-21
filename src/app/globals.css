@@ -29,6 +29,15 @@
   --font-plus-jakarta: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-hind-siliguri: 'Hind Siliguri', sans-serif;
   --font-inter: 'Inter', system-ui, sans-serif;
+  --dashboard-bg: #F8FAFC;
+  --dashboard-surface: #FFFFFF;
+  --dashboard-surface-muted: #F1F5F9;
+  --dashboard-border: #E2E8F0;
+  --dashboard-text: #0F172A;
+  --dashboard-muted: #64748B;
+  --dashboard-radius: 18px;
+  --dashboard-radius-sm: 12px;
+  --dashboard-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px rgba(15, 23, 42, 0.04);
 }
 
 html {
@@ -179,6 +188,97 @@ button,
 .aihaat-input {
   border-radius: 10px;
   border: 1px solid #E8E8EE;
+}
+
+/* Shared dashboard language. Feature pages can compose these primitives without
+   changing their data flow or route-specific interaction patterns. */
+.dashboard-shell {
+  min-height: 100vh;
+  background: var(--dashboard-bg);
+  color: var(--dashboard-text);
+}
+
+.dashboard-surface {
+  background: var(--dashboard-surface);
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--dashboard-radius);
+  box-shadow: var(--dashboard-shadow);
+}
+
+.dashboard-page {
+  width: min(100% - 2rem, 1500px);
+  margin-inline: auto;
+}
+
+.dashboard-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-page-title {
+  color: var(--dashboard-text);
+  font-size: clamp(1.35rem, 1.1rem + 0.7vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.dashboard-page-description {
+  color: var(--dashboard-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin-top: 0.45rem;
+}
+
+.dashboard-toolbar {
+  align-items: center;
+  background: color-mix(in srgb, var(--dashboard-surface) 92%, var(--dashboard-bg));
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--dashboard-radius-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  padding: 0.65rem;
+}
+
+.dashboard-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--dashboard-radius);
+  background: var(--dashboard-surface);
+  box-shadow: var(--dashboard-shadow);
+}
+
+.dashboard-table-wrap table {
+  min-width: 680px;
+}
+
+.dashboard-table-wrap thead {
+  background: var(--dashboard-surface-muted);
+}
+
+.dashboard-table-wrap th {
+  color: var(--dashboard-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 768px) {
+  .dashboard-page {
+    width: min(100% - 3rem, 1500px);
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════

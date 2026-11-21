@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
     if (targetIds.length === 0) {
       return NextResponse.json({ success: false, error: "No valid user IDs provided" }, { status: 400 });
     }
+    if (targetIds.length > 500) {
+      return NextResponse.json({ success: false, error: "Maximum 500 users allowed per bulk operation" }, { status: 400 });
+    }
 
     // 1. UPDATE ROLE ACTION
     if (action === "UPDATE_ROLE") {

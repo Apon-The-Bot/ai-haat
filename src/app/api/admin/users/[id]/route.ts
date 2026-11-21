@@ -1,5 +1,6 @@
 import { requireAdmin, requireAdminMfa, requireRecentMfa } from "@/lib/auth-guard";
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { logAdminAudit } from "@/lib/audit-logger";
 import { sanitizeProfileImageUrl } from "@/lib/profile-image";
@@ -127,7 +128,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+      return NextResponse.json({ success: false, code: "CUSTOMER_NOT_FOUND", error: "Customer not found" }, { status: 404 });
     }
 
     // 1. Calculate Financial KPIs
@@ -329,8 +330,18 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (err: any) {
-    console.error("[Admin Users Single GET Error]:", err);
-    return NextResponse.json({ error: err.message || "Failed to load user profile" }, { status: 500 });
+    const correlationId = randomUUID();
+    console.error("[Admin Users Single GET Error]", {
+      correlationId,
+      operation: "admin_user_profile_load",
+      userId: (await params).id,
+      errorName: err instanceof Error ? err.name : "UnknownError",
+      errorMessage: err instanceof Error ? err.message : String(err),
+    });
+    return NextResponse.json(
+      { success: false, code: "PROFILE_LOAD_FAILED", error: "Unable to load customer profile", correlationId },
+      { status: 500, headers: { "X-Correlation-ID": correlationId } }
+    );
   }
 }
 

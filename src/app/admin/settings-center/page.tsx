@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, ArrowUpRight, Bell, CheckCircle2, CreditCard, Mail, MessageCircle, RefreshCw, Settings, ShieldCheck, Smartphone, Truck } from "@/components/animated-icons/lucide";
+import { AdminNavigationSettings } from "@/components/admin/AdminNavigationSettings";
 
 type CardState = {
   key: string;
@@ -117,6 +118,8 @@ export default function AdminSettingsCenterPage() {
           </article>;
         })}
       </div>
+
+      <AdminNavigationSettings />
 
       <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-500 shadow-sm"><ShieldCheck className="h-4 w-4 text-emerald-600" /> All cards use existing admin MFA-protected APIs. Credentials and secret values are intentionally masked. {updatedAt && `Last refreshed at ${updatedAt}.`}</div>
     </div>

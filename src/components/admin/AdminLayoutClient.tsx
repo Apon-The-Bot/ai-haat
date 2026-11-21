@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Store, Menu, ExternalLink, ShieldAlert, LogIn, Bell, LogOut, Mail, ChevronDown, ChevronUp } from "@/components/animated-icons/lucide";
+import { Store, Menu, ExternalLink, ShieldAlert, LogIn, Bell, LogOut, Mail, Search, ChevronDown, ChevronUp } from "@/components/animated-icons/lucide";
 import { Logo } from "@/components/Logo";
 import { UserAvatar } from "@/components/admin/UserAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { useNotification } from "@/context/NotificationContext";
 import { AdminMobileNavigation } from "./AdminMobileNavigation";
-import { adminNavigation as navigation } from "./admin-navigation";
+import { AdminCommandPalette } from "./AdminCommandPalette";
+import { useAdminNavigationPreferences } from "@/hooks/useAdminNavigationPreferences";
 import { Tooltip } from "@/components/ui/Tooltip";
 
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
@@ -20,10 +21,11 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [mfaStatus, setMfaStatus] = useState<{ totpEnabled?: boolean; isMfaVerified?: boolean } | null>(null);
   const [mfaLoading, setMfaLoading] = useState(true);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    "DASHBOARD": true,
-    "COMMERCE": true,
-  });
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSidebarHovered, setIsSidebarHovered] = useState(false);
+  const { groups: navigation, preferences, update, toggleGroup } = useAdminNavigationPreferences();
+  const sidebarExpanded = preferences.sidebarMode === "EXPANDED" || (preferences.sidebarMode === "AUTO" && isSidebarHovered);
+  const expandedGroups = preferences.expandedGroups;
 
   // Authoritative admin verification: strictly check role assigned by server session
   const isAdmin = user?.role === "ADMIN";
@@ -50,6 +52,17 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
       setMfaLoading(false);
     }
   }, [isAdmin]);
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   if (!mounted || mfaLoading) {
     return (
@@ -96,11 +109,12 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans antialiased">
+    <div className="dashboard-shell text-slate-900 flex flex-col font-sans antialiased">
       
       {/* TOPBAR */}
       <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
+          <button type="button" onClick={() => setIsSearchOpen(true)} className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-500 transition hover:border-orange-200 hover:bg-orange-50 hover:text-slate-800" aria-label="Search admin features"><Search className="h-4 w-4 text-[#FC5C03]" /><span>Search</span><kbd className="rounded bg-white px-1.5 py-0.5 text-[10px] text-slate-400">⌘K</kbd></button>
           <button
             onClick={() => setIsMobileMenuOpen(true)}
             className="lg:hidden p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-black cursor-pointer"
@@ -164,15 +178,14 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
       <div className="flex-1 w-full flex">
         
         {/* DESKTOP SIDEBAR */}
-        <aside className="hidden lg:block w-64 xl:w-72 shrink-0 bg-white border-r border-slate-200 p-4 space-y-5 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
+        <aside onMouseEnter={() => setIsSidebarHovered(true)} onMouseLeave={() => setIsSidebarHovered(false)} className={`hidden lg:block shrink-0 bg-white border-r border-slate-200 p-3 space-y-5 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto transition-[width] duration-200 ${sidebarExpanded ? "w-64 xl:w-72 shadow-xl z-50" : "w-16"}`} aria-label="Admin navigation">
+          {sidebarExpanded && preferences.favorites.length > 0 && <div className="space-y-1"><div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-orange-500">Quick Access</div>{navigation.flatMap((group) => group.items.filter((item) => preferences.favorites.includes(item.href))).map((item) => { const Icon = item.icon; return <Link key={`favorite-${item.href}`} href={item.href} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"><Icon className="h-4 w-4 text-orange-500" /><span>{item.name}</span></Link>; })}</div>}
           {navigation.map((group) => (
             <div key={group.group} className="space-y-1">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
-                {group.group}
-              </div>
-              {group.items.map((item) => {
+              {sidebarExpanded && <button type="button" onClick={() => toggleGroup(group.group)} className="w-full text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1 hover:text-slate-700">{group.group}<span className="float-right">{expandedGroups[group.group] ? "−" : "+"}</span></button>}
+              {(sidebarExpanded ? expandedGroups[group.group] !== false : true) && group.items.filter((item) => !preferences.hiddenItems.includes(item.href)).map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || Boolean(pathname?.startsWith(`${item.href}/`));
                 return (
                   <Tooltip key={item.name} content={item.name === "Inventory Batches" ? "Manage inventory batches, stock records, and related batch operations." : item.name}>
                     <Link
@@ -184,9 +197,9 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                       }`}
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className={`flex items-center ${sidebarExpanded ? "gap-2.5" : "justify-center w-full"}`}>
                         <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
-                        <span>{item.name}</span>
+                        {sidebarExpanded && <span>{item.name}</span>}
                       </div>
                     </Link>
                   </Tooltip>
@@ -196,7 +209,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
           ))}
 
           {/* Bottom Logout Shortcut */}
-          <div className="pt-3 border-t border-slate-100">
+          {sidebarExpanded && <div className="pt-3 border-t border-slate-100">
             <button
               onClick={() => logout()}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer text-left"
@@ -204,11 +217,11 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
             </button>
-          </div>
+          </div>}
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-[#F8FAFC]">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-[var(--dashboard-bg)]">
           {mfaStatus && !mfaStatus.totpEnabled && pathname !== "/admin/mfa-setup" && (
             <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-3 text-amber-800">
@@ -235,11 +248,13 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
           pathname={pathname}
           unreadCount={unreadCount}
           expandedGroups={expandedGroups}
-          setExpandedGroups={setExpandedGroups}
+          setExpandedGroups={(next) => update({ expandedGroups: typeof next === "function" ? next(preferences.expandedGroups) : next })}
           setIsMobileMenuOpen={setIsMobileMenuOpen}
           logout={logout}
         />
       )}
+
+      <AdminCommandPalette open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
     </div>
   );

@@ -1,3 +1,4 @@
+import type React from "react";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -35,7 +36,10 @@ import {
   ListChecks,
 } from "@/components/animated-icons/lucide";
 
-export const adminNavigation = [
+export type AdminNavigationItem = { name: string; href: string; icon: React.ComponentType<{ className?: string }> };
+export type AdminNavigationGroup = { group: string; items: AdminNavigationItem[] };
+
+export const adminNavigation: AdminNavigationGroup[] = [
     {
       group: "DASHBOARD",
       items: [

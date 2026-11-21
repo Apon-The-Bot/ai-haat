@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireAdminMfa } from "@/lib/auth-guard";
+import { logAdminAudit } from "@/lib/audit-logger";
 import {
   bulkUpdateProductStatus,
   bulkUpdateProductVisibility,
@@ -20,11 +21,28 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { action, status, visibility, adjustment } = body;
     // Support either productIds or ids for backward-compatibility
-    const productIds: string[] = body.productIds || body.ids;
+    const rawProductIds = body.productIds || body.ids;
+    const productIds = Array.isArray(rawProductIds)
+      ? Array.from(new Set(rawProductIds.filter((id): id is string => typeof id === "string" && id.trim().length > 0)))
+      : [];
 
-    if (!Array.isArray(productIds) || productIds.length === 0) {
+    if (productIds.length === 0) {
       return NextResponse.json({ success: false, error: "Invalid or empty productIds" }, { status: 400 });
     }
+    if (productIds.length > 500) {
+      return NextResponse.json({ success: false, error: "Maximum 500 products allowed per bulk operation" }, { status: 400 });
+    }
+
+    const auditBulk = async (actionName: string, details: Record<string, unknown>) => {
+      await logAdminAudit({
+        actorId: authResult.user.id,
+        actorEmail: authResult.user.email,
+        action: `PRODUCT_BULK_${actionName}`,
+        targetType: "PRODUCT",
+        targetId: `BULK (${productIds.length} products)`,
+        details: { ...details, requestedCount: productIds.length, productIds },
+      });
+    };
 
     if (action === "STATUS" || action === "ACTIVATE" || action === "DEACTIVATE") {
       let targetStatus = status;
@@ -38,6 +56,7 @@ export async function POST(req: NextRequest) {
         );
       }
       const result = await bulkUpdateProductStatus(productIds, targetStatus as any, authResult.user);
+      await auditBulk("STATUS", { status: targetStatus, affectedCount: result.count });
       return NextResponse.json({ success: true, count: result.count, status: targetStatus });
     } else if (action === "VISIBILITY") {
       if (!visibility || !["PUBLIC", "HIDDEN", "DIRECT_LINK_ONLY"].includes(visibility)) {
@@ -47,14 +66,17 @@ export async function POST(req: NextRequest) {
         );
       }
       const result = await bulkUpdateProductVisibility(productIds, visibility as any, authResult.user);
+      await auditBulk("VISIBILITY", { visibility, affectedCount: result.count });
       return NextResponse.json({ success: true, count: result.count, visibility });
     } else if (action === "ARCHIVE") {
       const result = await bulkArchiveProducts(productIds, authResult.user);
       revalidatePath("/product/[slug]", "page");
+      await auditBulk("ARCHIVE", { affectedCount: result.count });
       return NextResponse.json({ success: true, count: result.count });
     } else if (action === "DELETE") {
       const result = await bulkDeleteProducts(productIds, authResult.user);
       revalidatePath("/product/[slug]", "page");
+      await auditBulk("DELETE", { deletedCount: result.deletedCount, archivedCount: result.archivedCount });
       return NextResponse.json({
         success: true,
         deletedCount: result.deletedCount,
@@ -63,6 +85,7 @@ export async function POST(req: NextRequest) {
       });
     } else if (action === "EXPORT_CSV") {
       const csv = await exportProductsToCSV(productIds);
+      await auditBulk("EXPORT", { affectedCount: productIds.length });
       return new NextResponse(csv, {
         status: 200,
         headers: {
@@ -85,6 +108,7 @@ export async function POST(req: NextRequest) {
       val = Math.abs(val);
 
       await bulkUpdateProductPrice(productIds, { type: adjType, value: val, direction }, authResult.user);
+      await auditBulk("PRICE", { adjustmentType: adjType, direction, value: val });
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });

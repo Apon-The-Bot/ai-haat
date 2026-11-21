@@ -1,0 +1,19 @@
+"use client";
+
+import { useState } from "react";
+import { Menu, RotateCcw, Star } from "@/components/animated-icons/lucide";
+import { useAdminNavigationPreferences } from "@/hooks/useAdminNavigationPreferences";
+
+export function AdminNavigationSettings() {
+  const { groups, preferences, update, toggleFavorite, reset } = useAdminNavigationPreferences();
+  const [dragged, setDragged] = useState<string | null>(null);
+  const moveGroup = (target: string) => {
+    if (!dragged || dragged === target) return;
+    const order = [...preferences.groupOrder];
+    const from = order.indexOf(dragged); const to = order.indexOf(target);
+    if (from < 0 || to < 0) return;
+    order.splice(from, 1); order.splice(to, 0, dragged);
+    update({ groupOrder: order }); setDragged(null);
+  };
+  return <section id="navigation" className="dashboard-surface p-5 sm:p-6"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="text-lg font-black text-slate-900">Navigation workspace</h2><p className="mt-1 max-w-2xl text-sm text-slate-500">Personalize your admin shortcuts without changing permissions or removing any feature.</p></div><button type="button" onClick={reset} className="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:border-orange-200 hover:text-orange-600"><RotateCcw className="h-3.5 w-3.5" />Reset</button></div><div className="mt-5 flex flex-wrap gap-2" role="radiogroup" aria-label="Sidebar mode">{(["AUTO", "EXPANDED", "COMPACT"] as const).map((mode) => <button key={mode} type="button" role="radio" aria-checked={preferences.sidebarMode === mode} onClick={() => update({ sidebarMode: mode })} className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${preferences.sidebarMode === mode ? "border-orange-300 bg-orange-50 text-orange-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{mode === "AUTO" ? "Auto / hover" : mode === "EXPANDED" ? "Always expanded" : "Compact"}</button>)}</div><div className="mt-5 grid gap-3 md:grid-cols-2">{groups.map((group) => <article key={group.group} draggable onDragStart={() => setDragged(group.group)} onDragOver={(event) => event.preventDefault()} onDrop={() => moveGroup(group.group)} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3"><div className="flex items-center gap-2"><Menu className="h-4 w-4 cursor-grab text-slate-400" aria-hidden="true" /><h3 className="text-xs font-black uppercase tracking-wide text-slate-700">{group.group}</h3></div><div className="mt-3 space-y-1.5">{group.items.map((item) => { const hidden = preferences.hiddenItems.includes(item.href); const favorite = preferences.favorites.includes(item.href); return <div key={item.href} className={`flex items-center gap-2 rounded-xl border bg-white px-2.5 py-2 ${hidden ? "opacity-50" : "border-slate-100"}`}><span className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-700">{item.name}</span><button type="button" onClick={() => update({ hiddenItems: hidden ? preferences.hiddenItems.filter((href) => href !== item.href) : [...preferences.hiddenItems, item.href] })} className="rounded-lg px-2 py-1 text-[10px] font-bold text-slate-500 hover:bg-slate-100">{hidden ? "Show" : "Hide"}</button><button type="button" onClick={() => toggleFavorite(item.href)} className={`rounded-lg p-1.5 ${favorite ? "text-orange-500" : "text-slate-300 hover:text-orange-500"}`} aria-label={`${favorite ? "Remove" : "Add"} ${item.name} favorite`}><Star className="h-3.5 w-3.5" /></button></div>; })}</div></article>)}</div><p className="mt-4 text-[11px] font-semibold text-slate-400">Drag a group card to another card to reorder it. Preferences are stored locally for this admin browser and do not affect authorization.</p></section>;
+}

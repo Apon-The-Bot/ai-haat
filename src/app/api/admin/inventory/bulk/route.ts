@@ -22,6 +22,10 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    const uniqueStockIds = Array.from(new Set(stockIds.filter((id): id is string => typeof id === "string" && id.trim().length > 0)));
+    if (uniqueStockIds.length === 0 || uniqueStockIds.length > 500) {
+      return NextResponse.json({ success: false, error: "Select between 1 and 500 valid stock items." }, { status: 400 });
+    }
 
     if (action === "STATUS") {
       const allowedStatuses: StockStatus[] = ["AVAILABLE", "EXPIRED", "INVALID"];
@@ -38,7 +42,7 @@ export async function POST(req: NextRequest) {
       // Do not overwrite DELIVERED or REPLACED stock to protect customer order history
       const updateResult = await prisma.digitalStock.updateMany({
         where: {
-          id: { in: stockIds },
+          id: { in: uniqueStockIds },
           status: { notIn: ["DELIVERED", "REPLACED"] },
         },
         data: {
@@ -54,7 +58,7 @@ export async function POST(req: NextRequest) {
           success: true,
           metadata: JSON.stringify({
             action: "ADMIN_STOCK_BULK_STATUS",
-            stockIdsCount: stockIds.length,
+            stockIdsCount: uniqueStockIds.length,
             updatedCount: updateResult.count,
             newStatus: status,
             adminEmail: user.email,
@@ -73,7 +77,7 @@ export async function POST(req: NextRequest) {
       // Only delete unused stock (not DELIVERED or REPLACED)
       const deleteResult = await prisma.digitalStock.deleteMany({
         where: {
-          id: { in: stockIds },
+          id: { in: uniqueStockIds },
           status: { notIn: ["DELIVERED", "REPLACED"] },
         },
       });
@@ -85,7 +89,7 @@ export async function POST(req: NextRequest) {
           success: true,
           metadata: JSON.stringify({
             action: "ADMIN_STOCK_BULK_DELETE",
-            stockIdsCount: stockIds.length,
+            stockIdsCount: uniqueStockIds.length,
             deletedCount: deleteResult.count,
             adminEmail: user.email,
           }),

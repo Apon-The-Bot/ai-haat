@@ -155,6 +155,7 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
 
   const [user, setUser] = useState<UserProfile360 | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<"NOT_FOUND" | "FAILED" | null>(null);
   const [activeTab, setActiveTab] = useState<
     | "overview"
     | "personal"
@@ -225,6 +226,7 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
 
       if (res.ok && data.success && data.user) {
         setUser(data.user);
+        setLoadError(null);
         setEditForm({
           name: data.user.name || "",
           email: data.user.email || "",
@@ -233,10 +235,14 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
           image: data.user.image || "",
         });
       } else {
-        showToast(data.error || "Customer profile not found", "error");
+        setUser(null);
+        setLoadError(data.code === "CUSTOMER_NOT_FOUND" || res.status === 404 ? "NOT_FOUND" : "FAILED");
+        showToast(data.error || "Unable to load customer profile", "error");
       }
     } catch (err) {
       console.error("[User 360 Fetch Error]:", err);
+      setUser(null);
+      setLoadError("FAILED");
       showToast("Error retrieving customer profile", "error");
     } finally {
       setLoading(false);
@@ -563,16 +569,13 @@ export default function User360DetailPage({ params }: { params: Promise<{ id: st
   if (!user) {
     return (
       <div className="py-24 text-center">
-        <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <h2 className="text-lg font-bold text-gray-900">Customer Not Found</h2>
-        <p className="text-xs text-gray-500 mt-1">This user account could not be retrieved.</p>
-        <Link
-          href="/admin/users"
-          className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Back to Customers</span>
-        </Link>
+        {loadError === "NOT_FOUND" ? <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" /> : <AlertCircle className="w-12 h-12 text-rose-300 mx-auto mb-3" />}
+        <h2 className="text-lg font-bold text-gray-900">{loadError === "NOT_FOUND" ? "Customer Not Found" : "Unable to Load Customer Profile"}</h2>
+        <p className="text-xs text-gray-500 mt-1">{loadError === "NOT_FOUND" ? "This user account does not exist." : "A temporary server or database error prevented the profile from loading."}</p>
+        <div className="mt-4 flex justify-center gap-2">
+          {loadError === "FAILED" && <button type="button" onClick={fetchUserData} className="inline-flex items-center gap-1.5 rounded-xl bg-[#FC5C03] px-4 py-2 text-xs font-bold text-white"><RefreshCw className="w-4 h-4" />Retry</button>}
+          <Link href="/admin/users" className="inline-flex items-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-white"><ChevronLeft className="w-4 h-4" /><span>Back to Customers</span></Link>
+        </div>
       </div>
     );
   }
