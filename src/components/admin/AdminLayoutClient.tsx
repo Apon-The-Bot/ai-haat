@@ -224,7 +224,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-[var(--dashboard-bg)]">
+        <main className="admin-content flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-[var(--dashboard-bg)]">
           {mfaStatus && !mfaStatus.totpEnabled && pathname !== "/admin/mfa-setup" && (
             <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-3 text-amber-800">

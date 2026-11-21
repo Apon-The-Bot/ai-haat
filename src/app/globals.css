@@ -206,8 +206,22 @@ button,
 }
 
 .dashboard-page {
-  width: min(100% - 2rem, 1500px);
-  margin-inline: auto;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+/* Admin workspaces use the full content canvas. Keep intentional modal and
+   card max-widths intact by widening only route-level direct wrappers. */
+.admin-content > .max-w-3xl,
+.admin-content > .max-w-5xl,
+.admin-content > .max-w-6xl,
+.admin-content > .max-w-7xl,
+.admin-content > .max-w-\[1400px\],
+.admin-content > .max-w-\[1500px\] {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
 }
 
 .dashboard-page-header {
