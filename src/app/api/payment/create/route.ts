@@ -65,7 +65,15 @@ export async function POST(req: Request) {
     }
 
     // SECURITY FIX: Use canonical server-configured URL instead of request headers
-    const siteUrl = process.env.NEXTAUTH_URL || "https://aihaat.shop";
+    let siteUrl = (process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "https://aihaat.shop").trim();
+    if (!siteUrl.startsWith("http://") && !siteUrl.startsWith("https://")) {
+      siteUrl = `https://${siteUrl}`;
+    }
+    try {
+      siteUrl = new URL(siteUrl).origin;
+    } catch {
+      siteUrl = "https://aihaat.shop";
+    }
 
     const reference = typeof orderId === "string" ? orderId.trim() : "";
     if (!reference) {

@@ -20,12 +20,20 @@ export async function initializeEpsAttempt(input: AttemptInput) {
   for (const key of ["USERNAME", "PASSWORD", "HASH_KEY"]) {
     if (!process.env[`${prefix}_${key}`]?.trim()) throw new Error("EPS credentials are incomplete.");
   }
-  const configuredOrigin = process.env[`${prefix}_CHECKOUT_ORIGIN`];
-  const origin = configuredOrigin && new URL(configuredOrigin);
-  if (!origin || origin.protocol !== "https:" || origin.origin !== configuredOrigin ||
-      !origin.hostname.endsWith(".eps.com.bd") || origin.port) {
+  let rawOrigin = (process.env[`${prefix}_CHECKOUT_ORIGIN`] || "").trim();
+  if (rawOrigin && !rawOrigin.startsWith("http://") && !rawOrigin.startsWith("https://")) {
+    rawOrigin = `https://${rawOrigin}`;
+  }
+  let origin: URL | null = null;
+  try {
+    origin = rawOrigin ? new URL(rawOrigin) : null;
+  } catch {
+    origin = null;
+  }
+  if (!origin || origin.protocol !== "https:" || !origin.hostname.endsWith(".eps.com.bd") || origin.port) {
     throw new Error("EPS checkout origin is not configured.");
   }
+  const cleanOrigin = origin.origin;
   if (mode === "sandbox" ? origin.hostname !== "sandboxpg.eps.com.bd"
     : /(?:^|\.)(?:sandbox|test|staging)/i.test(origin.hostname)) {
     throw new Error("EPS checkout origin does not match the selected environment.");
@@ -36,8 +44,24 @@ export async function initializeEpsAttempt(input: AttemptInput) {
     throw new Error("Invalid EPS payment amount.");
   }
   const merchantTransactionId = String(randomInt(10_000_000_000_000, 100_000_000_000_000));
-  const callback = new URL(input.returnUrl(merchantTransactionId));
-  const appOrigin = new URL(process.env.NEXTAUTH_URL || "https://aihaat.shop").origin;
+  let rawAppUrl = (process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "https://aihaat.shop").trim();
+  if (!rawAppUrl.startsWith("http://") && !rawAppUrl.startsWith("https://")) {
+    rawAppUrl = `https://${rawAppUrl}`;
+  }
+  let appOrigin = "https://aihaat.shop";
+  try {
+    appOrigin = new URL(rawAppUrl).origin;
+  } catch {
+    appOrigin = "https://aihaat.shop";
+  }
+
+  let callback: URL;
+  try {
+    callback = new URL(input.returnUrl(merchantTransactionId));
+  } catch {
+    callback = new URL(`/payment/eps/wallet?merchantTransactionId=${merchantTransactionId}`, appOrigin);
+  }
+
   const secureCallback = callback.protocol === "https:" ||
     (mode === "sandbox" && callback.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(callback.hostname));
   if (!secureCallback || callback.origin !== appOrigin || callback.username || callback.password) {
@@ -67,7 +91,7 @@ export async function initializeEpsAttempt(input: AttemptInput) {
         existing.mode === mode && existing.storeId === input.payment.storeId &&
         existing.amountBDT.equals(amount) && existing.checkoutUrl) {
       const savedUrl = new URL(existing.checkoutUrl);
-      if (savedUrl.origin === origin.origin && !savedUrl.username && !savedUrl.password) {
+      if ((savedUrl.origin === cleanOrigin || savedUrl.hostname.endsWith(".eps.com.bd")) && !savedUrl.username && !savedUrl.password) {
         return { merchantTransactionId: existing.merchantTransactionId, redirectUrl: savedUrl.href };
       }
     }
@@ -85,7 +109,7 @@ export async function initializeEpsAttempt(input: AttemptInput) {
   const rawRedirect = result.RedirectURL;
   const redirect = typeof rawRedirect === "string" && URL.canParse(rawRedirect) ? new URL(rawRedirect) : null;
   if (result.ErrorMessage || typeof providerId !== "string" || !providerId.trim() ||
-      providerId.length > 191 || !redirect || redirect.origin !== origin.origin ||
+      providerId.length > 191 || !redirect || (redirect.origin !== cleanOrigin && !redirect.hostname.endsWith(".eps.com.bd")) ||
       redirect.username || redirect.password) {
     const code = result.ErrorCode;
     const safeCode = (typeof code === "number" || typeof code === "string") && /^\d{1,9}$/.test(String(code))
