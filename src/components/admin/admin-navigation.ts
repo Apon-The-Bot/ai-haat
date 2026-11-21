@@ -39,6 +39,14 @@ import {
 export type AdminNavigationItem = { name: string; href: string; icon: React.ComponentType<{ className?: string }> };
 export type AdminNavigationGroup = { group: string; items: AdminNavigationItem[] };
 
+export function getActiveAdminHref(pathname: string | null | undefined): string | null {
+  if (!pathname) return null;
+  return adminNavigation
+    .flatMap((group) => group.items)
+    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href || null;
+}
+
 export const adminNavigation: AdminNavigationGroup[] = [
     {
       group: "DASHBOARD",

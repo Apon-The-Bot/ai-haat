@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNotification } from "@/context/NotificationContext";
 import { AdminMobileNavigation } from "./AdminMobileNavigation";
 import { AdminCommandPalette } from "./AdminCommandPalette";
+import { getActiveAdminHref } from "./admin-navigation";
 import { useAdminNavigationPreferences } from "@/hooks/useAdminNavigationPreferences";
 import { Tooltip } from "@/components/ui/Tooltip";
 
@@ -26,6 +27,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const { groups: navigation, preferences, update, toggleGroup } = useAdminNavigationPreferences();
   const sidebarExpanded = preferences.sidebarMode === "EXPANDED" || (preferences.sidebarMode === "AUTO" && isSidebarHovered);
   const expandedGroups = preferences.expandedGroups;
+  const activeHref = getActiveAdminHref(pathname);
 
   // Authoritative admin verification: strictly check role assigned by server session
   const isAdmin = user?.role === "ADMIN";
@@ -185,22 +187,23 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
               {sidebarExpanded && <button type="button" onClick={() => toggleGroup(group.group)} className="w-full text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1 hover:text-slate-700">{group.group}<span className="float-right">{expandedGroups[group.group] ? "−" : "+"}</span></button>}
               {(sidebarExpanded ? expandedGroups[group.group] !== false : true) && group.items.filter((item) => !preferences.hiddenItems.includes(item.href)).map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href || Boolean(pathname?.startsWith(`${item.href}/`));
+                const isActive = activeHref === item.href;
                 return (
                   <Tooltip key={item.name} content={item.name === "Inventory Batches" ? "Manage inventory batches, stock records, and related batch operations." : item.name}>
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                      className={`relative flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                         isActive
                           ? "bg-[#FFF2E8] text-[#FC5C03] shadow-2xs"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                       }`}
                     >
                       <div className={`flex items-center ${sidebarExpanded ? "gap-2.5" : "justify-center w-full"}`}>
-                        <Icon className={`w-4 h-4 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
+                        <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
                         {sidebarExpanded && <span>{item.name}</span>}
                       </div>
+                      {isActive && <span aria-hidden="true" className="absolute right-1.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[var(--primary-orange)]" />}
                     </Link>
                   </Tooltip>
                 );
