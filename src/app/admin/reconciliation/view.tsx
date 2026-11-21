@@ -29,11 +29,11 @@ export const walletUrl = (id: string) => recordUrl("/admin/reconciliation", { vi
 export const linkStyle = "font-medium text-blue-700 underline underline-offset-2";
 
 export function RecordTable({ headings, rows }: { headings: string[]; rows: ReactNode[][] }) {
-  if (!rows.length) return <p className="rounded-xl border bg-white p-5 text-sm">No matching records on this page.</p>;
+  if (!rows.length) return <p className="dashboard-surface p-5 text-sm text-slate-600">No matching records on this page.</p>;
   return (
-    <div className="overflow-x-auto rounded-xl border bg-white">
+    <div className="dashboard-table-wrap">
       <table className="w-full text-left text-sm">
-        <thead className="bg-slate-100">
+        <thead>
           <tr>{headings.map(heading => <th scope="col" key={heading} className="px-4 py-3">{heading}</th>)}</tr>
         </thead>
         <tbody className="divide-y">
@@ -50,10 +50,10 @@ export function RecordTable({ headings, rows }: { headings: string[]; rows: Reac
 
 export function Pagination({ path, query, page, more }: { path: string; query: Query; page: number; more: boolean }) {
   return (
-    <nav aria-label="Record pages" className="flex items-center gap-4 text-sm">
-      {page > 1 && <Link className={linkStyle} href={recordUrl(path, query, { page: String(page - 1) })}>Previous</Link>}
-      <span>Page {page}</span>
-      {more && page < 10000 && <Link className={linkStyle} href={recordUrl(path, query, { page: String(page + 1) })}>Next</Link>}
+    <nav aria-label="Record pages" className="flex items-center gap-3 text-xs font-bold text-slate-500">
+      {page > 1 && <Link className="rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:border-orange-300 hover:text-orange-600" href={recordUrl(path, query, { page: String(page - 1) })}>Previous</Link>}
+      <span className="rounded-xl bg-slate-100 px-3 py-2">Page {page}</span>
+      {more && page < 10000 && <Link className="rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:border-orange-300 hover:text-orange-600" href={recordUrl(path, query, { page: String(page + 1) })}>Next</Link>}
     </nav>
   );
 }

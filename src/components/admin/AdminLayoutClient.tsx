@@ -203,7 +203,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                         <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#FC5C03]" : "text-slate-400"}`} />
                         {sidebarExpanded && <span>{item.name}</span>}
                       </div>
-                      {isActive && <span aria-hidden="true" className="absolute right-1.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[var(--primary-orange)]" />}
+                      {sidebarExpanded && isActive && <span aria-hidden="true" className="absolute right-1.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[var(--primary-orange)]" />}
                     </Link>
                   </Tooltip>
                 );

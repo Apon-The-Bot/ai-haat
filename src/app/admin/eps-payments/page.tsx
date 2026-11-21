@@ -51,39 +51,43 @@ export default async function EpsPaymentsPage({
   }).catch(() => null);
 
   return (
-    <section className="space-y-4">
-      <h1 className="text-2xl font-semibold">EPS Payments</h1>
-      <dl className="grid gap-3 rounded-xl border p-4 sm:grid-cols-3">
-        <div><dt>New gateway payments</dt><dd className="font-medium">{enabled ? "EPS" : "PipraPay"}</dd></div>
-        <div><dt>EPS environment</dt><dd className="font-medium">{prefix ? mode : "Unconfigured"}</dd></div>
-        <div><dt>Required settings</dt><dd className="font-medium">{prefix && missing.length === 0 ? "Present" : "Incomplete"}</dd></div>
+    <section className="dashboard-page space-y-6">
+      <header className="dashboard-page-header">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">Payments & operations</p>
+          <h1 className="dashboard-page-title">EPS Payments</h1>
+          <p className="dashboard-page-description">Monitor hosted checkout attempts, gateway references, and reconciliation status.</p>
+        </div>
+        {prefix && <EpsTestButton />}
+      </header>
+      <dl className="grid gap-3 sm:grid-cols-3">
+        {[['New gateway payments', enabled ? 'EPS' : 'PipraPay'], ['EPS environment', prefix ? mode : 'Unconfigured'], ['Required settings', prefix && missing.length === 0 ? 'Present' : 'Incomplete']].map(([label, value]) => <div key={label} className="dashboard-surface p-4"><dt className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</dt><dd className="mt-1 text-lg font-black text-slate-900">{value}</dd></div>)}
       </dl>
-      {missing.length > 0 && <p className="break-words text-sm">Missing settings: {missing.join(", ")}</p>}
-      {prefix && <EpsTestButton />}
-      <form method="get" className="flex flex-wrap items-end gap-3">
+      {missing.length > 0 && <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">Missing settings: {missing.join(", ")}</p>}
+      <form method="get" className="dashboard-toolbar">
         <label className="grid gap-1">Payment reference
-          <input name="q" defaultValue={query} maxLength={191} className="rounded border bg-transparent p-2" />
+          <input name="q" defaultValue={query} maxLength={191} className="rounded-xl border border-slate-200 bg-white p-2 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" />
         </label>
         <label className="grid gap-1">Status
-          <select name="state" defaultValue={state ?? ""} className="rounded border bg-transparent p-2">
+          <select name="state" defaultValue={state ?? ""} className="rounded-xl border border-slate-200 bg-white p-2 text-sm outline-none focus:border-orange-400">
             <option value="">All</option>
             {states.map((value) => <option key={value}>{value}</option>)}
           </select>
         </label>
         <label className="grid gap-1">Environment
-          <select name="mode" defaultValue={filterMode ?? ""} className="rounded border bg-transparent p-2">
+          <select name="mode" defaultValue={filterMode ?? ""} className="rounded-xl border border-slate-200 bg-white p-2 text-sm outline-none focus:border-orange-400">
             <option value="">All</option>
             {modes.map((value) => <option key={value}>{value}</option>)}
           </select>
         </label>
-        <button type="submit" className="rounded border px-3 py-2">Filter attempts</button>
+        <button type="submit" className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-bold text-white transition hover:bg-orange-600">Filter attempts</button>
       </form>
-      <p>Latest 50 matching payment attempts</p>
-      {attempts === null ? <p role="alert">EPS payment history is unavailable. Check the database connection and migration status.</p> :
-        attempts.length === 0 ? <p>No matching EPS payment attempts.</p> : (
-        <div className="overflow-x-auto rounded-xl border">
+      <p className="text-sm font-bold text-slate-700">Latest 50 matching payment attempts</p>
+      {attempts === null ? <p className="dashboard-surface p-5 text-sm text-rose-700" role="alert">EPS payment history is unavailable. Check the database connection and migration status.</p> :
+        attempts.length === 0 ? <p className="dashboard-surface p-5 text-sm text-slate-600">No matching EPS payment attempts.</p> : (
+        <div className="dashboard-table-wrap">
           <table className="w-full text-left text-sm">
-            <thead>
+            <thead className="bg-slate-50">
               <tr>
                 {["Merchant transaction", "EPS references", "Order or wallet reference", "Purpose", "BDT", "Environment", "Status", "Action"].map(
                   (label) => <th key={label} scope="col" className="p-3">{label}</th>
@@ -92,7 +96,7 @@ export default async function EpsPaymentsPage({
             </thead>
             <tbody>
               {attempts.map((attempt) => (
-                <tr key={attempt.merchantTransactionId} className="border-t">
+                <tr key={attempt.merchantTransactionId} className="border-t border-slate-100 align-top hover:bg-orange-50/30">
                   <td className="p-3 font-mono">{attempt.merchantTransactionId}</td>
                   <td className="p-3">
                     <dl className="space-y-1 whitespace-nowrap text-xs">

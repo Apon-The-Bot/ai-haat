@@ -17,35 +17,38 @@ export async function ReconciliationView({ query, path }: {
   const orders = walletView ? [] : await readOrders(query, offset);
 
   return (
-    <div className="space-y-5">
-      {path === "/admin/reconciliation" && <Link className={linkStyle} href="/admin/reports">Financial reports</Link>}
-      <div>
-        <h1 className="text-2xl font-bold">Financial reconciliation</h1>
-        <p className="text-sm text-slate-600">Read-only review of order payment records, refunds, and wallet entries. External settlement requires the provider’s statement.</p>
-      </div>
-      <nav aria-label="Reconciliation views" className="flex gap-4">
-        <Link className={linkStyle} aria-current={!walletView ? "page" : undefined}
+    <div className="dashboard-page space-y-6">
+      <header className="dashboard-page-header">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-600">Financial reports</p>
+          <h1 className="dashboard-page-title">Financial reconciliation</h1>
+          <p className="dashboard-page-description">Read-only review of order payments, refunds, and wallet entries.</p>
+        </div>
+        {path === "/admin/reconciliation" && <Link className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-orange-300 hover:text-orange-600" href="/admin/reports">Back to reports</Link>}
+      </header>
+      <div className="flex flex-wrap gap-2">
+        <Link className={`rounded-xl px-3.5 py-2 text-sm font-bold transition ${!walletView ? "bg-orange-50 text-orange-700" : "text-slate-500 hover:bg-slate-100"}`} aria-current={!walletView ? "page" : undefined}
           href={recordUrl(path, { range })}>Orders, payments & refunds</Link>
-        <Link className={linkStyle} aria-current={walletView ? "page" : undefined}
+        <Link className={`rounded-xl px-3.5 py-2 text-sm font-bold transition ${walletView ? "bg-orange-50 text-orange-700" : "text-slate-500 hover:bg-slate-100"}`} aria-current={walletView ? "page" : undefined}
           href={recordUrl(path, { range, view: "wallet" })}>Wallet ledger</Link>
-      </nav>
-      <form action={path} className="flex flex-wrap items-end gap-3 rounded-xl border bg-white p-4 text-sm">
+      </div>
+      <form action={path} className="dashboard-toolbar text-sm">
         {walletView && <input type="hidden" name="view" value="wallet" />}
         <label className="grid gap-1">
           Exact reference across all dates
-          <input name="q" defaultValue={term} maxLength={191} className="rounded border px-3 py-2"
+          <input name="q" defaultValue={term} maxLength={191} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             placeholder={walletView ? "Wallet ID or transaction reference" : "Order, payment or refund reference"} />
         </label>
         <label className="grid gap-1">
           Period when browsing
-          <select name="range" defaultValue={range} className="rounded border px-3 py-2">
+          <select name="range" defaultValue={range} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-orange-400">
             {Object.entries({ TODAY: "Today", "7D": "Last 7 days", "30D": "Last 30 days", "90D": "Last 90 days", THIS_MONTH: "This month", ALL: "All time" })
               .map(([id, label]) => <option key={id} value={id}>{label}</option>)}
           </select>
         </label>
-        <button className="rounded bg-slate-900 px-4 py-2 text-white">Apply</button>
+        <button className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-orange-600">Apply filters</button>
       </form>
-      <p className="text-xs text-slate-600">Timestamps are UTC. Linked records are included regardless of their date.</p>
+      <p className="text-xs font-semibold text-slate-400">Timestamps are UTC. Linked records are included regardless of their date.</p>
       {walletView ? (
         <RecordTable headings={["Wallet entry", "Created (UTC)", "Type / method", "Status", "Amount", "Linked order"]}
           rows={walletRows.slice(0, pageSize).map(row => [
