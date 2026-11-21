@@ -602,8 +602,14 @@ export default function AdminProductsPage() {
                 if (prod.status === "INACTIVE") statusColor = "bg-red-100 text-red-700";
                 if (prod.status === "ARCHIVED") statusColor = "bg-slate-200 text-slate-500";
 
+                let statusRowColor = "bg-white";
+                if (prod.status === "ACTIVE") statusRowColor = "bg-emerald-50/45";
+                if (prod.status === "DRAFT") statusRowColor = "bg-amber-50/55";
+                if (prod.status === "INACTIVE") statusRowColor = "bg-rose-50/45";
+                if (prod.status === "ARCHIVED") statusRowColor = "bg-slate-100/80 text-slate-500";
+
                 return (
-                <tr key={prod.id} className={`hover:bg-slate-50/70 transition-colors ${selectedProductIds.has(prod.id) ? "bg-orange-50/40" : ""}`}>
+                <tr key={prod.id} className={`${statusRowColor} hover:bg-orange-50/55 transition-colors ${selectedProductIds.has(prod.id) ? "bg-orange-50/80" : ""}`}>
                   <td className="py-4 px-4">
                       <input 
                         type="checkbox" 
