@@ -48,12 +48,22 @@ export function createEpsTransactions(env = process.env, request: typeof fetch =
         signal: AbortSignal.timeout(10_000),
       });
       if (response.status === 401) invalidateEpsToken(mode, token, request);
-      if (!response.ok) throw new Error();
-      const body: unknown = await response.json();
-      if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error();
-      return body as Record<string, unknown>;
-    } catch {
-      throw new Error(`EPS ${operation} request failed.`);
+      const responseText = await response.text();
+      let body: Record<string, unknown> | null = null;
+      try {
+        body = JSON.parse(responseText);
+      } catch {}
+
+      if (!response.ok || !body) {
+        console.error(`[EPS ${operation} Error HTTP ${response.status}]:`, responseText);
+        const errMsg = body?.ErrorMessage || body?.message || body?.error || responseText.slice(0, 200) || `HTTP ${response.status}`;
+        const errCode = body?.ErrorCode ? `[Code ${body.ErrorCode}] ` : "";
+        throw new Error(`EPS ${operation} failed: ${errCode}${errMsg}`);
+      }
+      return body;
+    } catch (err: any) {
+      if (err instanceof Error && err.message.startsWith("EPS ")) throw err;
+      throw new Error(`EPS ${operation} request failed: ${err?.message || "Unknown network error"}`);
     }
   }
 

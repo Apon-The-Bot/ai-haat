@@ -122,7 +122,8 @@ export async function initializeEpsAttempt(input: AttemptInput) {
       where: { merchantTransactionId, state: "INITIALIZING" },
       data: { initializationCode: safeCode },
     });
-    throw new Error("EPS did not return a valid checkout session.");
+    const errMsg = result.ErrorMessage ? `EPS: ${result.ErrorMessage}` : "EPS did not return a valid checkout session.";
+    throw new Error(errMsg);
   }
   const saved = await prisma.epsPaymentAttempt.updateMany({
     where: { merchantTransactionId, state: "INITIALIZING" },

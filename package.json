@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/db-env-guard.mjs --mode=dev",
-    "dev": "next dev",
-    "build": "node scripts/build.mjs",
+    "dev": "node init && next dev",
+    "build": "node init && node scripts/build.mjs",
     "production:eps-migrate-build": "chmod +x node_modules/@prisma/engines/schema-engine-* && npx prisma migrate resolve --applied 20261118234500_profile_image_source && npx prisma migrate deploy && npm run build",
-    "start": "next start",
+    "start": "node init && next start",
     "db:guard": "node scripts/db-env-guard.mjs --mode=dev",
     "db:migrate:dev": "node scripts/db-env-guard.mjs --mode=dev-only && prisma migrate dev",
     "db:push": "node scripts/db-env-guard.mjs --mode=dev-only && prisma db push",
