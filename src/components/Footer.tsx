@@ -86,6 +86,18 @@ export function Footer() {
           </section>
         </div>
 
+        <div className="border-t border-gray-800/80 py-5" aria-label="EPS accepted payment methods">
+          <picture>
+            <source media="(max-width: 639px)" srcSet="/images/payments/eps-footer-mobile-dark.png" />
+            <img
+              src="/images/payments/eps-footer-desktop-dark.png"
+              alt="Pay with EPS, Visa, Mastercard, American Express, Rocket and other payment methods"
+              className="h-auto w-full rounded-2xl object-contain"
+              loading="lazy"
+            />
+          </picture>
+        </div>
+
         <div className="flex flex-col gap-3 border-t border-gray-800/80 py-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start" aria-label="Accepted payment methods"><span className="mr-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">পেমেন্ট:</span>{acceptedPayments.map((method) => <PaymentLogo key={method} method={method} width={72} height={30} className="h-8 w-16 rounded border border-gray-800 bg-white" />)}</div>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-gray-500 sm:justify-end"><span>© 2026 AI Haat. All Rights Reserved.</span><Link href="/privacy" className="hover:text-white">প্রাইভেসি</Link><span aria-hidden="true">•</span><Link href="/terms" className="hover:text-white">শর্তাবলী</Link><span aria-hidden="true">•</span><Link href="/order-tracking" className="hover:text-white">অর্ডার ট্র্যাকিং</Link></div>

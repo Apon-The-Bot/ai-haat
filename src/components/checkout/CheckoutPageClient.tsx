@@ -1114,6 +1114,12 @@ function CheckoutContent() {
                                 Cards & Banks
                               </span>
                             </div>
+                            <img
+                              src="/images/payments/eps-checkout-methods.png"
+                              alt="Pay with EPS, cards, Rocket and other supported methods"
+                              className="mt-3 h-auto max-w-full rounded-xl border border-slate-100 object-contain"
+                              loading="lazy"
+                            />
                           </div>
                         </div>
 
