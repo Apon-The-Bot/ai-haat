@@ -7,7 +7,7 @@ CREATE TABLE `whatsapp_automation_identities` (
   `revokedAt` DATETIME(3) NULL,
   UNIQUE INDEX `wa_identity_user_revision_key` (`userId`, `revision`),
   PRIMARY KEY (`id`),
-  CONSTRAINT `whatsapp_automation_identities_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `whatsapp_automation_identities_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `whatsapp_automation_consents` (

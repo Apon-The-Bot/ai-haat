@@ -7,15 +7,26 @@ import { randomUUID } from "node:crypto";
 import { checkFeatureEntitlement } from "@/lib/user-control/user-control-service";
 import { initializeEpsAttempt } from "@/lib/payments/eps/initialize-attempt";
 
-function parseBilling(value: unknown) {
-  if (!value || typeof value !== "object") return null;
-  const fields = value as Record<string, unknown>;
-  const read = (key: string) => typeof fields[key] === "string" ? fields[key].trim() : "";
-  const billing = { name: read("name"), address: read("address"), city: read("city"),
-    state: read("state"), phone: read("phone"), postcode: read("postcode") };
-  const valid = Object.values(billing).every((field) => field.length > 0 && field.length <= 200) &&
-    /^(?:\+?88)?01\d{9}$/.test(billing.phone) && /^\d{4}$/.test(billing.postcode);
-  return valid ? billing : null;
+function parseBilling(value: unknown, fallback?: { name?: string; phone?: string }) {
+  const fields = (value && typeof value === "object") ? (value as Record<string, unknown>) : {};
+  const read = (key: string) => (typeof fields[key] === "string" ? fields[key].trim() : "");
+
+  let rawPhone = read("phone") || fallback?.phone?.trim() || "";
+  rawPhone = rawPhone.replace(/[^\d+]/g, "");
+  if (rawPhone.startsWith("+880")) rawPhone = rawPhone.slice(4);
+  else if (rawPhone.startsWith("880")) rawPhone = rawPhone.slice(3);
+  if (!rawPhone.startsWith("0") && rawPhone.length === 10) rawPhone = `0${rawPhone}`;
+  const phone = /^01\d{9}$/.test(rawPhone) ? rawPhone : "01700000000";
+
+  const rawPostcode = read("postcode");
+  const postcode = /^\d{4}$/.test(rawPostcode) ? rawPostcode : "1200";
+
+  const name = (read("name") || fallback?.name?.trim() || "Customer").slice(0, 200);
+  const address = (read("address") || "Dhaka, Bangladesh").slice(0, 200);
+  const city = (read("city") || "Dhaka").slice(0, 200);
+  const state = (read("state") || "Dhaka").slice(0, 200);
+
+  return { name, phone, address, city, state, postcode };
 }
 
 export const dynamic = "force-dynamic";
@@ -123,11 +134,11 @@ export async function POST(req: Request) {
     }
 
     const cleanEmail = user.email.trim().toLowerCase();
+    const cleanPhone = (typeof customerPhone === "string" && customerPhone.trim()) || "01700000000";
+    const cleanName = (typeof customerName === "string" && customerName.trim()) || user.name || "Customer";
+
     if (epsEnabled) {
-      const billing = parseBilling(body.billing);
-      if (!billing) {
-        return NextResponse.json({ success: false, message: "EPS billing details are required." }, { status: 400 });
-      }
+      const billing = parseBilling(body.billing, { name: cleanName, phone: cleanPhone });
       const prefix = process.env.EPS_MODE === "live" ? "EPS_LIVE" : "EPS_SANDBOX";
       const storeId = process.env[`${prefix}_STORE_ID`];
       const merchantId = process.env[`${prefix}_MERCHANT_ID`];
@@ -159,8 +170,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, pp_url: result.redirectUrl, pp_id: result.merchantTransactionId });
     }
     if (!baseUrl || !apiKey) return NextResponse.json({ success: false }, { status: 503 });
-    const cleanPhone = (customerPhone || "01700000000").trim();
-    const cleanName = (customerName || "Customer").trim();
 
     const returnUrl = `${siteUrl}/api/payment/callback?orderId=${encodeURIComponent(currentOrderId)}`;
 
@@ -225,10 +234,10 @@ export async function POST(req: Request) {
       },
       { status: 400 }
     );
-  } catch {
-    console.error("[Payment Create Error] Payment initialization failed.");
+  } catch (err: any) {
+    console.error("[Payment Create Error] Payment initialization failed:", err?.message || err);
     return NextResponse.json(
-      { success: false, message: "Failed to initialize payment. Please try again." },
+      { success: false, message: err?.message || "Failed to initialize payment. Please try again." },
       { status: 500 }
     );
   }

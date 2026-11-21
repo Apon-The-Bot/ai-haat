@@ -34,7 +34,7 @@ export function EpsBillingFields() {
         {fields.map(([name, label, autoComplete]) => (
           <label key={name} className="grid gap-1 text-sm">
             {label}
-            <input name={`eps-${name}`} autoComplete={autoComplete} maxLength={200} required={required === true}
+            <input name={`eps-${name}`} autoComplete={autoComplete} maxLength={200}
               pattern={name === "phone" ? "(?:[+]?(?:88))?01[0-9]{9}" : name === "postcode" ? "[0-9]{4}" : undefined}
               className="rounded-md border bg-transparent px-3 py-2" />
           </label>

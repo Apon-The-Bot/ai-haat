@@ -370,9 +370,8 @@ export function QuickCheckoutModal() {
         if (gatewayRes.ok && paymentUrl) {
           window.location.href = paymentUrl;
         } else {
-          // Fallback to success page
-          router.push(`/checkout/success?orderId=${encodeURIComponent(createdId)}`);
-          closeQuickCheckout();
+          showToast(gatewayData.message || "পেমেন্ট গেটওয়ে চালু করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", "error");
+          setIsSubmitting(false);
         }
       }
     } catch (err: any) {
