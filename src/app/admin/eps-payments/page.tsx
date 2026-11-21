@@ -21,7 +21,7 @@ export default async function EpsPaymentsPage({
   const enabled = process.env.EPS_PAYMENT_ENABLED === "true";
   const mode = process.env.EPS_MODE;
   const prefix = mode === "live" ? "EPS_LIVE" : mode === "sandbox" ? "EPS_SANDBOX" : null;
-  const required = ["USERNAME", "PASSWORD", "HASH_KEY", "STORE_ID", "MERCHANT_ID", "CHECKOUT_ORIGIN"];
+  const required = ["USERNAME", "PASSWORD", "HASH_KEY", "STORE_ID", "MERCHANT_ID"];
   const missing = prefix ? required.map((key) => `${prefix}_${key}`).filter((key) => !process.env[key]?.trim()) : [];
   const params = await searchParams;
   const query = typeof params.q === "string" ? params.q.trim().slice(0, 191) : "";

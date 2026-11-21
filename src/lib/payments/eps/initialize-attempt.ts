@@ -20,18 +20,20 @@ export async function initializeEpsAttempt(input: AttemptInput) {
   for (const key of ["USERNAME", "PASSWORD", "HASH_KEY"]) {
     if (!process.env[`${prefix}_${key}`]?.trim()) throw new Error("EPS credentials are incomplete.");
   }
-  let rawOrigin = (process.env[`${prefix}_CHECKOUT_ORIGIN`] || "").trim();
-  if (rawOrigin && !rawOrigin.startsWith("http://") && !rawOrigin.startsWith("https://")) {
+  const defaultOrigin = mode === "sandbox" ? "https://sandboxpg.eps.com.bd" : "https://pg.eps.com.bd";
+  let rawOrigin = (process.env[`${prefix}_CHECKOUT_ORIGIN`] || "").trim() || defaultOrigin;
+  if (!rawOrigin.startsWith("http://") && !rawOrigin.startsWith("https://")) {
     rawOrigin = `https://${rawOrigin}`;
   }
   let origin: URL | null = null;
   try {
-    origin = rawOrigin ? new URL(rawOrigin) : null;
+    origin = new URL(rawOrigin);
   } catch {
-    origin = null;
+    origin = new URL(defaultOrigin);
   }
-  if (!origin || origin.protocol !== "https:" || !origin.hostname.endsWith(".eps.com.bd") || origin.port) {
-    throw new Error("EPS checkout origin is not configured.");
+  const isEpsHost = origin.hostname === "eps.com.bd" || origin.hostname.endsWith(".eps.com.bd");
+  if (!origin || origin.protocol !== "https:" || !isEpsHost || origin.port) {
+    origin = new URL(defaultOrigin);
   }
   const cleanOrigin = origin.origin;
   if (mode === "sandbox" ? origin.hostname !== "sandboxpg.eps.com.bd"
@@ -91,7 +93,8 @@ export async function initializeEpsAttempt(input: AttemptInput) {
         existing.mode === mode && existing.storeId === input.payment.storeId &&
         existing.amountBDT.equals(amount) && existing.checkoutUrl) {
       const savedUrl = new URL(existing.checkoutUrl);
-      if ((savedUrl.origin === cleanOrigin || savedUrl.hostname.endsWith(".eps.com.bd")) && !savedUrl.username && !savedUrl.password) {
+      const isSavedEps = savedUrl.hostname === "eps.com.bd" || savedUrl.hostname.endsWith(".eps.com.bd");
+      if ((savedUrl.origin === cleanOrigin || isSavedEps) && !savedUrl.username && !savedUrl.password) {
         return { merchantTransactionId: existing.merchantTransactionId, redirectUrl: savedUrl.href };
       }
     }
@@ -108,8 +111,9 @@ export async function initializeEpsAttempt(input: AttemptInput) {
   const providerId = result.TransactionId;
   const rawRedirect = result.RedirectURL;
   const redirect = typeof rawRedirect === "string" && URL.canParse(rawRedirect) ? new URL(rawRedirect) : null;
+  const isRedirectEps = redirect && (redirect.hostname === "eps.com.bd" || redirect.hostname.endsWith(".eps.com.bd"));
   if (result.ErrorMessage || typeof providerId !== "string" || !providerId.trim() ||
-      providerId.length > 191 || !redirect || (redirect.origin !== cleanOrigin && !redirect.hostname.endsWith(".eps.com.bd")) ||
+      providerId.length > 191 || !redirect || (redirect.origin !== cleanOrigin && !isRedirectEps) ||
       redirect.username || redirect.password) {
     const code = result.ErrorCode;
     const safeCode = (typeof code === "number" || typeof code === "string") && /^\d{1,9}$/.test(String(code))
